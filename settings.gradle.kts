@@ -8,4 +8,4 @@
  */
 
 rootProject.name = "neo4j-shortest-path"
-include("lib")
+include("dijkstra")
