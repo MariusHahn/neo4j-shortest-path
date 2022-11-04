@@ -1,18 +1,20 @@
 package wtf.hahn.neo4j.util;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.TestInstance;
-import org.neo4j.driver.Config;
-import org.neo4j.harness.Neo4j;
-import org.neo4j.harness.Neo4jBuilder;
-import org.neo4j.harness.Neo4jBuilders;
-
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.TestInstance;
+import org.neo4j.driver.Config;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.harness.Neo4j;
+import org.neo4j.harness.Neo4jBuilder;
+import org.neo4j.harness.Neo4jBuilders;
 
 
 @TestInstance(PER_CLASS)
@@ -29,6 +31,10 @@ public  class IntegrationTest {
         functions.forEach(neo4jBuilder::withFunction);
         neo4j = neo4jBuilder.withDisabledServer().withFixture(dataset.cypher()).build();
         uri = neo4j.boltURI();
+    }
+
+    protected Driver driver() {
+        return GraphDatabase.driver(uri, build);
     }
 
     @AfterAll
