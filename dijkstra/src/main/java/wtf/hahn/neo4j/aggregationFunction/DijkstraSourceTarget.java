@@ -27,16 +27,16 @@ public class DijkstraSourceTarget {
             @Name("type") String type,
             @Name("propertyKey") String propertyKey) {
         final RelationshipType relationshipType = RelationshipType.withName(type);
-        final DijkstraHeap heap = new DijkstraHeap(startNode.getId());
+        final DijkstraHeap heap = new DijkstraHeap(startNode);
         try (final Transaction transaction = graphDatabaseService.beginTx()) {
-            while (heap.getClosestNotSettled() != null && !heap.isSettled(endNode.getId())) {
-                final Node toSettle = transaction.getNodeById(heap.getClosestNotSettled());
+            while (heap.getClosestNotSettled() != null && !heap.isSettled(endNode)) {
+                final Node toSettle = heap.getClosestNotSettled();
                 for (Relationship relationship : toSettle.getRelationships(Direction.OUTGOING, relationshipType)) {
                     heap.setNodeDistance(propertyKey, toSettle, relationship);
                 }
-                heap.setSettled(toSettle.getId());
+                heap.setSettled(toSettle);
             }
-            ReverseIterator<Relationship> relationships = new ReverseIterator<>(heap.getPath(endNode.getId()));
+            ReverseIterator<Relationship> relationships = new ReverseIterator<>(heap.getPath(endNode));
             return new ShortestPropertyPath(relationships, relationshipType, propertyKey);
         }
     }

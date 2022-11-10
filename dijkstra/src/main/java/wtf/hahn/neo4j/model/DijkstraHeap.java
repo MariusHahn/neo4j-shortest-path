@@ -5,62 +5,60 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Value;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
 public class DijkstraHeap {
-    private final Map<Long, Info> heap = new HashMap<>();
+    private final Map<Node, Info> heap = new HashMap<>();
 
-    public DijkstraHeap(long nodeId) {
-        heap.put(nodeId, new Info(false, 0L, null));
+    public DijkstraHeap(Node startNode) {
+        heap.put(startNode, new Info(false, 0L, null));
     }
 
-    public void setSettled(long nodeId) {
-        if (!heap.containsKey(nodeId)) throw new UnsupportedOperationException();
-        Info info = heap.get(nodeId);
-        heap.put(nodeId, new Info(true, info.distance, info.relationship));
+    public void setSettled(Node node) {
+        if (!heap.containsKey(node)) throw new UnsupportedOperationException();
+        Info info = heap.get(node);
+        heap.put(node, new Info(true, info.distance, info.relationship));
     }
 
     public void setNodeDistance(String propertyKey, Node toSettle, Relationship relationship) {
         Long edgeWeight  = (Long) relationship.getProperty(propertyKey);
-        long currentDistance = getCurrentDistance(toSettle.getId());
-        long endNodeId = relationship.getEndNode().getId();
-        heap.put(endNodeId,new Info(false, edgeWeight + currentDistance, relationship));
+        long currentDistance = getCurrentDistance(toSettle);
+        Node endNode = relationship.getEndNode();
+        heap.put(endNode ,new Info(false, edgeWeight + currentDistance, relationship));
 
     }
 
-    public boolean isSettled(long nodeId) {
+    public boolean isSettled(Node nodeId) {
         return !(heap.get(nodeId) == null || !heap.get(nodeId).settled);
     }
 
-    public Long getClosestNotSettled() {
+    public Node getClosestNotSettled() {
+        record DistanceNodeId( Node node, Long distance){}
         DistanceNodeId distanceNodeId = new DistanceNodeId(null, Long.MAX_VALUE);
-        for (Map.Entry<Long, Info> entry : heap.entrySet()) {
-            Long nodeId = entry.getKey();
+        for (Map.Entry<Node, Info> entry : heap.entrySet()) {
+            Node nodeId = entry.getKey();
             Info info = entry.getValue();
-            if (!(info.settled || info.distance >= distanceNodeId.getDistance())) {
-                distanceNodeId = new DistanceNodeId(nodeId, info.getDistance());
+            if (!(info.settled || info.distance >= distanceNodeId.distance())) {
+                distanceNodeId = new DistanceNodeId(nodeId, info.distance());
             }
         }
-        return distanceNodeId.nodeId;
+        return distanceNodeId.node;
     }
 
-    public long getCurrentDistance(long nodeId) {
-        return heap.get(nodeId).distance;
+    public long getCurrentDistance(Node node) {
+        return heap.get(node).distance;
     }
 
-    public List<Relationship> getPath(Long endNodeId) {
+    public List<Relationship> getPath(Node endNode) {
         List<Relationship> ids = new ArrayList<>();
-        Info info = heap.get(endNodeId);
+        Info info = heap.get(endNode);
         while (info.relationship != null) {
             ids.add(info.relationship);
-            info = heap.get(info.relationship.getStartNodeId());
+            info = heap.get(info.relationship.getStartNode());
         }
         return ids;
     }
 
-    @Value private static class Info { boolean settled; long distance; Relationship relationship;}
-    @Value private static class DistanceNodeId{ Long nodeId, distance;}
-
+    record Info (boolean settled, long distance, Relationship relationship){}
 }

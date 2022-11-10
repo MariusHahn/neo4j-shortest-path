@@ -1,6 +1,6 @@
 object Versions {
-    const val neo4j = "4.4.9"
-    const val jUnit = "5.8.2"
+    const val neo4j = "5.1.0"
+    const val jUnit = "5.9.1"
     const val lombok = "1.18.24"
 }
 
