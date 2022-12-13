@@ -2,16 +2,26 @@ package wtf.hahn.neo4j.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import wtf.hahn.neo4j.util.ReverseIterator;
 
-public class DijkstraHeap {
+public class Dijkstra {
     private final Map<Node, Info> heap = new HashMap<>();
+    private final Node endNode;
+    private final String propertyKey;
+    private final RelationshipType relationshipType;
 
-    public DijkstraHeap(Node startNode) {
+    public Dijkstra(Node startNode, Node endNode, String propertyKey, RelationshipType relationshipType) {
+        this.endNode = endNode;
+        this.propertyKey = propertyKey;
+        this.relationshipType = relationshipType;
         heap.put(startNode, new Info(false, 0L, null));
     }
 
@@ -34,7 +44,7 @@ public class DijkstraHeap {
     }
 
     public Node getClosestNotSettled() {
-        record DistanceNodeId( Node node, Long distance){}
+        record DistanceNodeId(Node node, Long distance){}
         DistanceNodeId distanceNodeId = new DistanceNodeId(null, Long.MAX_VALUE);
         for (Map.Entry<Node, Info> entry : heap.entrySet()) {
             Node nodeId = entry.getKey();
@@ -50,14 +60,24 @@ public class DijkstraHeap {
         return heap.get(node).distance;
     }
 
-    public List<Relationship> getPath(Node endNode) {
+    public Iterator<Relationship> getRelationships() {
         List<Relationship> ids = new ArrayList<>();
         Info info = heap.get(endNode);
         while (info.relationship != null) {
             ids.add(info.relationship);
             info = heap.get(info.relationship.getStartNode());
         }
-        return ids;
+        return new ReverseIterator<>(ids);
+    }
+
+    public void calcSourceTarget() {
+        while (getClosestNotSettled() != null && !isSettled(endNode)) {
+            final Node toSettle = getClosestNotSettled();
+            for (Relationship relationship : toSettle.getRelationships(Direction.OUTGOING, relationshipType)) {
+                setNodeDistance(propertyKey, toSettle, relationship);
+            }
+            setSettled(toSettle);
+        }
     }
 
     record Info (boolean settled, long distance, Relationship relationship){}
