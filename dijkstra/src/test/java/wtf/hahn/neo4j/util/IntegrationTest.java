@@ -10,20 +10,21 @@ import java.util.Collection;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.TestInstance;
 import org.neo4j.driver.Config;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.GraphDatabase;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilder;
 import org.neo4j.harness.Neo4jBuilders;
 
 
 @TestInstance(PER_CLASS)
-public  class IntegrationTest {
+public class IntegrationTest {
     protected final Config build;
     protected final Neo4j neo4j;
     protected final URI uri;
+    protected static final String DB_NAME = "neo4j"; // default name give by neo4j community edition
 
-    public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures, Collection<Class> functions, Dataset dataset) {
+    public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures,
+                           Collection<Class> functions, Dataset dataset) {
         build = Config.builder().withoutEncryption().build();
         Neo4jBuilder neo4jBuilder = Neo4jBuilders.newInProcessBuilder();
         aggregationFunctions.forEach(neo4jBuilder::withAggregationFunction);
@@ -33,8 +34,8 @@ public  class IntegrationTest {
         uri = neo4j.boltURI();
     }
 
-    protected Driver driver() {
-        return GraphDatabase.driver(uri, build);
+    protected GraphDatabaseService database() {
+        return neo4j.databaseManagementService().database(DB_NAME);
     }
 
     @AfterAll
@@ -42,7 +43,7 @@ public  class IntegrationTest {
         neo4j.close();
     }
 
-    public enum Dataset{
+    public enum Dataset {
         DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql");
 
         private final String fileName;

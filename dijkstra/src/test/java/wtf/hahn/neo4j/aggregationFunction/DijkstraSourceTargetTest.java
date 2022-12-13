@@ -1,11 +1,18 @@
 package wtf.hahn.neo4j.aggregationFunction;
 
 import static java.util.List.of;
+import static org.neo4j.graphdb.Direction.OUTGOING;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.Result;
-import org.neo4j.driver.Session;
+import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphalgo.PathFinder;
+import org.neo4j.graphalgo.WeightedPath;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PathExpander;
+import org.neo4j.graphdb.PathExpanders;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.util.IntegrationTest;
 
 public class DijkstraSourceTargetTest extends IntegrationTest {
@@ -16,21 +23,40 @@ public class DijkstraSourceTargetTest extends IntegrationTest {
     }
 
     @Test void pathLengthTest() {
-        try (Driver driver = driver()) {
-            Session session = driver.session();
+        try (Transaction transaction = database().beginTx()) {
             String cypher = getCypher("A", "F", "length");
-            Result result = session.run(cypher);
-            Assertions.assertEquals(160, result.single().get(0).asInt());
+            Result result = transaction.execute(cypher);
+            Assertions.assertEquals(160L, result.next().values().stream().findFirst().orElseThrow());
+        }
+    }
+    @Test void pathLengthTest2() {
+        try (Transaction transaction1 = database().beginTx()) {
+            Node start = transaction1.findNode(() -> "Location", "name", "A");
+            Node end = transaction1.findNode(() -> "Location", "name", "F");
+            RelationshipType type = RelationshipType.withName("ROAD");
+            PathExpander<Double> expander = PathExpanders.forTypeAndDirection(type, OUTGOING);
+            PathFinder<WeightedPath> pathFinder = GraphAlgoFactory.dijkstra(expander, "cost", 1);
+            WeightedPath singlePath = pathFinder.findSinglePath(start, end);
+            System.out.println(singlePath.weight());
+            transaction1.rollback();
         }
     }
 
+    @Test void printProcedures() {
+        try (Transaction transaction = database().beginTx()) {
+            Result result = transaction.execute("SHOW PROCEDURES  YIELD name, signature RETURN *");
+            result.stream().flatMap(x -> x.entrySet().stream())
+                    .forEach(stringObjectEntry -> System.out.printf("signature: %s\n",  stringObjectEntry.getValue()));
+        }
+    }
+
+
     //@Test
     void pathRelationshipsTest() {
-        try (Driver driver = driver()) {
-            Session session = driver.session();
+        try (Transaction transaction = database().beginTx()) {
             String cypher = getCypher("A", "F", "relationships");
-            Result result = session.run(cypher);
-            result.single().fields().forEach(System.out::println);
+            Result result = transaction.execute(cypher);
+            result.next().values().stream().forEach(System.out::println);
         }
     }
 
