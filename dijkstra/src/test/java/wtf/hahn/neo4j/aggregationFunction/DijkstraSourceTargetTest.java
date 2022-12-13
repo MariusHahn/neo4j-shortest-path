@@ -31,8 +31,8 @@ public class DijkstraSourceTargetTest extends IntegrationTest {
             String cypher = getCypher("A", "F", "pathCost");
             System.out.println(cypher);
             Result result = transaction.execute(cypher);
-            Long pathCost = (Long) result.next().values().stream().findFirst().orElseThrow();
-            Assertions.assertEquals(160L, pathCost);
+            Double pathCost = (Double) result.next().values().stream().findFirst().orElseThrow();
+            Assertions.assertEquals(160.0, pathCost);
             System.out.printf("Result: %s%n", pathCost);
         }
     }

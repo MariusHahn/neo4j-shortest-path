@@ -1,16 +1,17 @@
 package wtf.hahn.neo4j.model;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.ToString;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import wtf.hahn.neo4j.util.IterationHelper;
 import wtf.hahn.neo4j.util.ReverseIterator;
 import wtf.hahn.neo4j.util.ZipIterator;
 
@@ -19,8 +20,6 @@ public class ShortestPropertyPath implements WeightedPath {
 
     public final RelationshipType relationshipType;
     public final String propertyKey;
-    public final Long pathCost;
-    public final List<Node> nodes;
     public final List<Relationship> relationships;
 
     public ShortestPropertyPath(Iterator<Relationship> relationships, RelationshipType relationshipType,
@@ -28,8 +27,6 @@ public class ShortestPropertyPath implements WeightedPath {
         this.propertyKey = propertyKey;
         this.relationshipType = relationshipType;
         this.relationships = materializeRelationships(relationships);
-        pathCost = pathCost(propertyKey);
-        nodes = materializeNodes();
     }
 
     @Override
@@ -59,12 +56,12 @@ public class ShortestPropertyPath implements WeightedPath {
 
     @Override
     public Iterable<Node> nodes() {
-        return nodes;
+        return materializeNodes();
     }
 
     @Override
     public Iterable<Node> reverseNodes() {
-        return new ReverseIterator<>(nodes);
+        return new ReverseIterator<>(materializeNodes());
     }
 
     @Override
@@ -74,24 +71,17 @@ public class ShortestPropertyPath implements WeightedPath {
 
     @Override
     public Iterator<Entity> iterator() {
-        return new ZipIterator<>(nodes, relationships);
+        return new ZipIterator<>(nodes(), relationships);
     }
 
     private List<Relationship> materializeRelationships(Iterator<Relationship> relationships) {
-        final List<Relationship> relationshipList = new ArrayList<>();
-        while (relationships.hasNext()) {
-            Relationship relationship = relationships.next();
-            relationshipList.add(relationship);
-        }
-        return relationshipList;
+        return IterationHelper.stream(relationships).collect(Collectors.toList());
     }
 
     private List<Node> materializeNodes() {
         if (relationships.isEmpty()) return List.of();
-        final List<Node> nodes = new ArrayList<>();
-        nodes.add(relationships.get(0).getStartNode());
-        relationships.stream().map(Relationship::getEndNode).forEach(nodes::add);
-        return nodes;
+        return Stream.concat(Stream.of(startNode()), relationships.stream().map(Relationship::getEndNode))
+                .collect(Collectors.toList());
     }
 
     public Long pathCost(String propertyKey) {
@@ -104,6 +94,6 @@ public class ShortestPropertyPath implements WeightedPath {
 
     @Override
     public double weight() {
-        return pathCost;
+        return pathCost(propertyKey);
     }
 }

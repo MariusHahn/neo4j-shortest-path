@@ -1,6 +1,8 @@
 package wtf.hahn.neo4j.aggregationFunction;
 
-import lombok.AllArgsConstructor;
+import java.util.stream.Stream;
+
+import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -14,8 +16,6 @@ import org.neo4j.procedure.Procedure;
 import wtf.hahn.neo4j.model.DijkstraHeap;
 import wtf.hahn.neo4j.model.ShortestPropertyPath;
 import wtf.hahn.neo4j.util.ReverseIterator;
-
-import java.util.stream.Stream;
 
 public class DijkstraSourceTarget {
 
@@ -41,13 +41,19 @@ public class DijkstraSourceTarget {
             }
             ReverseIterator<Relationship> relationships = new ReverseIterator<>(heap.getPath(endNode));
             ShortestPropertyPath path = new ShortestPropertyPath(relationships, relationshipType, propertyKey);
-            return Stream.of(new PathResult(path.pathCost, path));
+            return Stream.of(new PathResult(path));
         }
     }
 
-    @AllArgsConstructor
+
     public static class PathResult {
-        public Long pathCost;
+        public Double pathCost;
         public Path path;
+
+        public PathResult(WeightedPath path) {
+            this.path = path;
+            pathCost = path.weight();
+        }
+
     }
 }
