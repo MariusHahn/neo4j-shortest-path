@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import lombok.ToString;
+import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -14,12 +15,11 @@ import wtf.hahn.neo4j.util.ReverseIterator;
 import wtf.hahn.neo4j.util.ZipIterator;
 
 @ToString
-public class ShortestPropertyPath implements Path {
-
+public class ShortestPropertyPath implements WeightedPath {
 
     public final RelationshipType relationshipType;
     public final String propertyKey;
-    public final int length;
+    public final Long pathCost;
     public final List<Node> nodes;
     public final List<Relationship> relationships;
 
@@ -28,7 +28,7 @@ public class ShortestPropertyPath implements Path {
         this.propertyKey = propertyKey;
         this.relationshipType = relationshipType;
         this.relationships = materializeRelationships(relationships);
-        length = materializeLength(propertyKey);
+        pathCost = pathCost(propertyKey);
         nodes = materializeNodes();
     }
 
@@ -69,7 +69,7 @@ public class ShortestPropertyPath implements Path {
 
     @Override
     public int length() {
-        return length;
+        return relationships.size();
     }
 
     @Override
@@ -94,11 +94,16 @@ public class ShortestPropertyPath implements Path {
         return nodes;
     }
 
-    private int materializeLength(String propertyKey) {
-        return (int) this.relationships.stream()
+    public Long pathCost(String propertyKey) {
+        return this.relationships.stream()
                 .map(relationship -> relationship.getProperty(propertyKey))
                 .map(cost -> (cost instanceof Long) ? String.valueOf(cost) : (String) cost)
                 .mapToLong(Long::valueOf)
                 .sum();
+    }
+
+    @Override
+    public double weight() {
+        return pathCost;
     }
 }

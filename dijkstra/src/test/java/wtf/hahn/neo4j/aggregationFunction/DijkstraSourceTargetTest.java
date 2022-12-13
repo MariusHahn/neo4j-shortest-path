@@ -15,21 +15,40 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.util.IntegrationTest;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class DijkstraSourceTargetTest extends IntegrationTest {
 
 
     public DijkstraSourceTargetTest() {
-        super(of(), of(), of(DijkstraSourceTarget.class), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+        super(of(), of(DijkstraSourceTarget.class), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
     @Test void pathLengthTest() {
         try (Transaction transaction = database().beginTx()) {
-            String cypher = getCypher("A", "F", "length");
+            String cypher = getCypher("A", "F", "pathCost");
+            System.out.println(cypher);
             Result result = transaction.execute(cypher);
-            Assertions.assertEquals(160L, result.next().values().stream().findFirst().orElseThrow());
+            Long pathCost = (Long) result.next().values().stream().findFirst().orElseThrow();
+            Assertions.assertEquals(160L, pathCost);
+            System.out.printf("Result: %s%n", pathCost);
         }
     }
-    @Test void pathLengthTest2() {
+
+    @Test void pathNodeTest() {
+        try (Transaction transaction = database().beginTx()) {
+            String cypher = getCypher("A", "F", "[n in nodes(path) | n.name] as name");
+            System.out.println(cypher);
+            Result result = transaction.execute(cypher);
+            String[] values = ((List<String>) result.next().get("name")).toArray(String[]::new);
+            Assertions.assertArrayEquals(values, new String[]{"A", "C", "D", "E", "F"});
+            System.out.printf("Result: [%s]%n", Arrays.stream(values).collect(Collectors.joining(", ")));
+        }
+    }
+
+    @Test void pathLengthTestInternal() {
         try (Transaction transaction1 = database().beginTx()) {
             Node start = transaction1.findNode(() -> "Location", "name", "A");
             Node end = transaction1.findNode(() -> "Location", "name", "F");
@@ -42,31 +61,12 @@ public class DijkstraSourceTargetTest extends IntegrationTest {
         }
     }
 
-    @Test void printProcedures() {
-        try (Transaction transaction = database().beginTx()) {
-            Result result = transaction.execute("SHOW PROCEDURES  YIELD name, signature RETURN *");
-            result.stream().flatMap(x -> x.entrySet().stream())
-                    .forEach(stringObjectEntry -> System.out.printf("signature: %s\n",  stringObjectEntry.getValue()));
-        }
-    }
-
-
-    //@Test
-    void pathRelationshipsTest() {
-        try (Transaction transaction = database().beginTx()) {
-            String cypher = getCypher("A", "F", "relationships");
-            Result result = transaction.execute(cypher);
-            result.next().values().stream().forEach(System.out::println);
-        }
-    }
-
-    private static String getCypher(final String sourceNode, final String targetNode, final String aggFunction) {
+    static String getCypher(final String sourceNode, final String targetNode, final String returnClause) {
         return """
-                MATCH
-                  (a:Location {name: '%s'}),
-                  (b:Location {name: '%s'})
-                WITH wtf.hahn.neo4j.aggregationFunction.sourceTarget(a, b, 'ROAD', 'cost') as path
-                RETURN %s(path)
-                """.formatted(sourceNode, targetNode, aggFunction);
+                MATCH (a:Location {name: '%s'}), (b:Location {name: '%s'})
+                CALL wtf.hahn.neo4j.aggregationFunction.sourceTarget(a, b, 'ROAD', 'cost')
+                YIELD pathCost, path
+                RETURN %s
+                """.formatted(sourceNode, targetNode, returnClause).stripIndent();
     }
 }

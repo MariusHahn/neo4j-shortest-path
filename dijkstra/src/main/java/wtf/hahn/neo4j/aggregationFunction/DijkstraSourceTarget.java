@@ -1,5 +1,6 @@
 package wtf.hahn.neo4j.aggregationFunction;
 
+import lombok.AllArgsConstructor;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -9,10 +10,12 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Name;
-import org.neo4j.procedure.UserFunction;
+import org.neo4j.procedure.Procedure;
 import wtf.hahn.neo4j.model.DijkstraHeap;
 import wtf.hahn.neo4j.model.ShortestPropertyPath;
 import wtf.hahn.neo4j.util.ReverseIterator;
+
+import java.util.stream.Stream;
 
 public class DijkstraSourceTarget {
 
@@ -20,8 +23,8 @@ public class DijkstraSourceTarget {
     public GraphDatabaseService graphDatabaseService;
 
     @SuppressWarnings("unused")
-    @UserFunction
-    public Path sourceTarget(
+    @Procedure
+    public Stream<PathResult> sourceTarget(
             @Name("startNode") Node startNode,
             @Name("endNode") Node endNode,
             @Name("type") String type,
@@ -37,8 +40,14 @@ public class DijkstraSourceTarget {
                 heap.setSettled(toSettle);
             }
             ReverseIterator<Relationship> relationships = new ReverseIterator<>(heap.getPath(endNode));
-            return new ShortestPropertyPath(relationships, relationshipType, propertyKey);
+            ShortestPropertyPath path = new ShortestPropertyPath(relationships, relationshipType, propertyKey);
+            return Stream.of(new PathResult(path.pathCost, path));
         }
     }
 
+    @AllArgsConstructor
+    public static class PathResult {
+        public Long pathCost;
+        public Path path;
+    }
 }
