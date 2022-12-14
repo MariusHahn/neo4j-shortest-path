@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.aggregationFunction;
+package wtf.hahn.neo4j.procedure;
 
 import java.util.Iterator;
 import java.util.stream.Stream;

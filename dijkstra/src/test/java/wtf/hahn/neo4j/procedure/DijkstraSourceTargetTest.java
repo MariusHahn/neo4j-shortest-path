@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.aggregationFunction;
+package wtf.hahn.neo4j.procedure;
 
 import static java.util.List.of;
 
@@ -13,14 +13,13 @@ import wtf.hahn.neo4j.util.IntegrationTest;
 
 public class DijkstraSourceTargetTest extends IntegrationTest {
 
-
     public DijkstraSourceTargetTest() {
         super(of(), of(DijkstraSourceTarget.class), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
     @ParameterizedTest
     @ValueSource(strings = {
-            "wtf.hahn.neo4j.aggregationFunction.sourceTarget",
-            "wtf.hahn.neo4j.aggregationFunction.sourceTargetNative",
+            "wtf.hahn.neo4j.procedure.sourceTarget",
+            "wtf.hahn.neo4j.procedure.sourceTargetNative",
     })
     void pathLengthTest(String functionName) {
         try (Transaction transaction = database().beginTx()) {
@@ -35,8 +34,8 @@ public class DijkstraSourceTargetTest extends IntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "wtf.hahn.neo4j.aggregationFunction.sourceTarget",
-            "wtf.hahn.neo4j.aggregationFunction.sourceTargetNative",
+            "wtf.hahn.neo4j.procedure.sourceTarget",
+            "wtf.hahn.neo4j.procedure.sourceTargetNative",
     })
     void pathNodeTest(String functionName ) {
         try (Transaction transaction = database().beginTx()) {
