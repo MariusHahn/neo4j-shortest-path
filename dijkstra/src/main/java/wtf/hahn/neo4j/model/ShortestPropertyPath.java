@@ -79,21 +79,16 @@ public class ShortestPropertyPath implements WeightedPath {
     }
 
     private List<Node> materializeNodes() {
-        if (relationships.isEmpty()) return List.of();
         return Stream.concat(Stream.of(startNode()), relationships.stream().map(Relationship::getEndNode))
                 .collect(Collectors.toList());
     }
 
-    public Long pathCost(String propertyKey) {
-        return this.relationships.stream()
+    @Override
+    public double weight() {
+        return relationships.stream()
                 .map(relationship -> relationship.getProperty(propertyKey))
                 .map(cost -> (cost instanceof Long) ? String.valueOf(cost) : (String) cost)
                 .mapToLong(Long::valueOf)
                 .sum();
-    }
-
-    @Override
-    public double weight() {
-        return pathCost(propertyKey);
     }
 }
