@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.model;
+package wtf.hahn.neo4j.dijkstra;
 
 import java.util.ArrayList;
 import java.util.HashMap;

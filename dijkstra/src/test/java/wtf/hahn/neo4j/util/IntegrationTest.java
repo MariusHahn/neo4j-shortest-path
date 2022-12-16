@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.TestInstance;
 import org.neo4j.driver.Config;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilder;
 import org.neo4j.harness.Neo4jBuilders;
@@ -22,6 +23,7 @@ public class IntegrationTest {
     protected final Neo4j neo4j;
     protected final URI uri;
     protected static final String DB_NAME = "neo4j"; // default name give by neo4j community edition
+    private final Dataset dataset;
 
     public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures,
                            Collection<Class> functions, Dataset dataset) {
@@ -32,6 +34,15 @@ public class IntegrationTest {
         functions.forEach(neo4jBuilder::withFunction);
         neo4j = neo4jBuilder.withDisabledServer().withFixture(dataset.cypher()).build();
         uri = neo4j.boltURI();
+        this.dataset = dataset;
+    }
+
+    protected String costProperty() {
+        return dataset.costProperty;
+    }
+
+    protected RelationshipType relationshipType() {
+        return RelationshipType.withName(dataset.relationshipTypeName);
     }
 
     protected GraphDatabaseService database() {
@@ -44,18 +55,22 @@ public class IntegrationTest {
     }
 
     public enum Dataset {
-        DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql");
+        DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql", "cost", "ROAD");
 
         private final String fileName;
         private final Path resources;
+        private final String costProperty;
+        private final String relationshipTypeName;
 
-        Dataset(Path resources, String fileName) {
+        Dataset(Path resources, String fileName, String costProperty, String relationshipTypeName) {
             this.fileName = fileName;
             this.resources = resources;
+            this.costProperty = costProperty;
+            this.relationshipTypeName = relationshipTypeName;
         }
 
-        Dataset(String fileName) {
-            this(Paths.get("src", "test", "resources"), fileName);
+        Dataset(String fileName, String costProperty, String relationshipTypeName) {
+            this(Paths.get("src", "test", "resources"), fileName, costProperty, relationshipTypeName);
         }
 
         public Path cypher() {
