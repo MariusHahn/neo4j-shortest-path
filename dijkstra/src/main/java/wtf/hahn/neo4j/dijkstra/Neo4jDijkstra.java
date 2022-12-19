@@ -9,8 +9,8 @@ import org.neo4j.graphdb.PathExpander;
 public class Neo4jDijkstra {
 
     public WeightedPath shortestPath(Node startNode, Node endNode, PathExpander<Double> expander, String costProperty) {
-        PathFinder<WeightedPath> pathFinder = GraphAlgoFactory.dijkstra(expander, costProperty, 1);
-        return pathFinder.findSinglePath(startNode, endNode);
+        PathFinder<WeightedPath> dijkstraFinder = GraphAlgoFactory.dijkstra(expander, costProperty, 1);
+        return dijkstraFinder.findSinglePath(startNode, endNode);
     }
 
 }
