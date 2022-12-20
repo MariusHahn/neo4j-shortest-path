@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.procedure;
+package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
 
@@ -12,8 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.CH;
-import wtf.hahn.neo4j.contractionHierarchies.Shortcut;
+import wtf.hahn.neo4j.procedure.ContractionHierarchies;
 import wtf.hahn.neo4j.util.IntegrationTest;
 
 public class ContractionHierarchiesTest extends IntegrationTest {
@@ -23,21 +22,21 @@ public class ContractionHierarchiesTest extends IntegrationTest {
     }
 
     @Test
-    void a() {
+    void chStandardContractionOrderTest() {
         try (Transaction transaction = database().beginTx()) {
             String cypher = "CALL wtf.hahn.neo4j.procedure.createContractionHierarchiesIndex('ROAD', 'cost')";
             transaction.execute(cypher);
-
             Set<ShortcutTriple> shortcuts = transaction.getAllRelationships().stream()
                     .filter(Shortcut::isShortcut)
                     .map(ShortcutTriple::new)
+                    .peek(System.out::println)
                     .collect(Collectors.toSet());
             Assertions.assertEquals(0, shortcuts.size());
         }
     }
 
     @Test
-    void chTest() {
+    void chReverseDegreeTest() {
         try (Transaction transaction = database().beginTx()) {
             new CH(
                     relationshipType().name()

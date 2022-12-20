@@ -16,8 +16,8 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.dijkstra.Neo4jDijkstra;
-import wtf.hahn.neo4j.dijkstra.expander.NodeExcludeExpander;
 import wtf.hahn.neo4j.dijkstra.expander.NodeIncludeExpander;
+import wtf.hahn.neo4j.util.IterationHelper;
 
 public record CH(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
                  RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, Neo4jDijkstra dijkstra) {
@@ -45,11 +45,10 @@ public record CH(RelationshipType type, String costProperty, Transaction transac
             Node[] outNodes = getNotContractedOutNodes(type, nodeToContract);
             for (Node inNode : inNodes) {
                 for (Node outNode : outNodes) {
-                    NodeExcludeExpander excludeExpander = new NodeExcludeExpander(nodeToContract, type);
-                    WeightedPath excludePath = dijkstra.shortestPath(inNode, outNode, excludeExpander, costProperty);
+                    WeightedPath shortestPath = dijkstra.shortestPathWithShortcuts(inNode, outNode, type, costProperty);
                     NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type);
                     WeightedPath includePath = dijkstra.shortestPath(inNode, outNode, includeExpander, costProperty);
-                    if (mustInsertShortcut(excludePath, includePath)) {
+                    if (samePath(shortestPath, includePath)) {
                         new Shortcut(type, inNode, outNode, costProperty, includePath).create();
                     }
                 }
@@ -57,8 +56,13 @@ public record CH(RelationshipType type, String costProperty, Transaction transac
         }
     }
 
-    private boolean mustInsertShortcut(WeightedPath excludePath, WeightedPath includePath) {
-        return excludePath == null || excludePath.weight() > includePath.weight();
+    private boolean samePath(WeightedPath shortestPath, WeightedPath includePath) {
+        if (shortestPath.length() == includePath.length() && shortestPath.weight() == includePath.weight()) {
+            List<Relationship> shortestPathRelationships = IterationHelper.stream(shortestPath.relationships()).toList();
+            List<Relationship> includePathRelationships = IterationHelper.stream(includePath.relationships()).toList();
+            return shortestPathRelationships.containsAll(includePathRelationships);
+        }
+        return false;
     }
 
     private static Node[] getNotContractedNeighbors(RelationshipType relationshipType, Node nodeToContract,
@@ -70,6 +74,7 @@ public record CH(RelationshipType type, String costProperty, Transaction transac
                 .stream()
                 .map(getEndNode)
                 .filter(n -> !n.hasProperty(Shortcut.rankPropertyName(relationshipType)))
+                .distinct()
                 .toArray(Node[]::new);
     }
 
