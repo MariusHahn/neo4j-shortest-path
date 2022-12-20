@@ -14,14 +14,14 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.dijkstra.Neo4jDijkstra;
-import wtf.hahn.neo4j.dijkstra.expander.NodeRestrictedExpander;
+import wtf.hahn.neo4j.dijkstra.expander.NodeExcludeExpander;
 import wtf.hahn.neo4j.util.IntegrationTest;
 
-public class NodeRestrictedExpanderTest extends IntegrationTest {
+public class NodeExcludeExpanderTest extends IntegrationTest {
 
     private final Neo4jDijkstra neo4jDijkstra = new Neo4jDijkstra();
 
-    public NodeRestrictedExpanderTest() {
+    public NodeExcludeExpanderTest() {
         super(of(), of(), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
@@ -31,14 +31,14 @@ public class NodeRestrictedExpanderTest extends IntegrationTest {
         try (Transaction transaction = database().beginTx()) {
             Node nodeA = transaction.findNode(() -> "Location", "name", "A");
             Node nodeF = transaction.findNode(() -> "Location", "name", "F");
-            Node nodeC = transaction.findNode(() -> "Location", "name", restrictedNode);
-            NodeRestrictedExpander expander = new NodeRestrictedExpander(nodeC, relationshipType());
+            Node restricted = transaction.findNode(() -> "Location", "name", restrictedNode);
+            NodeExcludeExpander expander = new NodeExcludeExpander(restricted, relationshipType());
             WeightedPath path = neo4jDijkstra.shortestPath(nodeA, nodeF, expander, costProperty());
-            assertEquals(weight, path.weight());
             String[] retrievedPathNames =
                     stream(path.nodes()).map(n -> (String) n.getProperty("name")).toArray(String[]::new);
             System.out.printf("\"%s\"", String.join("\", \"", retrievedPathNames));
             assertArrayEquals(pathNames, retrievedPathNames);
+            assertEquals(weight, path.weight());
         }
     }
 
