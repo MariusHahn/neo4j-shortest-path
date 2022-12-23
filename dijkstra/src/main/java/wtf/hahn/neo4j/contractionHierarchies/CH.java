@@ -2,6 +2,7 @@ package wtf.hahn.neo4j.contractionHierarchies;
 
 import static org.neo4j.graphdb.Direction.INCOMING;
 import static org.neo4j.graphdb.Direction.OUTGOING;
+import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,7 +18,6 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.dijkstra.Neo4jDijkstra;
 import wtf.hahn.neo4j.dijkstra.expander.NodeIncludeExpander;
-import wtf.hahn.neo4j.util.IterationHelper;
 
 public record CH(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
                  RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, Neo4jDijkstra dijkstra) {
@@ -54,15 +54,6 @@ public record CH(RelationshipType type, String costProperty, Transaction transac
                 }
             }
         }
-    }
-
-    private boolean samePath(WeightedPath shortestPath, WeightedPath includePath) {
-        if (shortestPath.length() == includePath.length() && shortestPath.weight() == includePath.weight()) {
-            List<Relationship> shortestPathRelationships = IterationHelper.stream(shortestPath.relationships()).toList();
-            List<Relationship> includePathRelationships = IterationHelper.stream(includePath.relationships()).toList();
-            return shortestPathRelationships.containsAll(includePathRelationships);
-        }
-        return false;
     }
 
     private static Node[] getNotContractedNeighbors(RelationshipType relationshipType, Node nodeToContract,
