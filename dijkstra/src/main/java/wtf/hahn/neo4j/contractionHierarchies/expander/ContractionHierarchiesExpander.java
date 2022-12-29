@@ -10,43 +10,37 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
 import wtf.hahn.neo4j.contractionHierarchies.Shortcut;
-import static org.neo4j.graphdb.Direction.INCOMING;
-import static org.neo4j.graphdb.Direction.OUTGOING;
 import static org.neo4j.internal.helpers.collection.Iterables.asResourceIterable;
 import static org.neo4j.internal.helpers.collection.Iterables.filter;
 
 import java.util.function.Predicate;
 
-public class ContractionHierarchiesExpander implements PathExpander<Double> {
+public record ContractionHierarchiesExpander(PathExpander<Double> dijkstraExpander,
+                                             String rankProperty,
+                                             Predicate<Relationship> rankFilter,
+                                             RelationshipType relationshipType,
+                                             Way way)
+        implements PathExpander<Double> {
 
-    private final PathExpander<Double> dijkstraExpander;
-    private final String rankProperty;
-    private final Predicate<Relationship> rankFilter;
-    private final RelationshipType relationshipType;
-    private final ContractionHierarchiesExpander.Side side;
 
-    public ContractionHierarchiesExpander(RelationshipType relationshipType, String rankProperty, Side side) {
-        this.relationshipType = relationshipType;
-        this.side = side;
-        dijkstraExpander = PathExpanders.forTypesAndDirections(
-                relationshipType
-                , side.direction
-                , Shortcut.shortcutRelationshipType(relationshipType)
-                , side.direction
+    public static ContractionHierarchiesExpander upwards(RelationshipType relationshipType, String rankProperty) {
+        return new ContractionHierarchiesExpander(
+                dijkstraExpander(relationshipType)
+                , rankProperty
+                , r -> hasHigherRank(r.getStartNode(), r.getEndNode(), rankProperty)
+                , relationshipType
+                , Way.UPWARDS
         );
-        this.rankProperty = rankProperty;
-        this.rankFilter = side == Side.UPWARDS
-                ? r -> hasHigherRank(r.getStartNode(), r.getEndNode())
-                : r -> hasHigherRank(r.getEndNode(), r.getStartNode())
-        ;
     }
 
-    boolean hasHigherRank(Node low, Node high) {
-        return getRankProperty(low, rankProperty) < getRankProperty(high, rankProperty);
-    }
-
-    static int getRankProperty(Node node, String rankProperty) {
-        return (int) node.getProperty(rankProperty);
+    public static ContractionHierarchiesExpander downwards(RelationshipType relationshipType, String rankProperty) {
+        return new ContractionHierarchiesExpander(
+                dijkstraExpander(relationshipType).reverse()
+                , rankProperty
+                , r -> hasHigherRank(r.getEndNode(), r.getStartNode(), rankProperty)
+                , relationshipType
+                , Way.DOWNWARDS
+        );
     }
 
     @Override
@@ -56,21 +50,27 @@ public class ContractionHierarchiesExpander implements PathExpander<Double> {
 
     @Override
     public PathExpander<Double> reverse() {
-        return new ContractionHierarchiesExpander(relationshipType, rankProperty, side.other());
+        return way() == Way.UPWARDS
+                ? downwards(relationshipType(), rankProperty())
+                : upwards(relationshipType(), rankProperty());
     }
 
-    public enum Side {
-        UPWARDS(OUTGOING),
-        DOWNWARDS(INCOMING);
-
-        private final Direction direction;
-
-        Side(Direction direction) {
-            this.direction = direction;
-        }
-
-        Side other() {
-            return this == UPWARDS ? DOWNWARDS : UPWARDS;
-        }
+    private static boolean hasHigherRank(Node low, Node high, String rankProperty) {
+        return getRankProperty(low, rankProperty) < getRankProperty(high, rankProperty);
     }
+
+    private static int getRankProperty(Node node, String rankProperty) {
+        return (int) node.getProperty(rankProperty);
+    }
+
+    private static PathExpander<Double> dijkstraExpander(RelationshipType relationshipType) {
+        return PathExpanders.forTypesAndDirections(
+                relationshipType
+                , Direction.OUTGOING
+                , Shortcut.shortcutRelationshipType(relationshipType)
+                , Direction.OUTGOING
+        );
+    }
+
+    public enum Way {UPWARDS, DOWNWARDS}
 }

@@ -10,10 +10,9 @@ import wtf.hahn.neo4j.contractionHierarchies.expander.ContractionHierarchiesExpa
 public record ContractionHierarchiesFinder(EvaluationContext evaluationContext) {
 
     public WeightedPath find(Node source, Node target, RelationshipType type, String costProperty) {
-        ContractionHierarchiesExpander expander = new ContractionHierarchiesExpander(
+        ContractionHierarchiesExpander expander = ContractionHierarchiesExpander.upwards(
                 type
                 , Shortcut.rankPropertyName(type)
-                , ContractionHierarchiesExpander.Side.UPWARDS
         );
         return GraphAlgoFactory.dijkstra(evaluationContext, expander, costProperty).findSinglePath(source, target);
     }
