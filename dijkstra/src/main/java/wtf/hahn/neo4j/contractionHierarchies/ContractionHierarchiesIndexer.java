@@ -19,10 +19,10 @@ import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.dijkstra.Neo4jDijkstra;
 import wtf.hahn.neo4j.dijkstra.expander.NodeIncludeExpander;
 
-public record CH(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
-                 RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, Neo4jDijkstra dijkstra) {
+public record ContractionHierarchiesIndexer(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
+                                            RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, Neo4jDijkstra dijkstra) {
 
-    public CH(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator) {
+    public ContractionHierarchiesIndexer(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator) {
         this(
                 RelationshipType.withName(type)
                 , costProperty
