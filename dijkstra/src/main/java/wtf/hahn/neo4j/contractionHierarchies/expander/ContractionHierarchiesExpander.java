@@ -1,23 +1,19 @@
 package wtf.hahn.neo4j.contractionHierarchies.expander;
 
+import java.util.function.Predicate;
+
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
-import org.neo4j.graphdb.PathExpanders;
+import org.neo4j.graphdb.PathExpanderBuilder;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
-import wtf.hahn.neo4j.contractionHierarchies.Shortcut;
-import static org.neo4j.internal.helpers.collection.Iterables.asResourceIterable;
-import static org.neo4j.internal.helpers.collection.Iterables.filter;
 
-import java.util.function.Predicate;
-
-public record ContractionHierarchiesExpander(PathExpander<Double> dijkstraExpander,
+public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
                                              String rankProperty,
-                                             Predicate<Relationship> rankFilter,
                                              RelationshipType relationshipType,
                                              Way way)
         implements PathExpander<Double> {
@@ -25,9 +21,9 @@ public record ContractionHierarchiesExpander(PathExpander<Double> dijkstraExpand
 
     public static ContractionHierarchiesExpander upwards(RelationshipType relationshipType, String rankProperty) {
         return new ContractionHierarchiesExpander(
-                dijkstraExpander(relationshipType)
+                baseExpander(relationshipType, r -> hasHigherRank(r.getStartNode(), r.getEndNode(), rankProperty),
+                        Direction.OUTGOING)
                 , rankProperty
-                , r -> hasHigherRank(r.getStartNode(), r.getEndNode(), rankProperty)
                 , relationshipType
                 , Way.UPWARDS
         );
@@ -35,9 +31,10 @@ public record ContractionHierarchiesExpander(PathExpander<Double> dijkstraExpand
 
     public static ContractionHierarchiesExpander downwards(RelationshipType relationshipType, String rankProperty) {
         return new ContractionHierarchiesExpander(
-                dijkstraExpander(relationshipType).reverse()
+                baseExpander(relationshipType,
+                        r -> hasHigherRank(r.getEndNode(), r.getStartNode(), rankProperty),
+                        Direction.INCOMING).reverse()
                 , rankProperty
-                , r -> hasHigherRank(r.getEndNode(), r.getStartNode(), rankProperty)
                 , relationshipType
                 , Way.DOWNWARDS
         );
@@ -45,7 +42,7 @@ public record ContractionHierarchiesExpander(PathExpander<Double> dijkstraExpand
 
     @Override
     public ResourceIterable<Relationship> expand(Path path, BranchState<Double> state) {
-        return asResourceIterable(filter(rankFilter, dijkstraExpander.expand(path, state)));
+        return baseExpander.expand(path, state);
     }
 
     @Override
@@ -63,13 +60,18 @@ public record ContractionHierarchiesExpander(PathExpander<Double> dijkstraExpand
         return (int) node.getProperty(rankProperty);
     }
 
-    private static PathExpander<Double> dijkstraExpander(RelationshipType relationshipType) {
-        return PathExpanders.forTypesAndDirections(
-                relationshipType
-                , Direction.OUTGOING
-                , Shortcut.shortcutRelationshipType(relationshipType)
-                , Direction.OUTGOING
-        );
+    private static PathExpander<Double> baseExpander(RelationshipType relationshipType,
+                                                     Predicate<Relationship> filter, Direction direction) {
+        /* TODO: Currently it works on every relationship type. This should change only to the given and
+                 its shortcut type.
+         */
+        return PathExpanderBuilder
+                //.empty()
+                .allTypes(direction)
+                .addRelationshipFilter(filter)
+                //.add(relationshipType, direction)
+                //.add(Shortcut.shortcutRelationshipType(relationshipType), direction)
+                .build();
     }
 
     public enum Way {UPWARDS, DOWNWARDS}
