@@ -33,7 +33,7 @@ public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
         return new ContractionHierarchiesExpander(
                 baseExpander(relationshipType,
                         r -> hasHigherRank(r.getEndNode(), r.getStartNode(), rankProperty),
-                        Direction.INCOMING).reverse()
+                        Direction.INCOMING)
                 , rankProperty
                 , relationshipType
                 , Way.DOWNWARDS
