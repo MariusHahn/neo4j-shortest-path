@@ -17,17 +17,14 @@ import wtf.hahn.neo4j.model.PathResult;
 
 public class ContractionHierarchies {
 
-    @Context
-    public GraphDatabaseService graphDatabaseService;
+    @Context public GraphDatabaseService graphDatabaseService;
+    @Context public Transaction transaction;
 
     @SuppressWarnings("unused")
     @Procedure(mode = Mode.WRITE)
     public void createContractionHierarchiesIndex(@Name("type") String type,
                                                   @Name("costProperty") String costProperty) {
-        try (Transaction transaction = graphDatabaseService.beginTx()) {
             new ContractionHierarchiesIndexer(type, costProperty, transaction, Comparator.comparingInt(Node::getDegree)).insertShortcuts();
-            transaction.commit();
-        }
     }
     @SuppressWarnings("unused")
     @Procedure
@@ -37,13 +34,11 @@ public class ContractionHierarchies {
                                              @Name("costProperty") String costProperty
     ){
         final RelationshipType relationshipType = RelationshipType.withName(type);
-        try (Transaction transaction = graphDatabaseService.beginTx()) {
-            BasicEvaluationContext evaluationContext =
-                    new BasicEvaluationContext(transaction, graphDatabaseService);
+            BasicEvaluationContext evaluationContext = new BasicEvaluationContext(transaction, graphDatabaseService);
             WeightedPath path = new ContractionHierarchiesFinder(evaluationContext)
                     .find(startNode, endNode, relationshipType, costProperty);
             PathResult result = new PathResult(path);
             return Stream.of(result);
-        }
+
     }
 }
