@@ -11,6 +11,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
+import wtf.hahn.neo4j.contractionHierarchies.Shortcut;
 
 public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
                                              String rankProperty,
@@ -62,15 +63,11 @@ public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
 
     private static PathExpander<Double> baseExpander(RelationshipType relationshipType,
                                                      Predicate<Relationship> filter, Direction direction) {
-        /* TODO: Currently it works on every relationship type. This should change only to the given and
-                 its shortcut type.
-         */
         return PathExpanderBuilder
-                //.empty()
-                .allTypes(direction)
+                .empty()
                 .addRelationshipFilter(filter)
-                //.add(relationshipType, direction)
-                //.add(Shortcut.shortcutRelationshipType(relationshipType), direction)
+                .add(relationshipType, direction)
+                .add(Shortcut.shortcutRelationshipType(relationshipType), direction)
                 .build();
     }
 

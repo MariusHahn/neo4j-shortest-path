@@ -56,7 +56,9 @@ public record Shortcut(
     }
 
     public static RelationshipType shortcutRelationshipType(RelationshipType relationshipType) {
-        return RelationshipType.withName(SHORTCUT_PREFIX + relationshipType.name());
+        return isShortcut(relationshipType)
+                ? relationshipType
+                : RelationshipType.withName(SHORTCUT_PREFIX + relationshipType.name());
     }
 
     public static String rankPropertyName(RelationshipType relationshipType) {
@@ -64,6 +66,10 @@ public record Shortcut(
     }
 
     public static boolean isShortcut(Relationship relationship) {
-        return relationship.getType().name().startsWith(SHORTCUT_PREFIX);
+        return isShortcut(relationship.getType());
+    }
+
+    public static boolean isShortcut(RelationshipType type) {
+        return type.name().startsWith(SHORTCUT_PREFIX);
     }
 }
