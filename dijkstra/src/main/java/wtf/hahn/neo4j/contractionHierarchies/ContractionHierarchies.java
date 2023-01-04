@@ -12,15 +12,16 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
+import org.neo4j.procedure.Procedure;
 import wtf.hahn.neo4j.model.PathResult;
 
-public class Procedure {
+public class ContractionHierarchies {
 
     @Context
     public GraphDatabaseService graphDatabaseService;
 
     @SuppressWarnings("unused")
-    @org.neo4j.procedure.Procedure(mode = Mode.WRITE)
+    @Procedure(mode = Mode.WRITE)
     public void createContractionHierarchiesIndex(@Name("type") String type,
                                                   @Name("costProperty") String costProperty) {
         try (Transaction transaction = graphDatabaseService.beginTx()) {
@@ -29,7 +30,7 @@ public class Procedure {
         }
     }
     @SuppressWarnings("unused")
-    @org.neo4j.procedure.Procedure
+    @Procedure
     public Stream<PathResult> sourceTargetCH(@Name("startNode") Node startNode,
                                              @Name("endNode") Node endNode,
                                              @Name("type") String type,

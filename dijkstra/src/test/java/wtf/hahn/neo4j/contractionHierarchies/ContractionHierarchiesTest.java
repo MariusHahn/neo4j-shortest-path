@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ProcedureTest extends IntegrationTest {
+public class ContractionHierarchiesTest extends IntegrationTest {
 
-    public ProcedureTest() {
-        super(of(), of(Procedure.class), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+    public ContractionHierarchiesTest() {
+        super(of(), of(ContractionHierarchies.class), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
     @Test
