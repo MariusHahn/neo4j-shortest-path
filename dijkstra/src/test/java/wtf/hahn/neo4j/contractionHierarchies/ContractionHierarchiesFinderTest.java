@@ -39,8 +39,14 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
             Assertions.assertEquals(160.0, path.weight());
             String names = Iterables.stream(path.nodes())
                     .map(n -> n.getProperty("name").toString())
-                    .collect(Collectors.joining(","));
+                    .collect(Collectors.joining(", "));
             System.out.println(names);
+            Assertions.assertEquals("A, B, F", names);
+            String namesResolved = Iterables.stream(new WeightedCHPath(path, transaction).nodes())
+                    .map(n -> n.getProperty("name").toString())
+                    .collect(Collectors.joining(", "));
+            System.out.println(namesResolved);
+            Assertions.assertEquals("A, B, D, E, F", namesResolved);
             System.out.printf("Result: %s%n", path.weight());
             transaction.rollback();
         }

@@ -7,6 +7,9 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.util.IterationHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public record Shortcut(
         RelationshipType type,
         Node start,
@@ -71,5 +74,23 @@ public record Shortcut(
 
     public static boolean isShortcut(RelationshipType type) {
         return type.name().startsWith(SHORTCUT_PREFIX);
+    }
+
+    public static List<Relationship> resolveRelationships(Relationship relationship, Transaction transaction) {
+        List<Relationship> relationships = new ArrayList<>();
+        resolveRelationships(relationship, relationships, transaction);
+        return relationships;
+
+    }
+
+    public static void resolveRelationships(Relationship relationship, List<Relationship> collect,
+                                            Transaction transaction) {
+        if (isShortcut(relationship)) {
+            Shortcut shortcut = new Shortcut(relationship, transaction);
+            resolveRelationships(shortcut.in(), collect, transaction);
+            resolveRelationships(shortcut.out(), collect, transaction);
+        } else {
+            collect.add(relationship);
+        }
     }
 }
