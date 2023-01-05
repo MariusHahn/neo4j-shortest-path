@@ -1,13 +1,15 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import org.neo4j.graphdb.Relationship;
+import static wtf.hahn.neo4j.util.EntityHelper.getNameProperty;
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 record ShortcutTriple(String start, String end, Double weight) {
     ShortcutTriple(Relationship relationship) {
         this(
-                (String) relationship.getStartNode().getProperty("name")
-                , (String) relationship.getEndNode().getProperty("name")
-                , (Double) relationship.getProperty((String) relationship.getProperty(Shortcut.WEIGHT_PROPERTY_KEY))
+                getNameProperty(relationship.getStartNode())
+                , getNameProperty(relationship.getEndNode())
+                , getProperty(relationship, getProperty(relationship,Shortcut.WEIGHT_PROPERTY_KEY))
         );
     }
 }

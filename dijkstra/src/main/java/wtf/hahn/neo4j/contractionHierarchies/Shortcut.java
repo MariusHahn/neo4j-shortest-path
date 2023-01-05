@@ -1,14 +1,16 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.util.IterationHelper;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.neo4j.internal.helpers.collection.Iterables;
 
 public record Shortcut(
         RelationshipType type,
@@ -34,15 +36,15 @@ public record Shortcut(
                 relationship.getType()
                 , relationship.getStartNode()
                 , relationship.getEndNode()
-                , transaction.getRelationshipByElementId((String) relationship.getProperty(IN_RELATION))
-                , transaction.getRelationshipByElementId((String) relationship.getProperty(OUT_RELATION))
-                , ((Number) relationship.getProperty((String) relationship.getProperty(WEIGHT_PROPERTY_KEY))).doubleValue()
-                , (String) relationship.getProperty(WEIGHT_PROPERTY_KEY)
+                , transaction.getRelationshipByElementId(getProperty(relationship, IN_RELATION))
+                , transaction.getRelationshipByElementId(getProperty(relationship, OUT_RELATION))
+                , getProperty(relationship, getProperty(relationship, WEIGHT_PROPERTY_KEY))
+                , getProperty(relationship, WEIGHT_PROPERTY_KEY)
         );
     }
 
     private static Relationship[] getRelationships(WeightedPath path) {
-        return IterationHelper.stream(path.relationships()).toArray(Relationship[]::new);
+        return Iterables.stream(path.relationships()).toArray(Relationship[]::new);
     }
 
     public void create() {

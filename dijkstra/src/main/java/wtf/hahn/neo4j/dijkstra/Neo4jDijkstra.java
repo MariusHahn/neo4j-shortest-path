@@ -26,5 +26,4 @@ public class Neo4jDijkstra {
         );
         return shortestPath(startNode, endNode, standardExpander, costProperty);
     }
-
 }

@@ -11,6 +11,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import wtf.hahn.neo4j.util.ReverseIterator;
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 public class Dijkstra {
     private final Map<Node, Info> heap = new HashMap<>();
@@ -32,7 +33,7 @@ public class Dijkstra {
     }
 
     public void setNodeDistance(String propertyKey, Node toSettle, Relationship relationship) {
-        Long edgeWeight  = (Long) relationship.getProperty(propertyKey);
+        Long edgeWeight = getProperty(relationship, propertyKey);
         long currentDistance = getCurrentDistance(toSettle);
         Node endNode = relationship.getEndNode();
         heap.put(endNode ,new Info(false, edgeWeight + currentDistance, relationship));

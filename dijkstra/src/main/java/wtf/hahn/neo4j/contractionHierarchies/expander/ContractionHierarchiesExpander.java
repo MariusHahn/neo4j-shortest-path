@@ -12,6 +12,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
 import wtf.hahn.neo4j.contractionHierarchies.Shortcut;
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
                                              String rankProperty,
@@ -58,7 +59,7 @@ public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
     }
 
     private static int getRankProperty(Node node, String rankProperty) {
-        return (int) node.getProperty(rankProperty);
+        return getProperty(node, rankProperty);
     }
 
     private static PathExpander<Double> baseExpander(RelationshipType relationshipType,

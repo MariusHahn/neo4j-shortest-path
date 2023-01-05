@@ -1,17 +1,18 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.neo4j.graphalgo.WeightedPath;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.helpers.collection.Iterables;
-import wtf.hahn.neo4j.util.IntegrationTest;
-
 import static java.util.List.of;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.neo4j.graphalgo.WeightedPath;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.EntityHelper;
+import wtf.hahn.neo4j.util.IntegrationTest;
 
 public class ContractionHierarchiesTest extends IntegrationTest {
 
@@ -44,7 +45,7 @@ public class ContractionHierarchiesTest extends IntegrationTest {
             WeightedPath path = ((WeightedPath) result.get("path"));
             Assertions.assertEquals(160.0, pathCost);
             String names = Iterables.stream(path.nodes())
-                    .map(n -> n.getProperty("name").toString())
+                    .map(EntityHelper::getNameProperty)
                     .collect(Collectors.joining(","));
             System.out.println(names);
             System.out.printf("Result: %s%n", pathCost);

@@ -7,4 +7,8 @@ public class EntityHelper {
     public static <T> T getProperty(Entity entity, String propertyName) {
         return (T) entity.getProperty(propertyName);
     }
+
+    public static String getNameProperty(Entity entity) {
+        return getProperty(entity, "name");
+    }
 }

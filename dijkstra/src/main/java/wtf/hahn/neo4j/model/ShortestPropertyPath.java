@@ -11,9 +11,10 @@ import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import wtf.hahn.neo4j.util.IterationHelper;
+import org.neo4j.internal.helpers.collection.Iterables;
 import wtf.hahn.neo4j.util.ReverseIterator;
 import wtf.hahn.neo4j.util.ZipIterator;
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 @ToString
 public class ShortestPropertyPath implements WeightedPath {
@@ -75,7 +76,7 @@ public class ShortestPropertyPath implements WeightedPath {
     }
 
     private List<Relationship> materializeRelationships(Iterator<Relationship> relationships) {
-        return IterationHelper.stream(relationships).collect(Collectors.toList());
+        return Iterables.stream(() -> relationships).collect(Collectors.toList());
     }
 
     private List<Node> materializeNodes() {
@@ -86,7 +87,7 @@ public class ShortestPropertyPath implements WeightedPath {
     @Override
     public double weight() {
         return relationships.stream()
-                .map(relationship -> relationship.getProperty(propertyKey))
+                .map(relationship -> getProperty(relationship, propertyKey))
                 .map(cost -> (cost instanceof Long) ? String.valueOf(cost) : (String) cost)
                 .mapToLong(Long::valueOf)
                 .sum();

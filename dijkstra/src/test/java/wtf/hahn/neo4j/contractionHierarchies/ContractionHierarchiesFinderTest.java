@@ -12,6 +12,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.EntityHelper;
 import wtf.hahn.neo4j.util.IntegrationTest;
 
 public class ContractionHierarchiesFinderTest extends IntegrationTest {
@@ -38,12 +39,12 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
             );
             Assertions.assertEquals(160.0, path.weight());
             String names = Iterables.stream(path.nodes())
-                    .map(n -> n.getProperty("name").toString())
+                    .map(EntityHelper::getNameProperty)
                     .collect(Collectors.joining(", "));
             System.out.println(names);
             Assertions.assertEquals("A, B, F", names);
             String namesResolved = Iterables.stream(new WeightedCHPath(path, transaction).nodes())
-                    .map(n -> n.getProperty("name").toString())
+                    .map(EntityHelper::getNameProperty)
                     .collect(Collectors.joining(", "));
             System.out.println(namesResolved);
             Assertions.assertEquals("A, B, D, E, F", namesResolved);

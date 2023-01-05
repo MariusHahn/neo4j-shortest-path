@@ -3,7 +3,6 @@ package wtf.hahn.neo4j.dijkstra.expander;
 import static java.util.List.of;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static wtf.hahn.neo4j.util.IterationHelper.stream;
 
 import java.util.stream.Stream;
 
@@ -14,7 +13,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.internal.helpers.collection.Iterables;
 import wtf.hahn.neo4j.dijkstra.Neo4jDijkstra;
+import wtf.hahn.neo4j.util.EntityHelper;
 import wtf.hahn.neo4j.util.IntegrationTest;
 
 public class NodeIncludeExpanderTest extends IntegrationTest {
@@ -58,7 +59,7 @@ public class NodeIncludeExpanderTest extends IntegrationTest {
             Node via = transaction.findNode(() -> "Location", "name", viaNode);
             NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType());
             WeightedPath path = neo4jDijkstra.shortestPath(start, target, expander, costProperty());
-            String[] retrievedPathNames = stream(path.nodes()).map(n -> (String) n.getProperty("name")).toArray(String[]::new);
+            String[] retrievedPathNames = Iterables.stream(path.nodes()).map(EntityHelper::getNameProperty).toArray(String[]::new);
             System.out.printf("\"%s\"", String.join("\", \"", retrievedPathNames));
             assertArrayEquals(new String[]{s, viaNode, t}, retrievedPathNames);
             assertEquals(weight, path.weight());
