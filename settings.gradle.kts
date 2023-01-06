@@ -8,4 +8,8 @@
  */
 
 rootProject.name = "neo4j-shortest-path"
+include("contractionHierarchies")
 include("dijkstra")
+include("util")
+include("model")
+include("test-util")
