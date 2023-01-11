@@ -10,7 +10,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.IterationHelper;
 
 public record Shortcut(
         RelationshipType type,
@@ -44,7 +44,7 @@ public record Shortcut(
     }
 
     private static Relationship[] getRelationships(WeightedPath path) {
-        return Iterables.stream(path.relationships()).toArray(Relationship[]::new);
+        return IterationHelper.stream(path.relationships()).toArray(Relationship[]::new);
     }
 
     public void create() {

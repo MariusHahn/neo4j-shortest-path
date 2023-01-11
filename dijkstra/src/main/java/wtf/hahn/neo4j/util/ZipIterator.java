@@ -6,7 +6,7 @@ public class ZipIterator<T> implements Iterator<T>, Iterable<T> {
 
     private final Iterator<? extends T> first;
     private final Iterator<? extends T> second;
-    boolean takeFirstIterable = true;
+    private boolean takeFirstIterable = true;
     
     public ZipIterator(Iterable<? extends T> first, Iterable<? extends T> second) {
         this.first = first.iterator();

@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.helpers.collection.Iterables;
 import wtf.hahn.neo4j.util.EntityHelper;
 import wtf.hahn.neo4j.util.IntegrationTest;
+import wtf.hahn.neo4j.util.IterationHelper;
 
 public class ContractionHierarchiesTest extends IntegrationTest {
 
@@ -44,7 +44,7 @@ public class ContractionHierarchiesTest extends IntegrationTest {
             Double pathCost = ((Double) result.get("pathCost"));
             WeightedPath path = ((WeightedPath) result.get("path"));
             Assertions.assertEquals(160.0, pathCost);
-            String names = Iterables.stream(path.nodes())
+            String names = IterationHelper.stream(path.nodes())
                     .map(EntityHelper::getNameProperty)
                     .collect(Collectors.joining(","));
             System.out.println(names);
