@@ -12,7 +12,7 @@ public class UtilPackageArchTest {
     @ArchTest
     private final ArchRule util_is_independent = noClasses().should()
             .dependOnClassesThat()
-            .resideInAnyPackage("wtf.hahn.neo4j");
+            .resideInAnyPackage("wtf.hahn.neo4j..");
 
     @ArchTest
     private final ArchRule test_classes_are_in_same_package = GeneralCodingRules.testClassesShouldResideInTheSamePackageAsImplementation();

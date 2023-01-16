@@ -12,6 +12,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.IterationHelper;
 import wtf.hahn.neo4j.util.ReverseIterator;
 import wtf.hahn.neo4j.util.ZipIterator;
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
@@ -76,7 +77,7 @@ public class ShortestPropertyPath implements WeightedPath {
     }
 
     private List<Relationship> materializeRelationships(Iterator<Relationship> relationships) {
-        return Iterables.stream(() -> relationships).collect(Collectors.toList());
+        return IterationHelper.stream(() -> relationships).collect(Collectors.toList());
     }
 
     private List<Node> materializeNodes() {
