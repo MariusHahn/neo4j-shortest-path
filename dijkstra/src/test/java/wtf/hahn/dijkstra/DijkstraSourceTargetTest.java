@@ -15,7 +15,7 @@ import wtf.hahn.neo4j.testUtil.IntegrationTest;
 public class DijkstraSourceTargetTest extends IntegrationTest {
 
     public DijkstraSourceTargetTest() {
-        super(of(), of(DijkstraSourceTarget.class), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+        super(of(), of(DijkstraSourceTarget.class), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
     @ParameterizedTest
     @ValueSource(strings = {

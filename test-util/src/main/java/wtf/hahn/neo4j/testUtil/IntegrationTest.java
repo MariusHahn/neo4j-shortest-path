@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.TestInstance;
 import org.neo4j.driver.Config;
@@ -25,13 +24,14 @@ public class IntegrationTest {
     private final Dataset dataset;
 
     public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures,
-                           Collection<Class> functions, Dataset dataset) {
+                           Collection<Class> functions, DatasetEnum datasetEnum) {
+        final Dataset dataset = datasetEnum.dataset();
         build = Config.builder().withoutEncryption().build();
         Neo4jBuilder neo4jBuilder = Neo4jBuilders.newInProcessBuilder();
         aggregationFunctions.forEach(neo4jBuilder::withAggregationFunction);
         procedures.forEach(neo4jBuilder::withProcedure);
         functions.forEach(neo4jBuilder::withFunction);
-        neo4j = neo4jBuilder.withDisabledServer().withFixture(dataset.cypher()).build();
+        neo4j = neo4jBuilder.withDisabledServer().withFixture(dataset.cypherPath()).build();
         uri = neo4j.boltURI();
         this.dataset = dataset;
     }
@@ -53,8 +53,7 @@ public class IntegrationTest {
         neo4j.close();
     }
 
-    public enum Dataset {
-        DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql", "cost", "ROAD");
+    public static class Dataset {
 
         private final String fileName;
         private final Path resources;
@@ -68,12 +67,22 @@ public class IntegrationTest {
             this.relationshipTypeName = relationshipTypeName;
         }
 
-        Dataset(String fileName, String costProperty, String relationshipTypeName) {
+        public Dataset(String fileName, String costProperty, String relationshipTypeName) {
             this(Paths.get("src", "test", "resources"), fileName, costProperty, relationshipTypeName);
         }
 
-        public Path cypher() {
+        public Path cypherPath() {
             return resources.resolve(fileName);
+        }
+    }
+
+    public interface DatasetEnum {
+        String getFileName();
+        String getCostProperty();
+        String getRelationshipTypeName();
+
+        default Dataset dataset() {
+            return new Dataset(getFileName(),getCostProperty(), getRelationshipTypeName());
         }
     }
 }

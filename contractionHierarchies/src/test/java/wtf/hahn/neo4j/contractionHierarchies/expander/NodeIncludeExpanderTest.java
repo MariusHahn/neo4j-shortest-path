@@ -15,6 +15,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.internal.helpers.collection.Iterables;
 import wtf.hahn.neo4j.contractionHierarchies.NativeDijkstra;
+import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.EntityHelper;
 
@@ -23,7 +24,7 @@ public class NodeIncludeExpanderTest extends IntegrationTest {
     private final NativeDijkstra nativeDijkstra = new NativeDijkstra();
 
     public NodeIncludeExpanderTest() {
-        super(of(), of(), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+        super(of(), of(), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
 

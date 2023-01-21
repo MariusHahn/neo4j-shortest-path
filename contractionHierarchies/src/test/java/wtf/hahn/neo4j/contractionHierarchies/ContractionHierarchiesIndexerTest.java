@@ -14,7 +14,7 @@ import wtf.hahn.neo4j.testUtil.IntegrationTest;
 public class ContractionHierarchiesIndexerTest extends IntegrationTest {
 
     public ContractionHierarchiesIndexerTest() {
-        super(of(), of(ContractionHierarchies.class), of(), Dataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+        super(of(), of(ContractionHierarchies.class), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
     @Test
