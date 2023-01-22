@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.model;
 
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 

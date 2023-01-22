@@ -11,6 +11,8 @@ plugins {
 }
 
 dependencies{
+    implementation(project(":util"))
+    implementation(project(":model"))
     implementation("org.junit.jupiter:junit-jupiter:${Versions.jUnit}")
     implementation("org.neo4j.test:neo4j-harness:${Versions.neo4j}")
     implementation("org.neo4j.driver:neo4j-java-driver:${Versions.neo4j}")

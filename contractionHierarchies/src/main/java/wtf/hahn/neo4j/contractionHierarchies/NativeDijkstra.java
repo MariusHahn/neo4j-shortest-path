@@ -8,6 +8,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.RelationshipType;
+import wtf.hahn.neo4j.model.Shortcut;
 
 public class NativeDijkstra {
 

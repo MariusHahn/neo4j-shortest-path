@@ -19,11 +19,3 @@ dependencies {
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    configurations.implementation.get().isCanBeResolved = true
-    val localDependencies = configurations.implementation.get()
-        .filter { it.name.endsWith("jar") }
-        .map{zipTree(it)}
-    from(localDependencies)
-}

@@ -11,7 +11,7 @@ public class ArchitectureTest {
     @ArchTest
     private final ArchRule test_classes_are_in_same_package = GeneralCodingRules.testClassesShouldResideInTheSamePackageAsImplementation();
 
-    //@ArchTest
+    @ArchTest
     private final ArchRule fields_are_private_or_final = ArchRuleConstants.FIELDS_ARE_PRIVATE_OR_FINAL;
 
     @ArchTest

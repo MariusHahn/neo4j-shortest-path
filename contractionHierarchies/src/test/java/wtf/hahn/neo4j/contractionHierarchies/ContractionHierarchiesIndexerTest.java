@@ -9,12 +9,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.model.Shortcut;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
+import wtf.hahn.neo4j.testUtil.ShortcutTriple;
 
 public class ContractionHierarchiesIndexerTest extends IntegrationTest {
 
     public ContractionHierarchiesIndexerTest() {
-        super(of(), of(ContractionHierarchies.class), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+        super(of(), of(), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
     @Test

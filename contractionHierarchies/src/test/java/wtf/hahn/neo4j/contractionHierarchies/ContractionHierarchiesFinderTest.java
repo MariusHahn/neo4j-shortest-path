@@ -18,7 +18,7 @@ import wtf.hahn.neo4j.util.EntityHelper;
 public class ContractionHierarchiesFinderTest extends IntegrationTest {
 
     public ContractionHierarchiesFinderTest() {
-        super(of(), of(ContractionHierarchies.class), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
+        super(of(), of(), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
     @Test

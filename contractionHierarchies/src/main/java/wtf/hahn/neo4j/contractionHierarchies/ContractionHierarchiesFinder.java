@@ -6,6 +6,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import wtf.hahn.neo4j.contractionHierarchies.expander.ContractionHierarchiesExpander;
+import wtf.hahn.neo4j.model.Shortcut;
 
 public record ContractionHierarchiesFinder(EvaluationContext evaluationContext) {
 

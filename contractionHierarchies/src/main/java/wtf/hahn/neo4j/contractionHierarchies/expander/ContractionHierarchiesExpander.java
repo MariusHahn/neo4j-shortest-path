@@ -11,7 +11,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
-import wtf.hahn.neo4j.contractionHierarchies.Shortcut;
+import wtf.hahn.neo4j.model.Shortcut;
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,

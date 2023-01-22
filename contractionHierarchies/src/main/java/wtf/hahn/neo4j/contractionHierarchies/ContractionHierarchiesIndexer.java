@@ -17,6 +17,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
+import wtf.hahn.neo4j.model.Shortcut;
 
 public record ContractionHierarchiesIndexer(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
                                             RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra) {
