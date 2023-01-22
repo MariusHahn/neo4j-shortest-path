@@ -2,6 +2,7 @@ object Versions {
     const val neo4j = "5.1.0"
     const val jUnit = "5.9.1"
     const val lombok = "1.18.24"
+    const val archunitJunit5 = "1.0.1"
 }
 
 object Plugins {

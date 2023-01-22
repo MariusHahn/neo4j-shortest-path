@@ -11,7 +11,7 @@ import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.util.ReverseIterator;
 import wtf.hahn.neo4j.util.ZipIterator;
 

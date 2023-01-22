@@ -10,7 +10,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.Iterables;
 
 public record Shortcut(
         RelationshipType type,

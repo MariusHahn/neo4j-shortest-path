@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.internal.helpers.collection.Iterables;
+import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.contractionHierarchies.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
