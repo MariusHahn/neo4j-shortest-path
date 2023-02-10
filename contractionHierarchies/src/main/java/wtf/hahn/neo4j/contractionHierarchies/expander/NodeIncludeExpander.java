@@ -17,13 +17,14 @@ import wtf.hahn.neo4j.model.Shortcut;
 public record NodeIncludeExpander(Node include, PathExpander<Double> expander)
         implements PathExpander<Double> {
 
-    public NodeIncludeExpander(Node includeNode, RelationshipType relationshipType) {
+    public NodeIncludeExpander(Node includeNode, RelationshipType relationshipType, String rankPropertyName) {
         this(
                 includeNode
                 , PathExpanderBuilder
                         .empty()
                         .add(relationshipType, OUTGOING)
-                        .add(Shortcut.shortcutRelationshipType(relationshipType))
+                        .add(Shortcut.shortcutRelationshipType(relationshipType), OUTGOING)
+                        .addNodeFilter(node -> !node.hasProperty(rankPropertyName))
                         .addRelationshipFilter(relationship -> containsNode(relationship, includeNode)).build()
         );
     }

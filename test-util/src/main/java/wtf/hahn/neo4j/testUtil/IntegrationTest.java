@@ -21,7 +21,7 @@ public class IntegrationTest {
     protected final Neo4j neo4j;
     protected final URI uri;
     protected static final String DB_NAME = "neo4j"; // default name give by neo4j community edition
-    private final Dataset dataset;
+    protected final Dataset dataset;
 
     public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures,
                            Collection<Class> functions, DatasetEnum datasetEnum) {
@@ -55,10 +55,10 @@ public class IntegrationTest {
 
     public static class Dataset {
 
-        private final String fileName;
-        private final Path resources;
-        private final String costProperty;
-        private final String relationshipTypeName;
+        public final String fileName;
+        public final Path resources;
+        public final String costProperty;
+        public final String relationshipTypeName;
 
         Dataset(Path resources, String fileName, String costProperty, String relationshipTypeName) {
             this.fileName = fileName;

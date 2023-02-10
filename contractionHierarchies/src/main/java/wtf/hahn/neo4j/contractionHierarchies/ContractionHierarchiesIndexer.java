@@ -18,9 +18,10 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
 import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.util.Iterables;
 
 public record ContractionHierarchiesIndexer(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
-                                            RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra) {
+                                            RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra, String rankPropertyName) {
 
     public ContractionHierarchiesIndexer(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator) {
         this(
@@ -31,6 +32,7 @@ public record ContractionHierarchiesIndexer(RelationshipType type, String costPr
                 , Shortcut.shortcutRelationshipType(RelationshipType.withName(type))
                 , contractionOrderComparator
                 , new NativeDijkstra()
+                , Shortcut.rankPropertyName(RelationshipType.withName(type))
         );
     }
 
@@ -40,19 +42,20 @@ public record ContractionHierarchiesIndexer(RelationshipType type, String costPr
         int rank = 0;
         while (!queue.isEmpty()) {
             Node nodeToContract = queue.poll();
-            nodeToContract.setProperty(Shortcut.rankPropertyName(type), rank++);
             Node[] inNodes = getNotContractedInNodes(type, nodeToContract);
             Node[] outNodes = getNotContractedOutNodes(type, nodeToContract);
             for (Node inNode : inNodes) {
                 for (Node outNode : outNodes) {
-                    WeightedPath shortestPath = dijkstra.shortestPathWithShortcuts(inNode, outNode, type, costProperty);
-                    NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type);
+                    if (inNode.equals(outNode)) continue;
+                    Iterable<WeightedPath> shortestPaths = dijkstra.shortestPathsWithShortcuts(inNode, outNode, type, costProperty, rankPropertyName);
+                    NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
                     WeightedPath includePath = dijkstra.shortestPath(inNode, outNode, includeExpander, costProperty);
-                    if (samePath(shortestPath, includePath)) {
+                    if (Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
                         new Shortcut(type, inNode, outNode, costProperty, includePath).create();
                     }
                 }
             }
+            nodeToContract.setProperty(rankPropertyName, rank++);
         }
     }
 

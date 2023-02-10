@@ -30,8 +30,9 @@ public record ContractionHierarchies(GraphDatabaseService graphDatabaseService,
         BasicEvaluationContext evaluationContext = new BasicEvaluationContext(transaction, graphDatabaseService);
         WeightedPath path = new ContractionHierarchiesFinder(evaluationContext)
                 .find(startNode, endNode, relationshipType, costProperty);
-        PathResult result = new PathResult(new WeightedCHPath(path, transaction));
-        return Stream.of(result);
+        return path != null
+                ? Stream.of(new PathResult(new WeightedCHPath(path, transaction)))
+                : Stream.of(PathResult.noPath());
 
     }
 }

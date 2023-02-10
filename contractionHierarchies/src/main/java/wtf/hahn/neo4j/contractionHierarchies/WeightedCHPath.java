@@ -25,7 +25,7 @@ public final class WeightedCHPath implements WeightedPath {
     public WeightedCHPath(WeightedPath path, Transaction transaction) {
         this.path = path;
         this.transaction = transaction;
-        relationships = Iterables.stream(this.path.relationships())
+        relationships = Iterables.stream(path.relationships())
                 .map(relationship -> Shortcut.resolveRelationships(relationship, this.transaction))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
