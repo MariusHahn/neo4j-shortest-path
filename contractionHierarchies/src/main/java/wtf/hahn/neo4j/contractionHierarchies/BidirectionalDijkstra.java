@@ -7,6 +7,7 @@ import java.util.Stack;
 
 import org.eclipse.collections.impl.factory.Sets;
 import org.neo4j.graphalgo.EvaluationContext;
+import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphalgo.impl.util.PathImpl;
 import org.neo4j.graphalgo.impl.util.WeightedPathImpl;
 import org.neo4j.graphdb.Node;
@@ -22,7 +23,7 @@ import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExpander<Double> upwardsExpander,
                                     PathExpander<Double> downwardsExpander) {
 
-    public Path findShortestPath(final Node startNode, final Node endNode, final String costProperty) {
+    public WeightedPath findShortestPath(final Node startNode, final Node endNode, final String costProperty) {
         final Transaction transaction = evaluationContext.transaction();
         final TraversalDescription frowardDescription = getBaseDescription(transaction).expand(upwardsExpander);
         final TraversalDescription backwardDescription = getBaseDescription(transaction).expand(upwardsExpander.reverse());
@@ -49,7 +50,7 @@ public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExp
         } else if (backwardHeap.containsKey(startNode)) {
             return resolvePath(endNode, startNode, backwardHeap);
         }
-        return resolvePath(startNode, endNode, forwardHeap);
+        return resolvePath(startNode, endNode, forwardHeap, backwardHeap);
     }
 
     private static boolean commonDistanceIsShortest(PriorityQueue<ExpandNode> forQ, PriorityQueue<ExpandNode> backQ, final Map<Node, ExpandNode> h1, final Map<Node, ExpandNode> h2) {
@@ -94,10 +95,10 @@ public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExp
         }
     }
 
-    private static Path resolvePath(final Node startNode, final Node endNode, final Map<Node, ExpandNode> heap) {
+    private static PathImpl.Builder resolvePathBuilder(final Node startNode, final Node endNode, final Map<Node, ExpandNode> heap) {
         final Stack<ExpandNode> relationships = new Stack<>();
         ExpandNode expandNode = heap.get(endNode);
-        while (expandNode != null && expandNode.in != null) {
+        while (expandNode != null && expandNode.in != null && !relationships.contains(expandNode)) {
             relationships.push(expandNode);
             expandNode = heap.get(expandNode.in.getStartNode());
         }
@@ -106,6 +107,24 @@ public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExp
             ExpandNode pop = relationships.pop();
             builder = builder.push(pop.in);
         }
+        return builder;
+    }
+
+    private static WeightedPath resolvePath(final Node startNode, final Node endNode,
+                                            final Map<Node, ExpandNode> forwardHeap,
+                                            final Map<Node, ExpandNode> backwardHeap) {
+        return Sets.intersect(forwardHeap.keySet(), backwardHeap.keySet()).stream().findFirst().map(common -> {
+            PathImpl.Builder left = resolvePathBuilder(startNode, common, forwardHeap);
+            PathImpl.Builder right = resolvePathBuilder(endNode, common, backwardHeap);
+            PathImpl pathBuild = left.build(right);
+            return new WeightedPathImpl(forwardHeap.get(common).distance + backwardHeap.get(common).distance,
+                    pathBuild);
+
+        }).orElse(null);
+    }
+
+    private static WeightedPath resolvePath(final Node startNode, final Node endNode, final Map<Node, ExpandNode> heap) {
+        PathImpl.Builder builder = resolvePathBuilder(startNode, endNode, heap);
         return new WeightedPathImpl(heap.get(endNode).distance(), builder.build());
     }
 
