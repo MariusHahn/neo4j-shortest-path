@@ -2,9 +2,11 @@ package wtf.hahn.neo4j.contractionHierarchies;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Stack;
 
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.factory.Sets;
 import org.neo4j.graphalgo.EvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
@@ -24,6 +26,7 @@ public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExp
                                     PathExpander<Double> downwardsExpander) {
 
     public WeightedPath findShortestPath(final Node startNode, final Node endNode, final String costProperty) {
+        if (startNode.equals(endNode)) return new WeightedPathImpl(0, new PathImpl.Builder(startNode).build());
         final Transaction transaction = evaluationContext.transaction();
         final TraversalDescription frowardDescription = getBaseDescription(transaction).expand(upwardsExpander);
         final TraversalDescription backwardDescription = getBaseDescription(transaction).expand(upwardsExpander.reverse());
@@ -45,22 +48,38 @@ public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExp
                 expand(costProperty, backwardDescription, backwardHeap, backwardQueue);
             }
         }
+        WeightedPath collisionPath = resolvePath(startNode, endNode, forwardHeap, backwardHeap);
         if (forwardHeap.containsKey(endNode)) {
-            return resolvePath(startNode, endNode, forwardHeap);
+            WeightedPath forwardPath = resolvePath(startNode, endNode, forwardHeap);
+            return collisionPath == null ||forwardPath.weight() < collisionPath.weight() ? forwardPath : collisionPath;
         } else if (backwardHeap.containsKey(startNode)) {
-            return resolvePath(endNode, startNode, backwardHeap);
+            WeightedPath backwardPath = resolvePath(endNode, startNode, backwardHeap);
+            return collisionPath == null || backwardPath.weight() < collisionPath.weight() ? backwardPath : collisionPath;
         }
-        return resolvePath(startNode, endNode, forwardHeap, backwardHeap);
+        return collisionPath;
     }
 
-    private static boolean commonDistanceIsShortest(PriorityQueue<ExpandNode> forQ, PriorityQueue<ExpandNode> backQ, final Map<Node, ExpandNode> h1, final Map<Node, ExpandNode> h2) {
-        return Sets.intersect(h1.keySet(), h2.keySet()).stream().findFirst().map(commonNode -> {
-            double minDistForward = forQ.stream().mapToDouble(ExpandNode::distance).min().orElse(Double.MAX_VALUE);
-            double minDistBackward = backQ.stream().mapToDouble(ExpandNode::distance).min().orElse(Double.MAX_VALUE);
-            double commonDistance = h1.get(commonNode).distance() + h2.get(commonNode).distance();
-            return minDistForward >= commonDistance && minDistBackward >= commonDistance;
-        }).orElse(false);
+    private static Node getSmallestCommonNode(final Map<Node, ExpandNode> h1, final Map<Node, ExpandNode> h2) {
+        record DistanceNode(Double distance, Node node){}
+        final MutableSet<Node> intersection = Sets.intersect(h1.keySet(), h2.keySet());
+        DistanceNode smallestDistance = new DistanceNode(Double.MAX_VALUE, null);
+        for (Node node : intersection) {
+            final double distance = h1.get(node).distance + h2.get(node).distance;
+            if (smallestDistance.distance() > distance) smallestDistance = new DistanceNode(distance, node);
+        }
+        return smallestDistance.node();
+    }
 
+    private static boolean commonDistanceIsShortest(PriorityQueue<ExpandNode> forQ, PriorityQueue<ExpandNode> backQ,
+                                                    final Map<Node, ExpandNode> h1, final Map<Node, ExpandNode> h2) {
+        final Node smallestCommonNode = getSmallestCommonNode(h1, h2);
+        if (smallestCommonNode == null) {
+            return false;
+        }
+        double minDistForward = forQ.stream().mapToDouble(ExpandNode::distance).min().orElse(Double.MAX_VALUE);
+        double minDistBackward = backQ.stream().mapToDouble(ExpandNode::distance).min().orElse(Double.MAX_VALUE);
+        double commonDistance = h1.get(smallestCommonNode).distance() + h2.get(smallestCommonNode).distance();
+        return minDistForward >= commonDistance && minDistBackward >= commonDistance;
     }
 
     private static void expand(String costProperty, TraversalDescription description,
@@ -113,7 +132,7 @@ public record BidirectionalDijkstra(EvaluationContext evaluationContext, PathExp
     private static WeightedPath resolvePath(final Node startNode, final Node endNode,
                                             final Map<Node, ExpandNode> forwardHeap,
                                             final Map<Node, ExpandNode> backwardHeap) {
-        return Sets.intersect(forwardHeap.keySet(), backwardHeap.keySet()).stream().findFirst().map(common -> {
+        return Optional.ofNullable(getSmallestCommonNode(forwardHeap, backwardHeap)).map(common -> {
             PathImpl.Builder left = resolvePathBuilder(startNode, common, forwardHeap);
             PathImpl.Builder right = resolvePathBuilder(endNode, common, backwardHeap);
             PathImpl pathBuild = left.build(right);
