@@ -1,6 +1,8 @@
 package wtf.hahn.neo4j.util;
 
 import org.neo4j.graphalgo.WeightedPath;
+import org.neo4j.graphalgo.impl.util.PathImpl;
+import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 
 import java.util.Iterator;

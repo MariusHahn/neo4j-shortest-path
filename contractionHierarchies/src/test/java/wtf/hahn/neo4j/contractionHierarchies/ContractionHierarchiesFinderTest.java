@@ -30,12 +30,13 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
                     , transaction
                     , Comparator.<Node>comparingInt(Node::getDegree).reversed()
             ).insertShortcuts();
-            WeightedPath path = new ContractionHierarchiesFinder(new BasicEvaluationContext(transaction, database())
+            WeightedPath path = new ContractionHierarchiesFinder(
+                    new BasicEvaluationContext(transaction, database())
+                    , relationshipType()
+                    , costProperty()
             ).find(
                     transaction.findNode(() -> "Location", "name", "A")
                     , transaction.findNode(() -> "Location", "name", "F")
-                    , relationshipType()
-                    , costProperty()
             );
             Assertions.assertEquals(160.0, path.weight());
             String names = Iterables.stream(path.nodes())

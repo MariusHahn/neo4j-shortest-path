@@ -80,7 +80,7 @@ public record ContractionHierarchiesIndexer(RelationshipType type, String costPr
         return getNotContractedNeighbors(relationshipType, nodeToContract, INCOMING);
     }
 
-    private static List<Node> loadAllNodes(RelationshipType relationshipType, Transaction transaction) {
+    static List<Node> loadAllNodes(RelationshipType relationshipType, Transaction transaction) {
         return transaction.findRelationships(relationshipType).stream()
                 .map(Relationship::getNodes)
                 .flatMap(Arrays::stream).distinct()

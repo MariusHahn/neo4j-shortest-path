@@ -37,7 +37,6 @@ public class Dijkstra {
         long currentDistance = getCurrentDistance(toSettle);
         Node endNode = relationship.getEndNode();
         heap.put(endNode ,new Info(false, edgeWeight + currentDistance, relationship));
-
     }
 
     public boolean isSettled(Node nodeId) {

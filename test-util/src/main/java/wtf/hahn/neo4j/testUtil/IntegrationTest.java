@@ -53,7 +53,7 @@ public class IntegrationTest {
         neo4j.close();
     }
 
-    public static class Dataset {
+    public static class  Dataset {
 
         public final String fileName;
         public final Path resources;

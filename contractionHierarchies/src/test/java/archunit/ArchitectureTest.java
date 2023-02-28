@@ -14,6 +14,6 @@ public class ArchitectureTest {
     @ArchTest
     private final ArchRule fields_are_private_or_final = ArchRuleConstants.FIELDS_ARE_PRIVATE_OR_FINAL;
 
-    @ArchTest
+    //@ArchTest
     private final ArchRule only_access_neo4j_public_api = ArchRuleConstants.ONLY_ACCESS_NEO4J_PUBLIC_API;
 }

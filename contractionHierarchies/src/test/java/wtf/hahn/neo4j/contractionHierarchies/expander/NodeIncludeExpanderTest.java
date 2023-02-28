@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.model.Shortcut;
 import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.contractionHierarchies.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
@@ -35,7 +36,7 @@ public class NodeIncludeExpanderTest extends IntegrationTest {
             Node start = transaction.findNode(() -> "Location", "name", s);
             Node target = transaction.findNode(() -> "Location", "name", t);
             Node via = transaction.findNode(() -> "Location", "name", viaNode);
-            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType());
+            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType(), Shortcut.rankPropertyName(relationshipType()));
             WeightedPath path = nativeDijkstra.shortestPath(start, target, expander, costProperty());
             Assertions.assertNull(path);
         }
@@ -58,7 +59,7 @@ public class NodeIncludeExpanderTest extends IntegrationTest {
             Node start = transaction.findNode(() -> "Location", "name", s);
             Node target = transaction.findNode(() -> "Location", "name", t);
             Node via = transaction.findNode(() -> "Location", "name", viaNode);
-            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType());
+            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType(), Shortcut.rankPropertyName(relationshipType()));
             WeightedPath path = nativeDijkstra.shortestPath(start, target, expander, costProperty());
             String[] retrievedPathNames = Iterables.stream(path.nodes()).map(EntityHelper::getNameProperty).toArray(String[]::new);
             System.out.printf("\"%s\"", String.join("\", \"", retrievedPathNames));
