@@ -26,9 +26,9 @@ public class GraphLoader {
     public Set<Node> loadAllNodes(RelationshipType type) {
         final Map<VNode, VNode> nodes = new HashMap<>();
         for (final Relationship relationship : (Iterable<Relationship>) () -> transaction.findRelationships(type)) {
-            final VNode startNode = nodes.computeIfAbsent(new VNode(relationship.getStartNode()), Function.identity());
-            final VNode endNode = nodes.computeIfAbsent(new VNode(relationship.getEndNode()), Function.identity());
-            final VRelationship vRelationship = new VRelationship(relationship);
+            final VNode startNode = nodes.computeIfAbsent(new VNode(relationship.getStartNode(), transaction), Function.identity());
+            final VNode endNode = nodes.computeIfAbsent(new VNode(relationship.getEndNode(), transaction), Function.identity());
+            final VRelationship vRelationship = new VRelationship(relationship, startNode, endNode);
             nodes.get(startNode).addOutRelationship(vRelationship);
             nodes.get(endNode).addInRelationship(vRelationship);
         }
@@ -39,7 +39,7 @@ public class GraphLoader {
         final Iterable<VNode> vNodes = nodes.stream().map(VNode.class::cast)::iterator;
         for (final VNode vNode : vNodes) {
             final Node pNode = transaction.getNodeByElementId(vNode.getElementId());
-            vNode.getProperties(MODIFIED).forEach(entry -> pNode.setProperty(entry.getKey(), entry.getValue()));
+            vNode.getProperties(MODIFIED).forEach(entry -> pNode.setProperty(entry.getKey(), entry.getValue().property()));
             vNode.getProperties(DELETED).map(Map.Entry::getKey).forEach(pNode::removeProperty);
             vNode.getLabels(CREATED).forEach(entry -> pNode.addLabel(entry.getKey()));
             vNode.getLabels(DELETED).forEach(entry -> pNode.removeLabel(entry.getKey()));

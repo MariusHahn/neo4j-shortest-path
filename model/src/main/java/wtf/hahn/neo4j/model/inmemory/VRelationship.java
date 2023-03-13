@@ -21,11 +21,11 @@ public class VRelationship extends VEntity implements Relationship {
         this.type = type;
         modification = CREATED;
     }
-    public VRelationship(Relationship relationship) {
+    public VRelationship(Relationship relationship, VNode startNode, VNode endNode) {
         super(relationship);
         type = relationship.getType();
-        this.startNode = (VNode) relationship.getStartNode();
-        this.endNode = (VNode) relationship.getEndNode();
+        this.startNode = startNode;
+        this.endNode = endNode;
     }
 
     @Override

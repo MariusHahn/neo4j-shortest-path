@@ -21,6 +21,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
+import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.util.Iterables;
 
 public class VNode extends VEntity implements Node {
@@ -28,9 +29,11 @@ public class VNode extends VEntity implements Node {
     private final Map<Label, Modification> labels;
     private final List<Relationship> outgoing;
     private final List<Relationship> ingoing;
+    private final Transaction transaction;
 
-    public VNode(Node node) {
+    public VNode(Node node, Transaction transaction) {
         super(node);
+        this.transaction = transaction;
         outgoing = new ArrayList<>();
         ingoing = new ArrayList<>();
         labels = Iterables.stream(node.getLabels())
@@ -110,9 +113,11 @@ public class VNode extends VEntity implements Node {
 
     @Override
     public Relationship createRelationshipTo(Node otherNode, RelationshipType type) {
-        modification = MODIFIED;
-        final VNode other = (VNode) otherNode;
-        final VRelationship vRelationship = new VRelationship(type, this, other);
+        Node s = transaction.getNodeByElementId(this.getElementId());
+        Node t = transaction.getNodeByElementId(otherNode.getElementId());
+        Relationship relationship = s.createRelationshipTo(t, type);
+        VNode other = (VNode) otherNode;
+        VRelationship vRelationship = new VRelationship(relationship, this, other);
         this.addOutRelationship(vRelationship);
         other.addInRelationship(vRelationship);
         return vRelationship;
