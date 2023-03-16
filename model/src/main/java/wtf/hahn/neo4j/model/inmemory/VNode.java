@@ -28,9 +28,11 @@ public class VNode extends VEntity implements Node {
     private final Map<Label, Modification> labels;
     private final List<Relationship> outgoing;
     private final List<Relationship> ingoing;
+    private final GraphLoader graphLoader;
 
-    public VNode(Node node) {
+    public VNode(Node node, GraphLoader graphLoader) {
         super(node);
+        this.graphLoader = graphLoader;
         outgoing = new ArrayList<>();
         ingoing = new ArrayList<>();
         labels = Iterables.stream(node.getLabels())
@@ -113,6 +115,7 @@ public class VNode extends VEntity implements Node {
         modification = MODIFIED;
         final VNode other = (VNode) otherNode;
         final VRelationship vRelationship = new VRelationship(type, this, other);
+        graphLoader.addCreatedRelationship(vRelationship);
         this.addOutRelationship(vRelationship);
         other.addInRelationship(vRelationship);
         return vRelationship;

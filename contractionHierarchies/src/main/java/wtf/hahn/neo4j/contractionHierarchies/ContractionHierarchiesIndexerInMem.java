@@ -4,10 +4,9 @@ import static org.neo4j.graphdb.Direction.INCOMING;
 import static org.neo4j.graphdb.Direction.OUTGOING;
 import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.neo4j.graphalgo.WeightedPath;
@@ -17,13 +16,13 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
-import wtf.hahn.neo4j.model.Graph;
 import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.inmemory.GraphLoader;
 import wtf.hahn.neo4j.util.Iterables;
 
 public record ContractionHierarchiesIndexerInMem(RelationshipType type, String costProperty, Transaction transaction,
                                                  RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra, String rankPropertyName,
-                                                 Graph graph
+                                                 GraphLoader graphLoader
 
 ) {
 
@@ -36,15 +35,12 @@ public record ContractionHierarchiesIndexerInMem(RelationshipType type, String c
                 , contractionOrderComparator
                 , new NativeDijkstra()
                 , Shortcut.rankPropertyName(RelationshipType.withName(type))
-                , new Graph(transaction.findRelationships(RelationshipType.withName(type)))
+                , new GraphLoader(transaction)
         );
     }
 
     public void insertShortcuts() {
-        long start = System.currentTimeMillis();
-        Collection<Node> nodes = graph.nodes();
-        System.out.printf("Load Graph time: %d%n", System.currentTimeMillis() - start);
-        start = System.currentTimeMillis();
+        Set<Node> nodes = graphLoader.loadAllNodes(type());
         PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), contractionOrderComparator);
         queue.addAll(nodes);
         int rank = 0;
@@ -59,16 +55,13 @@ public record ContractionHierarchiesIndexerInMem(RelationshipType type, String c
                     NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
                     WeightedPath includePath = dijkstra.shortestPath(inNode, outNode, includeExpander, costProperty);
                     if (Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
-                        Iterator<Relationship> relationships = includePath.relationships().iterator();
-                        graph.createShortcut(type, inNode, outNode, costProperty, relationships.next(), relationships.next(), includePath.weight());
+                        new Shortcut(type, inNode, outNode, costProperty, includePath).create();
                     }
                 }
             }
             nodeToContract.setProperty(rankPropertyName, rank++);
         }
-        System.out.printf("Contract time: %d%n", System.currentTimeMillis() - start);
-        graph.persistAddedRelationships(transaction);
-        System.out.printf("Contract with persist time: %d%n", System.currentTimeMillis() - start);
+        graphLoader.saveAllNode(nodes);
     }
 
     private static Node[] getNotContractedNeighbors(RelationshipType relationshipType, Node nodeToContract,
@@ -91,5 +84,4 @@ public record ContractionHierarchiesIndexerInMem(RelationshipType type, String c
     private static Node[] getNotContractedInNodes(RelationshipType relationshipType, Node nodeToContract) {
         return getNotContractedNeighbors(relationshipType, nodeToContract, INCOMING);
     }
-
 }

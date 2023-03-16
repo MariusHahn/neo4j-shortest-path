@@ -22,9 +22,9 @@ public class VEntity implements Entity {
     private final Map<String, ObservableProperty> properties;
     protected Modification modification;
 
-    public VEntity() {
+    public VEntity(String elementId) {
         this.id = null;
-        this.elementId = null;
+        this.elementId = elementId;
         this.properties = new HashMap<>();
         this.modification = MODIFIED;
     }

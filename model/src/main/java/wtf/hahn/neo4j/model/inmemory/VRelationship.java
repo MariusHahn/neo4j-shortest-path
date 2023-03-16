@@ -3,6 +3,7 @@ package wtf.hahn.neo4j.model.inmemory;
 import static wtf.hahn.neo4j.model.inmemory.Modification.CREATED;
 
 import java.util.Objects;
+import java.util.UUID;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -15,17 +16,17 @@ public class VRelationship extends VEntity implements Relationship {
     private final VNode endNode;
 
     public VRelationship(RelationshipType type, VNode startNode, VNode endNode) {
-        super();
+        super(UUID.randomUUID().toString());
         this.startNode = startNode;
         this.endNode = endNode;
         this.type = type;
         modification = CREATED;
     }
-    public VRelationship(Relationship relationship) {
+    public VRelationship(Relationship relationship, VNode startNode, VNode endNode) {
         super(relationship);
         type = relationship.getType();
-        this.startNode = (VNode) relationship.getStartNode();
-        this.endNode = (VNode) relationship.getEndNode();
+        this.startNode = startNode;
+        this.endNode = endNode;
     }
 
     @Override
