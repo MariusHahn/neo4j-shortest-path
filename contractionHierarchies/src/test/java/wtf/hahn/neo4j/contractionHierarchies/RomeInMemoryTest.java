@@ -8,12 +8,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -34,13 +37,8 @@ public class RomeInMemoryTest extends IntegrationTest {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
             Comparator<Node> comparator = Comparator.comparingInt(Node::getDegree);
-            System.err.println("Start contracting");
-            logTime(() -> {
                 new ContractionHierarchiesIndexerInMem(edgeLabel, costProperty, transaction,
                         comparator).insertShortcuts();
-                return Void.TYPE;
-            });
-            System.err.println("End contracting");
             transaction.commit();
         }
     }
@@ -59,10 +57,10 @@ public class RomeInMemoryTest extends IntegrationTest {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = logTime(() -> new NativeDijkstra().shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty()));
+            WeightedPath dijkstraPath = new NativeDijkstra().shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
             if (dijkstraPath != null) {
                 WeightedPath chPath =
-                        logTime(() -> (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path);
+                        (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path;
                 Assertions.assertEquals(dijkstraPath.weight(), chPath.weight());
             }
         }
@@ -103,10 +101,52 @@ public class RomeInMemoryTest extends IntegrationTest {
         }
     }
 
-    static <T> T logTime(Supplier<T> s ) {
+    @Test
+    void randomPaths() throws IOException {
+        Random random = new Random(1);
+        Path file = Files.createFile(Paths.get(".", "measureQueryPerformance.csv"));
+        try (BufferedWriter bufferedWriter = Files.newBufferedWriter(file)) {
+            bufferedWriter.append("From,To,Dijkstra,dijkstraLength,chLength,weight,dijkstraTime,cchTime\n");
+            random.ints(200, 1, 3353)
+                    .mapToObj(i -> random.ints(200, 1,3353).mapToObj(j -> new int[]{i, j}))
+                    .flatMap(Function.identity())
+                    .parallel()
+                    .forEach(x -> searchPerformanceTest(x[0], x[1], bufferedWriter));
+        }
+
+    }
+
+
+    void searchPerformanceTest(Integer startNodeId, Integer endNodeId, BufferedWriter writer) {
+        try (Transaction transaction = database().beginTx()) {
+            ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
+            Node start = transaction.findNode(() -> "Location", "id", startNodeId);
+            Node end = transaction.findNode(() -> "Location", "id", endNodeId);
+            TimeResult<WeightedPath> dijkstraPath = stoppedResult(()->new NativeDijkstra().shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty()));
+            if (dijkstraPath.result != null) {
+                TimeResult<WeightedPath> chPath = stoppedResult(() -> (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path);
+                Assertions.assertEquals(dijkstraPath.result.weight(), chPath.result.weight());
+                String log = "%d,%d,%d,%d,%f,%d,%d%n".formatted(
+                                startNodeId
+                                , endNodeId
+                                , dijkstraPath.result.length()
+                                , chPath.result.length()
+                                , dijkstraPath.result.weight()
+                                , dijkstraPath.executionTime
+                                , chPath.executionTime
+                );
+                writer.append(log);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    record TimeResult<T>(Long executionTime, T result) {}
+
+    private static <T> TimeResult<T> stoppedResult(Supplier<T> s) {
         long start = System.currentTimeMillis();
-        T r = s.get();
-        System.out.printf("%s%n", System.currentTimeMillis() - start);
-        return r;
+        T result = s.get();
+        return new TimeResult<>(System.currentTimeMillis() - start, result);
     }
 }
