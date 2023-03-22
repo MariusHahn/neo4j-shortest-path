@@ -46,7 +46,7 @@ public class RomePerformanceTest2 extends IntegrationTest {
                     "VALUES (?,?,?,?)";
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setLong(1, timestamp);
-            ps.setString(2, "EdgeDifference");
+            ps.setString(2, "NodeDegree");
             ps.setLong(3, timeNeeded.executionTime);
             ps.setInt(4, timeNeeded.result);
             Random random = new Random(1);
