@@ -10,10 +10,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.contractionHierarchies.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
@@ -22,7 +23,6 @@ import wtf.hahn.neo4j.util.EntityHelper;
 
 public class NodeIncludeExpanderTest extends IntegrationTest {
 
-    private final NativeDijkstra nativeDijkstra = new NativeDijkstra();
 
     public NodeIncludeExpanderTest() {
         super(of(), of(), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
@@ -33,10 +33,11 @@ public class NodeIncludeExpanderTest extends IntegrationTest {
     @MethodSource("dontFindViaPathArguments")
     void dontFindViaTest(String s, String viaNode, String t) {
         try (Transaction transaction = database().beginTx()) {
+            NativeDijkstra nativeDijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, database()));
             Node start = transaction.findNode(() -> "Location", "name", s);
             Node target = transaction.findNode(() -> "Location", "name", t);
             Node via = transaction.findNode(() -> "Location", "name", viaNode);
-            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType(), Shortcut.rankPropertyName(relationshipType()));
+            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType(), Shortcuts.rankPropertyName(relationshipType()));
             WeightedPath path = nativeDijkstra.shortestPath(start, target, expander, costProperty());
             Assertions.assertNull(path);
         }
@@ -56,10 +57,11 @@ public class NodeIncludeExpanderTest extends IntegrationTest {
     @MethodSource("findViaPathArguments")
     void findViaTest(String s, String viaNode, String t, double weight) {
         try (Transaction transaction = database().beginTx()) {
+            NativeDijkstra nativeDijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, database()));
             Node start = transaction.findNode(() -> "Location", "name", s);
             Node target = transaction.findNode(() -> "Location", "name", t);
             Node via = transaction.findNode(() -> "Location", "name", viaNode);
-            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType(), Shortcut.rankPropertyName(relationshipType()));
+            NodeIncludeExpander expander = new NodeIncludeExpander(via, relationshipType(), Shortcuts.rankPropertyName(relationshipType()));
             WeightedPath path = nativeDijkstra.shortestPath(start, target, expander, costProperty());
             String[] retrievedPathNames = Iterables.stream(path.nodes()).map(EntityHelper::getNameProperty).toArray(String[]::new);
             System.out.printf("\"%s\"", String.join("\", \"", retrievedPathNames));

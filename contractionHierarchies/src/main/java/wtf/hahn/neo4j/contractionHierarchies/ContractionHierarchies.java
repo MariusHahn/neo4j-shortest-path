@@ -1,6 +1,5 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
-import java.util.Comparator;
 import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.procedure.Name;
 import wtf.hahn.neo4j.model.PathResult;
 
 @RequiredArgsConstructor
@@ -18,9 +16,8 @@ public class ContractionHierarchies {
     private final GraphDatabaseService graphDatabaseService;
     private final Transaction transaction;
 
-    public void createContractionHierarchiesIndex(String type, String costProperty) {
-        new ContractionHierarchiesIndexer(type, costProperty, transaction,
-                Comparator.comparingInt(Node::getDegree)).insertShortcuts();
+    public int createContractionHierarchiesIndex(String type, String costProperty) {
+        return new ContractionHierarchiesIndexerByEdgeDifference(type, costProperty, transaction, graphDatabaseService).insertShortcuts();
     }
 
     public Stream<PathResult> sourceTargetCH(Node startNode, Node endNode, String type, String costProperty) {

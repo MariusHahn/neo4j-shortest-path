@@ -13,7 +13,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 import static wtf.hahn.neo4j.model.inmemory.Modification.CREATED;
 import static wtf.hahn.neo4j.model.inmemory.Modification.DELETED;
 import static wtf.hahn.neo4j.model.inmemory.Modification.MODIFIED;
@@ -35,7 +35,7 @@ public class GraphLoader {
             Relationship pRelationship = pStartNode.createRelationshipTo(pEndNode, vRelationship.getType());
             elementIdMapping.put(vRelationship.getElementId(), pRelationship.getElementId());
             vRelationship.getProperties(MODIFIED).forEach(entry -> {
-                if (Shortcut.IN_RELATION.equals(entry.getKey()) || Shortcut.OUT_RELATION.equals(entry.getKey())) {
+                if (Shortcuts.IN_RELATION.equals(entry.getKey()) || Shortcuts.OUT_RELATION.equals(entry.getKey())) {
                     String mixedId = (String) entry.getValue().property();
                     String elementId = elementIdMapping.getOrDefault(mixedId, mixedId);
                     pRelationship.setProperty(entry.getKey(), elementId);

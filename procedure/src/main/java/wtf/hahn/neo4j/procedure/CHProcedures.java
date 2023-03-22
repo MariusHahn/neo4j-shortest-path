@@ -1,13 +1,9 @@
 package wtf.hahn.neo4j.procedure;
 
-import java.util.Comparator;
 import java.util.stream.Stream;
 
-import org.neo4j.graphalgo.BasicEvaluationContext;
-import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Mode;

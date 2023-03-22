@@ -29,6 +29,7 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
                     , costProperty()
                     , transaction
                     , Comparator.<Node>comparingInt(Node::getDegree).reversed()
+                    , database()
             ).insertShortcuts();
             WeightedPath path = new ContractionHierarchiesFinder(
                     new BasicEvaluationContext(transaction, database())

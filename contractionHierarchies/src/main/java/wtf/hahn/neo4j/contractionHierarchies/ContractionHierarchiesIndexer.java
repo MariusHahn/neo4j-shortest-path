@@ -6,37 +6,41 @@ import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.function.Function;
 
+import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.util.Iterables;
 
 public record ContractionHierarchiesIndexer(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
                                             RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra, String rankPropertyName) {
 
-    public ContractionHierarchiesIndexer(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator) {
+    public ContractionHierarchiesIndexer(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator, GraphDatabaseService graphDatabaseService) {
         this(
                 RelationshipType.withName(type)
                 , costProperty
                 , transaction
                 , loadAllNodes(RelationshipType.withName(type), transaction)
-                , Shortcut.shortcutRelationshipType(RelationshipType.withName(type))
+                , Shortcuts.shortcutRelationshipType(RelationshipType.withName(type))
                 , contractionOrderComparator
-                , new NativeDijkstra()
-                , Shortcut.rankPropertyName(RelationshipType.withName(type))
+                , new NativeDijkstra(new BasicEvaluationContext(transaction, graphDatabaseService))
+                , Shortcuts.rankPropertyName(RelationshipType.withName(type))
         );
     }
 
-    public void insertShortcuts() {
+    public int insertShortcuts() {
+        int insertionCounter = 0;
         PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), contractionOrderComparator);
         queue.addAll(nodes);
         int rank = 0;
@@ -51,12 +55,16 @@ public record ContractionHierarchiesIndexer(RelationshipType type, String costPr
                     NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
                     WeightedPath includePath = dijkstra.shortestPath(inNode, outNode, includeExpander, costProperty);
                     if (Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
-                        new Shortcut(type, inNode, outNode, costProperty, includePath).create();
+                        insertionCounter++;
+                        Iterator<Relationship> relationshipIterator = includePath.relationships().iterator();
+                        Shortcuts.create(relationshipIterator.next(), relationshipIterator.next(), costProperty,
+                                includePath.weight());
                     }
                 }
             }
             nodeToContract.setProperty(rankPropertyName, rank++);
         }
+        return insertionCounter;
     }
 
     private static Node[] getNotContractedNeighbors(RelationshipType relationshipType, Node nodeToContract,
@@ -64,19 +72,19 @@ public record ContractionHierarchiesIndexer(RelationshipType type, String costPr
         Function<Relationship, Node> getEndNode =
                 direction == OUTGOING ? Relationship::getEndNode : Relationship::getStartNode;
         return nodeToContract.getRelationships(direction, relationshipType,
-                        Shortcut.shortcutRelationshipType(relationshipType))
+                        Shortcuts.shortcutRelationshipType(relationshipType))
                 .stream()
                 .map(getEndNode)
-                .filter(n -> !n.hasProperty(Shortcut.rankPropertyName(relationshipType)))
+                .filter(n -> !n.hasProperty(Shortcuts.rankPropertyName(relationshipType)))
                 .distinct()
                 .toArray(Node[]::new);
     }
 
-    private static Node[] getNotContractedOutNodes(RelationshipType relationshipType, Node nodeToContract) {
+    static Node[] getNotContractedOutNodes(RelationshipType relationshipType, Node nodeToContract) {
         return getNotContractedNeighbors(relationshipType, nodeToContract, OUTGOING);
     }
 
-    private static Node[] getNotContractedInNodes(RelationshipType relationshipType, Node nodeToContract) {
+    static Node[] getNotContractedInNodes(RelationshipType relationshipType, Node nodeToContract) {
         return getNotContractedNeighbors(relationshipType, nodeToContract, INCOMING);
     }
 

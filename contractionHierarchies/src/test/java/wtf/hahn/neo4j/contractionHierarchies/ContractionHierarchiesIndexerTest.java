@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.testUtil.ShortcutTriple;
 
@@ -27,10 +27,11 @@ public class ContractionHierarchiesIndexerTest extends IntegrationTest {
                     , costProperty()
                     , transaction
                     , Comparator.<Node>comparingInt(Node::getDegree).reversed()
+                    , database()
             ).insertShortcuts();
 
             List<ShortcutTriple> shortcuts = transaction.getAllRelationships().stream()
-                    .filter(Shortcut::isShortcut)
+                    .filter(Shortcuts::isShortcut)
                     .map(ShortcutTriple::new)
                     .peek(System.out::println)
                     .toList();

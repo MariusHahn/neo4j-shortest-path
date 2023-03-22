@@ -11,7 +11,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 
 public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
                                              String rankProperty,
@@ -68,7 +68,7 @@ public record ContractionHierarchiesExpander(PathExpander<Double> baseExpander,
                 .empty()
                 .addRelationshipFilter(filter)
                 .add(relationshipType, direction)
-                .add(Shortcut.shortcutRelationshipType(relationshipType), direction)
+                .add(Shortcuts.shortcutRelationshipType(relationshipType), direction)
                 .build();
     }
 

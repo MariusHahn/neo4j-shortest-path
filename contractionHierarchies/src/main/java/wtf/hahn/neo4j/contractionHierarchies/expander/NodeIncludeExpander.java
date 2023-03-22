@@ -12,7 +12,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.traversal.BranchState;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 
 public record NodeIncludeExpander(Node include, PathExpander<Double> expander)
         implements PathExpander<Double> {
@@ -23,7 +23,7 @@ public record NodeIncludeExpander(Node include, PathExpander<Double> expander)
                 , PathExpanderBuilder
                         .empty()
                         .add(relationshipType, OUTGOING)
-                        .add(Shortcut.shortcutRelationshipType(relationshipType), OUTGOING)
+                        .add(Shortcuts.shortcutRelationshipType(relationshipType), OUTGOING)
                         .addNodeFilter(node -> !node.hasProperty(rankPropertyName))
                         .addRelationshipFilter(relationship -> containsNode(relationship, includeNode)).build()
         );

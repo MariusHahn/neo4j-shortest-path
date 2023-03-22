@@ -18,6 +18,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
+import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 public class PaperGraphInMemoryTest extends IntegrationTest {
@@ -28,8 +29,8 @@ public class PaperGraphInMemoryTest extends IntegrationTest {
     public PaperGraphInMemoryTest() {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
-            Comparator<Node> comparator = Comparator.comparingLong(node -> getLongProperty(node, RANK_PROPERTY_NAME));
-            new ContractionHierarchiesIndexerInMem(dataset.relationshipTypeName, costProperty, transaction, comparator).insertShortcuts();
+            int inse = new ContractionHierarchiesIndexerByEdgeDifference(dataset.relationshipTypeName, costProperty, transaction, database()).insertShortcuts();
+            System.out.printf("%d shortCuts have been inserted%n", inse);
             transaction.commit();
         }
     }
@@ -39,10 +40,10 @@ public class PaperGraphInMemoryTest extends IntegrationTest {
     void testEachNodeToEveryOther(Number startNodeId, Number endNodeId) {
         try (Transaction transaction = database().beginTx()) {
             BasicEvaluationContext context = new BasicEvaluationContext(transaction, database());
-            TreeBasedCHSearch searcher = new TreeBasedCHSearch(context, relationshipType(), RANK_PROPERTY_NAME, costProperty);
+            TreeBasedCHSearch searcher = new TreeBasedCHSearch(context, relationshipType(), Shortcuts.rankPropertyName(relationshipType()), costProperty);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = new NativeDijkstra().shortestPathWithShortcuts(start, end, type, costProperty);
+            WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database())).shortestPathWithShortcuts(start, end, type, costProperty);
             if (dijkstraPath != null) {
                 WeightedPath chPath = searcher.find(start, end);
                 Assertions.assertEquals(dijkstraPath.weight(), chPath.weight());

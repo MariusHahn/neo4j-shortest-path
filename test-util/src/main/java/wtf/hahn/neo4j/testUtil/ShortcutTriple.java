@@ -1,7 +1,7 @@
 package wtf.hahn.neo4j.testUtil;
 
 import org.neo4j.graphdb.Relationship;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 import static wtf.hahn.neo4j.util.EntityHelper.getNameProperty;
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
@@ -10,7 +10,7 @@ public record ShortcutTriple(String start, String end, Double weight) {
         this(
                 getNameProperty(relationship.getStartNode())
                 , getNameProperty(relationship.getEndNode())
-                , getProperty(relationship, getProperty(relationship, Shortcut.WEIGHT_PROPERTY_KEY))
+                , getProperty(relationship, getProperty(relationship, Shortcuts.WEIGHT_PROPERTY_KEY))
         );
     }
 }

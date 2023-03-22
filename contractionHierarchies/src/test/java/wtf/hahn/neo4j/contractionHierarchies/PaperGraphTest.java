@@ -29,7 +29,7 @@ public class PaperGraphTest extends IntegrationTest {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
             Comparator<Node> comparator = Comparator.comparingLong(node -> getLongProperty(node, RANK_PROPERTY_NAME));
-            new ContractionHierarchiesIndexer(dataset.relationshipTypeName, costProperty, transaction, comparator).insertShortcuts();
+            new ContractionHierarchiesIndexer(dataset.relationshipTypeName, costProperty, transaction, comparator, database()).insertShortcuts();
             transaction.commit();
         }
     }
@@ -42,7 +42,7 @@ public class PaperGraphTest extends IntegrationTest {
             TreeBasedCHSearch searcher = new TreeBasedCHSearch(context, relationshipType(), RANK_PROPERTY_NAME, costProperty);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = new NativeDijkstra().shortestPathWithShortcuts(start, end, type, costProperty);
+            WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database())).shortestPathWithShortcuts(start, end, type, costProperty);
             if (dijkstraPath != null) {
                 WeightedPath chPath = searcher.find(start, end);
                 Assertions.assertEquals(dijkstraPath.weight(), chPath.weight());

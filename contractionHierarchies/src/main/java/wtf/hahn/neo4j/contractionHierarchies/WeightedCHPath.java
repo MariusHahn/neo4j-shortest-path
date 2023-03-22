@@ -11,7 +11,7 @@ import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.model.Shortcut;
+import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.util.ReverseIterator;
 import wtf.hahn.neo4j.util.ZipIterator;
@@ -26,7 +26,7 @@ public final class WeightedCHPath implements WeightedPath {
         this.path = path;
         this.transaction = transaction;
         relationships = Iterables.stream(path.relationships())
-                .map(relationship -> Shortcut.resolveRelationships(relationship, this.transaction))
+                .map(relationship -> Shortcuts.resolveRelationships(relationship, this.transaction))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
         nodes = Stream.concat(Stream.of(startNode()), relationships.stream().map(Relationship::getEndNode)).toList();
