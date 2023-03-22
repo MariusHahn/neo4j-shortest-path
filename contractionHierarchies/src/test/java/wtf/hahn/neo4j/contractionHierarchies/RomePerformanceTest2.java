@@ -49,6 +49,7 @@ public class RomePerformanceTest2 extends IntegrationTest {
             ps.setString(2, "NodeDegree");
             ps.setLong(3, timeNeeded.executionTime);
             ps.setInt(4, timeNeeded.result);
+            ps.executeUpdate();
             Random random = new Random(1);
             connection.setAutoCommit(false);
             String sqlString = "INSERT INTO result (`timestamp`, `from`,`to`,dijkstraLength,chLength,weight,dijkstraTime,chTime) values (?,?,?,?,?,?,?,?);";
