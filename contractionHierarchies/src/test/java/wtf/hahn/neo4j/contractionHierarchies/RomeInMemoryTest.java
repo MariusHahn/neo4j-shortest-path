@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Random;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -36,9 +40,8 @@ public class RomeInMemoryTest extends IntegrationTest {
     public RomeInMemoryTest() {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
-            Comparator<Node> comparator = Comparator.comparingInt(Node::getDegree);
-                new ContractionHierarchiesIndexerInMem(edgeLabel, costProperty, transaction,
-                        comparator).insertShortcuts();
+                new ContractionHierarchiesIndexerByEdgeDifference(edgeLabel, costProperty, transaction,
+                        database()).insertShortcuts();
             transaction.commit();
         }
     }
@@ -57,7 +60,9 @@ public class RomeInMemoryTest extends IntegrationTest {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = new NativeDijkstra().shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
+            WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(
+                    transaction, database()
+            )).shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
             if (dijkstraPath != null) {
                 WeightedPath chPath =
                         (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path;
@@ -67,7 +72,7 @@ public class RomeInMemoryTest extends IntegrationTest {
     }
 
 
-    //@Test
+    ///@Test
     void sourceTargetToCsv() throws IOException {
         Path file = Files.createFile(Paths.get(".", "failing.txt"));
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(file)) {
@@ -85,7 +90,7 @@ public class RomeInMemoryTest extends IntegrationTest {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = new NativeDijkstra()
+            WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database()))
                     .shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
             if (dijkstraPath != null) {
                 WeightedPath chPath = (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path;
@@ -122,7 +127,7 @@ public class RomeInMemoryTest extends IntegrationTest {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            TimeResult<WeightedPath> dijkstraPath = stoppedResult(()->new NativeDijkstra().shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty()));
+            TimeResult<WeightedPath> dijkstraPath = stoppedResult(() -> new NativeDijkstra(new BasicEvaluationContext(transaction, database())).shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty()));
             if (dijkstraPath.result != null) {
                 TimeResult<WeightedPath> chPath = stoppedResult(() -> (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path);
                 Assertions.assertEquals(dijkstraPath.result.weight(), chPath.result.weight());

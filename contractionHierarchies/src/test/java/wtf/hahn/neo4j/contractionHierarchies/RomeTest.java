@@ -13,8 +13,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.BasicEvaluationContext;
@@ -22,10 +20,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpanders;
-import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
-import wtf.hahn.neo4j.model.Shortcut;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 
@@ -38,7 +33,7 @@ public class RomeTest extends IntegrationTest {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
             Comparator<Node> comparator = Comparator.comparingInt(Node::getDegree);
-            new ContractionHierarchiesIndexer(edgeLabel, costProperty, transaction, comparator).insertShortcuts();
+            new ContractionHierarchiesIndexer(edgeLabel, costProperty, transaction, comparator, database()).insertShortcuts();
             transaction.commit();
         }
     }
@@ -57,7 +52,7 @@ public class RomeTest extends IntegrationTest {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = new NativeDijkstra().shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
+            WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database())).shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
             if (dijkstraPath != null) {
                 WeightedPath chPath =
                         (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path;
@@ -85,7 +80,7 @@ public class RomeTest extends IntegrationTest {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
-            WeightedPath dijkstraPath = new NativeDijkstra()
+            WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database()))
                     .shortestPath(start,end, PathExpanders.forTypeAndDirection(relationshipType(), Direction.OUTGOING),costProperty());
             if (dijkstraPath != null) {
                 WeightedPath chPath = (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty).findFirst().get().path;
