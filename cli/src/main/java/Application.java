@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Objects;
@@ -137,8 +138,14 @@ public class Application {
 
     private static void createSqlite() throws SQLException, IOException {
         try (Connection c = DriverManager.getConnection(CONNECTION_STRING)){
-            String sql = Files.readString(Paths.get("src", "main", "resources", "schema.sql"));
-            c.createStatement().execute(sql);
+            String readString = Files.readString(Paths.get("src", "main", "resources", "schema.sql"));
+            Iterable<String> statements =  Arrays.stream(readString.split(";"))
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank())::iterator;
+            for (String sql : statements) {
+                log.debug(sql);
+                c.createStatement().execute(sql);
+            }
         }
     }
 }
