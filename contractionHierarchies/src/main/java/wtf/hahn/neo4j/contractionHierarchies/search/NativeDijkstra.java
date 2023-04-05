@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.search;
 
 import static org.neo4j.graphdb.Direction.OUTGOING;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanderBuilder;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.impl.StandardExpander;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.util.EntityHelper;
 
@@ -20,8 +21,12 @@ public class NativeDijkstra {
     private final EvaluationContext context;
 
     public WeightedPath shortestPath(Node startNode, Node endNode, PathExpander<Double> expander, String costProperty) {
-        PathFinder<WeightedPath> dijkstraFinder = GraphAlgoFactory.dijkstra(expander, costProperty, 1);
+        PathFinder<WeightedPath> dijkstraFinder = GraphAlgoFactory.dijkstra(context, expander, costProperty);
         return dijkstraFinder.findSinglePath(startNode, endNode);
+    }
+
+    public WeightedPath shortestPath(Node startNode, Node endNode, RelationshipType type, String costProperty) {
+        return shortestPath(startNode, endNode, PathExpanders.forTypeAndDirection(type, OUTGOING), costProperty);
     }
 
     public WeightedPath shortestPathWithShortcuts(Node startNode, Node endNode, RelationshipType type, String costProperty) {

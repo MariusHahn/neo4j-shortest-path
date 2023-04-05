@@ -1,7 +1,7 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.index;
 
-import static wtf.hahn.neo4j.contractionHierarchies.IndexUtil.getNotContractedInNodes;
-import static wtf.hahn.neo4j.contractionHierarchies.IndexUtil.getNotContractedOutNodes;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedInNodes;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedOutNodes;
 import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.ArrayList;
@@ -20,12 +20,13 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.inmemory.GraphLoader;
 import wtf.hahn.neo4j.util.Iterables;
 
-public final class ContractionHierarchiesIndexerByNodeDegree {
+public final class ContractionHierarchiesIndexerByNodeDegree implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
     private final String costProperty;
     private final NativeDijkstra dijkstra;

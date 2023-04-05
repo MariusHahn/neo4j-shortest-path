@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.index;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;

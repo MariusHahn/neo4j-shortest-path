@@ -17,6 +17,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 

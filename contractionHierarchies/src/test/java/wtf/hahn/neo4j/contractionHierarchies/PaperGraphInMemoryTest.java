@@ -1,9 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
-import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
-import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -17,12 +15,13 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 public class PaperGraphInMemoryTest extends IntegrationTest {
-    private static final String RANK_PROPERTY_NAME = "paper_rank";
     private final String costProperty = dataset.costProperty;
     private final RelationshipType type = RelationshipType.withName(dataset.relationshipTypeName);
 

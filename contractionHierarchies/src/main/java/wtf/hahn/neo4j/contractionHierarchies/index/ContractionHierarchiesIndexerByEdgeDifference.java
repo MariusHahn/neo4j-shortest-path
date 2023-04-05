@@ -1,8 +1,8 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.index;
 
 import static java.lang.Math.max;
-import static wtf.hahn.neo4j.contractionHierarchies.IndexUtil.getNotContractedInNodes;
-import static wtf.hahn.neo4j.contractionHierarchies.IndexUtil.getNotContractedOutNodes;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedInNodes;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedOutNodes;
 import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.Arrays;
@@ -21,12 +21,13 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.inmemory.GraphLoader;
 import wtf.hahn.neo4j.util.Iterables;
 
-public final class ContractionHierarchiesIndexerByEdgeDifference {
+public final class ContractionHierarchiesIndexerByEdgeDifference implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
     private final String costProperty;
     private final NativeDijkstra dijkstra;
@@ -63,7 +64,7 @@ public final class ContractionHierarchiesIndexerByEdgeDifference {
                     Iterable<WeightedPath> shortestPaths = dijkstra.shortestPathsWithShortcuts(inOutNode.inNode, inOutNode.outNode, type, costProperty, rankPropertyName);
                     NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
                     WeightedPath includePath = dijkstra.shortestPath(inOutNode.inNode, inOutNode.outNode, includeExpander, costProperty);
-                    if (Iterables.stream(shortestPaths).count() == 1 && Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
+                    if (/*Iterables.stream(shortestPaths).count() == 1 &&*/ Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
                         Iterator<Relationship> relationshipIterator = includePath.relationships().iterator();
                         shortcutsToInsert.add(new XShortcut(relationshipIterator.next(), relationshipIterator.next(), includePath.weight()));
                     }
