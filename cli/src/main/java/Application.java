@@ -111,14 +111,9 @@ public class Application {
         return Neo4jBuilders
                 .newInProcessBuilder()
                 .withConfig(new SimpleSetting<>("dbms.security.allow_csv_import_from_file_urls", true), true)
-                .withConfig(new SimpleSetting<>("server.directories.import", resourcePath().toAbsolutePath()), resourcePath().toAbsolutePath())
                 .withWorkingDir(createIfNotExisting(parser.getWorkingDirectory()))
                 .withDisabledServer()
                 .build();
-    }
-
-    private Path resourcePath() {
-        return Paths.get("src", "main", "resource");
     }
 
     @SneakyThrows(IOException.class)
