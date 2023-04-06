@@ -26,6 +26,7 @@ import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.inmemory.GraphLoader;
 import wtf.hahn.neo4j.util.Iterables;
+import wtf.hahn.neo4j.util.MeasureTimeLogger;
 
 public final class ContractionHierarchiesIndexerByEdgeDifference implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
@@ -64,7 +65,7 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
                     Iterable<WeightedPath> shortestPaths = dijkstra.shortestPathsWithShortcuts(inOutNode.inNode, inOutNode.outNode, type, costProperty, rankPropertyName);
                     NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
                     WeightedPath includePath = dijkstra.shortestPath(inOutNode.inNode, inOutNode.outNode, includeExpander, costProperty);
-                    if (/*Iterables.stream(shortestPaths).count() == 1 &&*/ Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
+                    if (Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
                         Iterator<Relationship> relationshipIterator = includePath.relationships().iterator();
                         shortcutsToInsert.add(new XShortcut(relationshipIterator.next(), relationshipIterator.next(), includePath.weight()));
                     }

@@ -6,8 +6,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexer;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
@@ -21,7 +19,7 @@ public class Parser {
     private final CommandLine commandLine;
     private final Option workingDirectory = Option.builder().option("w").longOpt("work-dir").hasArg(true).numberOfArgs(1)
             .optionalArg(false).desc("Specifies the database working directory").build();
-    private final Option cyphers = Option.builder().option("cf").longOpt("cypher-file").hasArg(true).numberOfArgs(1)
+    private final Option importFile = Option.builder().option("if").longOpt("import-file").hasArg(true).numberOfArgs(1)
             .desc("Specifies the path to the cypher file that will be executed after db start-up").optionalArg(true).build();
     private final Option sourceTargetCsv = Option.builder().option("st").longOpt("source-target-csv").hasArg(true)
             .numberOfArgs(1).desc("Specifies the path to the csv file which will containing source target ids. Ids are" +
@@ -37,7 +35,7 @@ public class Parser {
     @SneakyThrows(ParseException.class) public Parser(String... args) {
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
-        options.addOption(workingDirectory).addOption(cyphers).addOption(sourceTargetCsv)
+        options.addOption(workingDirectory).addOption(importFile).addOption(sourceTargetCsv)
                 .addOption(contractionAlgorithm).addOption(relationshipType).addOption(costProperty);
         this.commandLine = parser.parse(options, args);
     }
@@ -47,11 +45,15 @@ public class Parser {
     }
 
     public Path getCypherLocation() {
-        return Paths.get(commandLine.getOptionValue(cyphers));
+        return Paths.get(commandLine.getOptionValue(importFile));
     }
 
     public Path getSourceTargetCsvLocation() {
         return Paths.get(commandLine.getOptionValue(sourceTargetCsv));
+    }
+
+    public boolean hasImportFileDefined() {
+        return commandLine.hasOption(importFile);
     }
 
     public ContractionHierarchiesIndexer getContractionAlgorithm(String relationshipType, String costProperty, Transaction tx, GraphDatabaseService db) {
