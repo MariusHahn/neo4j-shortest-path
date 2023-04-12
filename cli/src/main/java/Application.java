@@ -23,7 +23,9 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import wtf.hahn.neo4j.contractionHierarchies.ContractionHierarchiesFinder;
-import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
+import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionChDijkstra;
+import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
+import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.util.GrFileImporter;
 import wtf.hahn.neo4j.util.GrFileLoader;
 import wtf.hahn.neo4j.util.SimpleSetting;
@@ -68,14 +70,16 @@ public class Application {
             val evaluationContext = new BasicEvaluationContext(transaction, db);
             val dijkstra = new NativeDijkstra(evaluationContext);
             val finder = new ContractionHierarchiesFinder(evaluationContext, relationshipType, costProperty);
+            Dijkstra dijkstra2 = new Dijkstra(relationshipType, costProperty);
+            BidirectionChDijkstra bidirectionChDijkstra = new BidirectionChDijkstra(relationshipType, costProperty);
             Files.lines(sourceTargetCsvLocation)
                     .map(line -> Arrays.stream(line.split(",")).map(Integer::parseInt).toArray(Integer[]::new))
                     .forEach(nodeIds -> {
                         val source = transaction.findNode(() -> "Location", "id", nodeIds[0]);
                         val target = transaction.findNode(() -> "Location", "id", nodeIds[1]);
-                        val dijkstraResult = new StoppedResult<>(() -> dijkstra.shortestPathWithShortcuts(source, target, relationshipType, costProperty));
+                        val dijkstraResult = new StoppedResult<>(() -> dijkstra2.find(source, target));
                         if (Objects.nonNull(dijkstraResult.getResult())) {
-                            val chResult = new StoppedResult<>(() -> finder.find(source, target));
+                            val chResult = new StoppedResult<>(() -> bidirectionChDijkstra.find(source, target));
                             saveSearchResults(ps, chResult, dijkstraResult);
                         }
                     });
@@ -85,8 +89,8 @@ public class Application {
 
     @SneakyThrows
     private void saveSearchResults(PreparedStatement ps,
-                                   StoppedResult<WeightedPath> chResult,
-                                   StoppedResult<WeightedPath> dijkstraResult) {
+                                   StoppedResult<? extends WeightedPath> chResult,
+                                   StoppedResult<? extends WeightedPath> dijkstraResult) {
         ps.setLong(1, getLongProperty(dijkstraResult.getResult().startNode(), "id"));
         ps.setLong(2, getLongProperty(dijkstraResult.getResult().endNode(), "id"));
         ps.setInt(3, dijkstraResult.getResult().length());
@@ -146,6 +150,7 @@ public class Application {
 
     private void createSqlite() throws SQLException, IOException {
         try (Connection c = DriverManager.getConnection(connectionString())){
+            System.err.println(Paths.get(".").toAbsolutePath());
             String readString = Files.readString(Paths.get("src", "main", "resources", "schema.sql"));
             Iterable<String> statements =  Arrays.stream(readString.split(";"))
                     .map(String::trim)

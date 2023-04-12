@@ -13,6 +13,7 @@ plugins {
 dependencies {
     implementation(project(":util"))
     implementation(project(":model"))
+    implementation(project(":dijkstra"))
     testImplementation(project(":test-util"))
 }
 

@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies.search;
+package wtf.hahn.neo4j.dijkstra;
 
 import static org.neo4j.graphdb.Direction.OUTGOING;
 import lombok.RequiredArgsConstructor;

@@ -20,7 +20,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
-import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
+import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.util.Iterables;
 

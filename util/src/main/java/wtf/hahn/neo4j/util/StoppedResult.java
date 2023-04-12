@@ -10,8 +10,8 @@ public class StoppedResult<T> {
     long millis;
 
     public StoppedResult(Supplier<T> supplier) {
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime()/1000;
         this.result = supplier.get();
-        this.millis = System.currentTimeMillis() - start;
+        this.millis = System.nanoTime()/1000 - start;
     }
 }

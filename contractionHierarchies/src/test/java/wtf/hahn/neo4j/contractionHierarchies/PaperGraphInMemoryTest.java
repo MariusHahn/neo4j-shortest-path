@@ -16,8 +16,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
-import wtf.hahn.neo4j.contractionHierarchies.search.NativeDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
+import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 

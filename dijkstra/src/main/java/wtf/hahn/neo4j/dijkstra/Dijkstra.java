@@ -1,84 +1,80 @@
 package wtf.hahn.neo4j.dijkstra;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import org.neo4j.graphalgo.CostEvaluator;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import wtf.hahn.neo4j.util.ReverseIterator;
-import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
+import org.neo4j.graphdb.ResourceIterable;
+import org.neo4j.graphdb.impl.ExtendedPath;
+import org.neo4j.graphdb.impl.StandardExpander;
+import org.neo4j.graphdb.traversal.BranchState;
+import wtf.hahn.neo4j.model.ShortestPathResult;
+import wtf.hahn.neo4j.util.EntityHelper;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
 
 public class Dijkstra {
-    private final Map<Node, Info> heap = new HashMap<>();
-    private final Node endNode;
-    private final String propertyKey;
-    private final RelationshipType relationshipType;
+    private final PathExpander<Double> expander;
+    private final CostEvaluator<Double> weightFunction;
 
-    public Dijkstra(Node startNode, Node endNode, String propertyKey, RelationshipType relationshipType) {
-        this.endNode = endNode;
-        this.propertyKey = propertyKey;
-        this.relationshipType = relationshipType;
-        heap.put(startNode, new Info(false, 0L, null));
+    public Dijkstra(RelationshipType relationshipType, CostEvaluator<Double> weightFunction) {
+        expander = StandardExpander.create(relationshipType, Direction.OUTGOING);
+        this.weightFunction = weightFunction;
     }
 
-    public void setSettled(Node node) {
-        if (!heap.containsKey(node)) throw new UnsupportedOperationException();
-        Info info = heap.get(node);
-        heap.put(node, new Info(true, info.distance, info.relationship));
+    public Dijkstra(RelationshipType relationshipType, String costProperty) {
+        this(relationshipType,
+                ((relationship, direction) -> EntityHelper.getDoubleProperty(relationship, costProperty)));
     }
 
-    public void setNodeDistance(String propertyKey, Node toSettle, Relationship relationship) {
-        Long edgeWeight = getProperty(relationship, propertyKey);
-        long currentDistance = getCurrentDistance(toSettle);
-        Node endNode = relationship.getEndNode();
-        heap.put(endNode ,new Info(false, edgeWeight + currentDistance, relationship));
+    public ShortestPathResult find(Node start, Node goal) {
+        return new Query(start, goal).getResult();
     }
 
-    public boolean isSettled(Node nodeId) {
-        return !(heap.get(nodeId) == null || !heap.get(nodeId).settled);
-    }
+    class Query {
+        private final Node goal;
+        private final PriorityQueue<DijkstraState> queue = new PriorityQueue<>();
+        private final Map<Node, DijkstraState> seen = new HashMap<>();
 
-    public Node getClosestNotSettled() {
-        record DistanceNodeId(Node node, Long distance){}
-        DistanceNodeId distanceNodeId = new DistanceNodeId(null, Long.MAX_VALUE);
-        for (Map.Entry<Node, Info> entry : heap.entrySet()) {
-            Node nodeId = entry.getKey();
-            Info info = entry.getValue();
-            if (!(info.settled || info.distance >= distanceNodeId.distance())) {
-                distanceNodeId = new DistanceNodeId(nodeId, info.distance());
+        Query(Node start, Node goal) {
+            this.goal = goal;
+            DijkstraState init = new DijkstraState(start);
+            queue.offer(init);
+            seen.put(start, init);
+
+        }
+
+        public ShortestPathResult getResult() {
+            while (!queue.isEmpty()) {
+                final DijkstraState state = queue.poll();
+                if (state.getEndNode().equals(goal)) {
+                    return new ShortestPathResult(state.getPath(), state.getCost(), 0, queue.size());
+                }
+                final ResourceIterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
+                state.settled = true;
+                for (Relationship relationship : relationships) {
+                    final Node neighbor = relationship.getOtherNode(state.getEndNode());
+                    final Double cost = weightFunction.getCost(relationship, Direction.BOTH);
+                    if (mustUpdateNeighborState(state, neighbor, cost)) {
+                        final Path newPath = ExtendedPath.extend(state.getPath(), relationship);
+                        final DijkstraState newState = new DijkstraState(neighbor, newPath, state.getCost() + cost);
+                        queue.remove(newState);
+                        queue.offer(newState);
+                        seen.put(neighbor, newState);
+                    }
+                }
             }
+            return null;
         }
-        return distanceNodeId.node;
-    }
 
-    public long getCurrentDistance(Node node) {
-        return heap.get(node).distance;
-    }
-
-    public Iterator<Relationship> getRelationships() {
-        List<Relationship> ids = new ArrayList<>();
-        Info info = heap.get(endNode);
-        while (info.relationship != null) {
-            ids.add(info.relationship);
-            info = heap.get(info.relationship.getStartNode());
-        }
-        return new ReverseIterator<>(ids);
-    }
-
-    public void calcSourceTarget() {
-        while (getClosestNotSettled() != null && !isSettled(endNode)) {
-            final Node toSettle = getClosestNotSettled();
-            for (Relationship relationship : toSettle.getRelationships(Direction.OUTGOING, relationshipType)) {
-                setNodeDistance(propertyKey, toSettle, relationship);
-            }
-            setSettled(toSettle);
+        private boolean mustUpdateNeighborState(DijkstraState state, Node neighbor, Double cost) {
+            return !seen.containsKey(neighbor) ||
+                    !(seen.get(neighbor).settled || seen.get(neighbor).getCost() < state.getCost() + cost);
         }
     }
-
-    record Info (boolean settled, long distance, Relationship relationship){}
 }

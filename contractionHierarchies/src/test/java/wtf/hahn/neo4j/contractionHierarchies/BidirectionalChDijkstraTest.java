@@ -6,8 +6,6 @@ import static org.neo4j.graphdb.Direction.OUTGOING;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.Random;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
@@ -21,15 +19,19 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionChDijkstra;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
+import wtf.hahn.neo4j.model.ShortestPathResult;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
-public class OldenburgTest extends IntegrationTest {
+public class BidirectionalChDijkstraTest extends IntegrationTest {
 
     private final String costProperty = dataset.costProperty;
     private final String edgeLabel = dataset.relationshipTypeName;
+    private final BidirectionChDijkstra
+            bidirectionChDijkstra = new BidirectionChDijkstra(relationshipType(), costProperty());
 
-    public OldenburgTest() {
+    public BidirectionalChDijkstraTest() {
         super(of(), of(), of(), TestDataset.OLDENBURG);
         try (Transaction transaction = database().beginTx()) {
             new ContractionHierarchiesIndexerByEdgeDifference(
@@ -45,30 +47,19 @@ public class OldenburgTest extends IntegrationTest {
                 .map(ids -> Arguments.of(ids[0], ids[1]));
     }
 
-    private static Stream<Arguments> randomPaths() {
-        Random random = new Random(73);
-        return random.ints(200, 0, 6104)
-                .mapToObj(i -> random.ints(200, 0, 6104).filter(j -> j != i).mapToObj(j -> new int[] {i, j}))
-                .flatMap(Function.identity())
-                .map(x -> Arguments.of(x[0], x[1]));
-    }
-
     @ParameterizedTest
-    @MethodSource({/*"randomPaths",*/ "fromTheoPaths",})
+    @MethodSource({"fromTheoPaths",})
     void testNodeIdToNodeId(Integer s, Integer t) {
         try (Transaction transaction = database().beginTx()) {
-            ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
             NativeDijkstra dijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, database()));
             Node start = transaction.findNode(() -> "Location", "id", s);
             Node end = transaction.findNode(() -> "Location", "id", t);
             PathExpander<Double> standardExpander = PathExpanders.forTypeAndDirection(relationshipType(), OUTGOING);
             WeightedPath dijkstraPath = dijkstra.shortestPath(start, end, standardExpander, costProperty());
             if (dijkstraPath != null) {
-                WeightedPath chPath =
-                        (WeightedPath) chFinder.sourceTargetCH(start, end, edgeLabel, costProperty)
-                                .findFirst()
-                                .get().path;
+                ShortestPathResult chPath = bidirectionChDijkstra.find(start, end);
                 Assertions.assertNotNull(chPath);
+                //System.err.printf("path length %s, searchSpace size %s%n", dijkstraPath.length(), chPath.searchSpaceSize());
                 Assertions.assertEquals(
                         dijkstraPath.weight()
                         , chPath.weight()
