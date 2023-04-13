@@ -180,7 +180,7 @@ public class BidirectionalDijkstra {
         return weightFunction.getCost(relationship, Direction.BOTH);
     }
 
-    private static boolean isSettled(Map<Node, DijkstraState> queueState, Node neighbor) {
+    static boolean isSettled(Map<Node, DijkstraState> queueState, Node neighbor) {
         return !(!alreadySeen(queueState, neighbor) || !queueState.get(neighbor).isSettled());
     }
 
