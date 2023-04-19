@@ -7,13 +7,15 @@ import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -26,6 +28,8 @@ import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.inmemory.GraphLoader;
 import wtf.hahn.neo4j.util.Iterables;
+import wtf.hahn.neo4j.util.LastInsertWinsPriorityQueue;
+import wtf.hahn.neo4j.util.StoppedResult;
 
 public final class ContractionHierarchiesIndexerByEdgeDifference implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
@@ -42,16 +46,24 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
         graphLoader = new GraphLoader(transaction);
     }
 
-    void updateNeighborsInQueue(Map<Node, EdgeDifferenceAndShortCuts> queue, Node nodeToContract) {
-        Stream.concat(
-                Arrays.stream(getNotContractedInNodes(type, nodeToContract))
-                , Arrays.stream(getNotContractedOutNodes(type, nodeToContract)))
+    void updateNeighborsInQueue(LastInsertWinsPriorityQueue<EdgeDifferenceAndShortCuts> queue, Node nodeToContract) {
+        Set<EdgeDifferenceAndShortCuts> collect = Stream.concat(
+                        Arrays.stream(getNotContractedInNodes(type, nodeToContract))
+                        , Arrays.stream(getNotContractedOutNodes(type, nodeToContract)))
                 .distinct()
-                .forEach(node -> queue.put(node, shortCutsToInsert(node)));
+                .map(nodeToContract1 -> new StoppedResult<>(() -> shortCutsToInsert(nodeToContract1)))
+                .peek(stoppedResult -> System.err.printf(", calc: %d", stoppedResult.getMillis()))
+                .map(StoppedResult::getResult)
+                .collect(Collectors.toSet());
+        System.out.println();
+        StoppedResult<Class<Void>> classStoppedResult = new StoppedResult<>(() -> {
+            collect.forEach(queue::offer);
+            return Void.TYPE;
+        });
+        System.err.printf("Updating queue took %d micro seconds%n", classStoppedResult.getMillis());
     }
 
     record XShortcut(Relationship in, Relationship out , Double weight) {}
-    record EdgeDifferenceAndShortCuts(Integer edgeDifference, Collection<XShortcut> shortcuts) {}
     EdgeDifferenceAndShortCuts shortCutsToInsert(Node nodeToContract) {
         Node[] notContractedInNodes = getNotContractedInNodes(type, nodeToContract);
         Node[] notContractedOutNodes = getNotContractedOutNodes(type, nodeToContract);
@@ -70,39 +82,45 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
                     }
                 });
         int edgeDifference = shortcutsToInsert.size() - notContractedInNodes.length - notContractedOutNodes.length;
-        return new EdgeDifferenceAndShortCuts(edgeDifference, shortcutsToInsert);
-    }
-
-    Node getBestNext(Map<Node, EdgeDifferenceAndShortCuts> x) {
-        Map.Entry<Node, EdgeDifferenceAndShortCuts> currentBest = null;
-        for (Map.Entry<Node, EdgeDifferenceAndShortCuts> entry : x.entrySet()) {
-            if (currentBest == null || entry.getValue().edgeDifference() < currentBest.getValue().edgeDifference()) {
-                currentBest = entry;
-            } else if (entry.getValue().edgeDifference().equals(currentBest.getValue().edgeDifference()) && entry.getValue().shortcuts().size() < currentBest.getValue().shortcuts().size()) {
-                currentBest = entry;
-            } else if (entry.getValue().edgeDifference().equals(currentBest.getValue().edgeDifference()) && entry.getValue().shortcuts().size() == currentBest.getValue().shortcuts().size() && entry.getKey().getDegree() > currentBest.getKey().getDegree()) {
-                currentBest = entry;
-            }
-        }
-        return currentBest.getKey();
+        return new EdgeDifferenceAndShortCuts(nodeToContract, edgeDifference, shortcutsToInsert);
     }
 
     public int insertShortcuts() {
         int insertionCounter = 0;
         Set<Node> nodes = graphLoader.loadAllNodes(type);
-        Map<Node, EdgeDifferenceAndShortCuts> queue = nodes.stream().collect(Collectors.toMap(x -> x, this::shortCutsToInsert));
+        LastInsertWinsPriorityQueue<EdgeDifferenceAndShortCuts>
+                queue  = new LastInsertWinsPriorityQueue<>(nodes.stream().map(this::shortCutsToInsert));
         int rank = 0;
         while (!queue.isEmpty()) {
-            Node nodeToContract = getBestNext(queue);
-            for (XShortcut shortcut : queue.get(nodeToContract).shortcuts) {
+            StoppedResult<EdgeDifferenceAndShortCuts> poll = new StoppedResult<>(() -> queue.poll());
+            System.err.printf("Poll took %d micro seconds%n", poll.getMillis());
+            Node nodeToContract = poll.getResult().nodeToContract;
+            for (XShortcut shortcut : poll.getResult().shortcuts) {
                 Shortcuts.create(shortcut.in, shortcut.out, costProperty, shortcut.weight);
                 insertionCounter++;
             }
-            queue.remove(nodeToContract);
             nodeToContract.setProperty(rankPropertyName, rank++);
             updateNeighborsInQueue(queue, nodeToContract);
         }
         graphLoader.saveAllNode(nodes);
         return insertionCounter;
     }
+
+    @RequiredArgsConstructor
+    @EqualsAndHashCode(of = "nodeToContract")
+    private static class EdgeDifferenceAndShortCuts implements Comparable<EdgeDifferenceAndShortCuts> {
+        public final Node nodeToContract;
+        public final Integer edgeDifference;
+        public final Collection<XShortcut> shortcuts;
+
+        @Override
+        public int compareTo(EdgeDifferenceAndShortCuts o) {
+            Comparator<EdgeDifferenceAndShortCuts> c = Comparator
+                    .<EdgeDifferenceAndShortCuts>comparingInt(x -> x.edgeDifference)
+                    .thenComparingInt(value -> value.shortcuts.size())
+                    .thenComparing(Comparator.<EdgeDifferenceAndShortCuts>comparingInt(value -> value.nodeToContract.getDegree()).reversed());
+            return c.compare(this, o);
+        }
+    }
+
 }
