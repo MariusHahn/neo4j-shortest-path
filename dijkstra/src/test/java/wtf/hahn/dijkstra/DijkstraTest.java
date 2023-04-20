@@ -1,14 +1,20 @@
 package wtf.hahn.dijkstra;
 
 import static java.util.List.of;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toSet;
 import static org.neo4j.graphdb.Direction.OUTGOING;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -36,12 +42,6 @@ public class DijkstraTest extends IntegrationTest {
                 .map(line -> Arrays.stream(line.split(",")).map(Integer::valueOf).toArray(Integer[]::new))
                 .map(ids -> Arguments.of(ids[0], ids[1]));
     }
-    private static Stream<Arguments> failing() {
-        return Stream.of(
-                Arguments.of(3086, 2880)
-                , Arguments.of(4162,500)
-        );
-    }
 
     @ParameterizedTest
     @MethodSource({"fromTheoPaths",})
@@ -60,6 +60,32 @@ public class DijkstraTest extends IntegrationTest {
                         , chPath.weight()
                         , "%s%n%s".formatted(dijkstraPath.toString(), chPath.toString())
                 );
+            }
+        }
+    }
+    @Test
+    void testOneToManyDijkstra() throws IOException {
+        Set<Integer> ids = Files.lines(IntegrationTest.resourcePath().resolve("oldenburg-st.csv"))
+                .map(line -> Arrays.stream(line.split(",")).map(Integer::valueOf).toArray(Integer[]::new))
+                .flatMap(Arrays::stream).collect(toSet());
+        try (Transaction transaction = database().beginTx()) {
+            Node start = transaction.findNode(() -> "Location", "id", 1);
+            Set<Node> goals = ids.stream().map(id -> transaction.findNode(() -> "Location", "id", id)).collect(toSet());
+            PathExpander<Double> standardExpander = PathExpanders.forTypeAndDirection(relationshipType(), OUTGOING);
+            Map<Node, ShortestPathResult> shortestPaths = dijkstra.find(start, goals, standardExpander);
+            NativeDijkstra nativeDijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, database()));
+            for (Node goal : goals) {
+                WeightedPath dijkstraPath = nativeDijkstra.shortestPath(start, goal, standardExpander, costProperty());
+                if (dijkstraPath != null) {
+                    ShortestPathResult shortestPath = shortestPaths.get(goal);
+                    Assertions.assertNotNull(shortestPath);
+                    Assertions.assertEquals(
+                            dijkstraPath.weight()
+                            , shortestPath.weight()
+                            , "%s%n%s".formatted(dijkstraPath.toString(), shortestPath.toString())
+                    );
+                }
+
             }
         }
     }
