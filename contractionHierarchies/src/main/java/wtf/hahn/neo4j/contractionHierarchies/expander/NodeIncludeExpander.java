@@ -24,9 +24,13 @@ public record NodeIncludeExpander(Node include, PathExpander<Double> expander)
                         .empty()
                         .add(relationshipType, OUTGOING)
                         .add(Shortcuts.shortcutRelationshipType(relationshipType), OUTGOING)
-                        .addNodeFilter(node -> !node.hasProperty(rankPropertyName))
+                        .addNodeFilter(node -> notYetContracted(rankPropertyName, node))
                         .addRelationshipFilter(relationship -> containsNode(relationship, includeNode)).build()
         );
+    }
+
+    static boolean notYetContracted(String rankPropertyName, Node node) {
+        return !node.hasProperty(rankPropertyName);
     }
 
     @Override

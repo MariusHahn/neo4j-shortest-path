@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -24,43 +23,36 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
-import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
+import wtf.hahn.neo4j.contractionHierarchies.expander.NotContractedWithShortcutsExpander;
+import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.inmemory.GraphLoader;
-import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.util.LastInsertWinsPriorityQueue;
 import wtf.hahn.neo4j.util.StoppedResult;
 
 public final class ContractionHierarchiesIndexerByEdgeDifference implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
     private final String costProperty;
-    private final NativeDijkstra dijkstra;
+    private final Dijkstra dijkstra;
     private final String rankPropertyName;
     private final GraphLoader graphLoader;
+    private final NotContractedWithShortcutsExpander notYetContractedExpander;
 
     public ContractionHierarchiesIndexerByEdgeDifference(String type, String costProperty, Transaction transaction, GraphDatabaseService graphDatabaseService) {
         this.type = RelationshipType.withName(type);
         this.costProperty = costProperty;
-        dijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, graphDatabaseService));
         rankPropertyName = Shortcuts.rankPropertyName(this.type);
         graphLoader = new GraphLoader(transaction);
+        dijkstra = new Dijkstra(this.type, costProperty);
+        notYetContractedExpander = new NotContractedWithShortcutsExpander(this.type, rankPropertyName);
     }
 
     void updateNeighborsInQueue(LastInsertWinsPriorityQueue<EdgeDifferenceAndShortCuts> queue, Node nodeToContract) {
-        Set<EdgeDifferenceAndShortCuts> collect = Stream.concat(
-                        Arrays.stream(getNotContractedInNodes(type, nodeToContract))
+        Stream.concat(Arrays.stream(getNotContractedInNodes(type, nodeToContract))
                         , Arrays.stream(getNotContractedOutNodes(type, nodeToContract)))
                 .distinct()
-                .map(nodeToContract1 -> new StoppedResult<>(() -> shortCutsToInsert(nodeToContract1)))
-                .peek(stoppedResult -> System.err.printf(", calc: %d", stoppedResult.getMillis()))
-                .map(StoppedResult::getResult)
-                .collect(Collectors.toSet());
-        System.out.println();
-        StoppedResult<Class<Void>> classStoppedResult = new StoppedResult<>(() -> {
-            collect.forEach(queue::offer);
-            return Void.TYPE;
-        });
-        System.err.printf("Updating queue took %d micro seconds%n", classStoppedResult.getMillis());
+                .map(this::shortCutsToInsert)
+                .forEach(queue::offer);
     }
 
     record XShortcut(Relationship in, Relationship out , Double weight) {}
@@ -73,10 +65,10 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
                 .flatMap(inNode -> Arrays.stream(notContractedOutNodes).filter(outNode -> !inNode.equals(outNode)).map(outNode -> new InOutNode(inNode, outNode)))
                 .parallel()
                 .forEach(inOutNode -> {
-                    Iterable<WeightedPath> shortestPaths = dijkstra.shortestPathsWithShortcuts(inOutNode.inNode, inOutNode.outNode, type, costProperty, rankPropertyName);
+                    WeightedPath shortest = dijkstra.find(inOutNode.inNode, inOutNode.outNode, notYetContractedExpander);
                     NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
-                    WeightedPath includePath = dijkstra.shortestPath(inOutNode.inNode, inOutNode.outNode, includeExpander, costProperty);
-                    if (Iterables.stream(shortestPaths).anyMatch(path -> samePath(path, includePath))) {
+                    WeightedPath includePath = dijkstra.find(inOutNode.inNode, inOutNode.outNode, includeExpander);
+                    if (samePath(shortest, includePath)) {
                         Iterator<Relationship> relationshipIterator = includePath.relationships().iterator();
                         shortcutsToInsert.add(new XShortcut(relationshipIterator.next(), relationshipIterator.next(), includePath.weight()));
                     }
@@ -92,10 +84,9 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
                 queue  = new LastInsertWinsPriorityQueue<>(nodes.stream().map(this::shortCutsToInsert));
         int rank = 0;
         while (!queue.isEmpty()) {
-            StoppedResult<EdgeDifferenceAndShortCuts> poll = new StoppedResult<>(() -> queue.poll());
-            System.err.printf("Poll took %d micro seconds%n", poll.getMillis());
-            Node nodeToContract = poll.getResult().nodeToContract;
-            for (XShortcut shortcut : poll.getResult().shortcuts) {
+            EdgeDifferenceAndShortCuts poll = queue.poll();
+            Node nodeToContract = poll.nodeToContract;
+            for (XShortcut shortcut : poll.shortcuts) {
                 Shortcuts.create(shortcut.in, shortcut.out, costProperty, shortcut.weight);
                 insertionCounter++;
             }

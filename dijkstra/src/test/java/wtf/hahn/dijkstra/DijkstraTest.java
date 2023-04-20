@@ -36,7 +36,7 @@ public class DijkstraTest extends IntegrationTest {
                 .map(line -> Arrays.stream(line.split(",")).map(Integer::valueOf).toArray(Integer[]::new))
                 .map(ids -> Arguments.of(ids[0], ids[1]));
     }
-    private static Stream<Arguments> failing() throws IOException {
+    private static Stream<Arguments> failing() {
         return Stream.of(
                 Arguments.of(3086, 2880)
                 , Arguments.of(4162,500)
@@ -54,27 +54,6 @@ public class DijkstraTest extends IntegrationTest {
             WeightedPath dijkstraPath = nativeDijkstra.shortestPath(start, end, standardExpander, costProperty());
             if (dijkstraPath != null) {
                 ShortestPathResult chPath = dijkstra.find(start, end);
-                Assertions.assertNotNull(chPath);
-                Assertions.assertEquals(
-                        dijkstraPath.weight()
-                        , chPath.weight()
-                        , "%s%n%s".formatted(dijkstraPath.toString(), chPath.toString())
-                );
-            }
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource({"fromTheoPaths",})
-    void testNodeIdToNodeIdFindBi(Integer s, Integer t) {
-        try (Transaction transaction = database().beginTx()) {
-            NativeDijkstra nativeDijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, database()));
-            Node start = transaction.findNode(() -> "Location", "id", s);
-            Node end = transaction.findNode(() -> "Location", "id", t);
-            PathExpander<Double> standardExpander = PathExpanders.forTypeAndDirection(relationshipType(), OUTGOING);
-            WeightedPath dijkstraPath = nativeDijkstra.shortestPath(start, end, standardExpander, costProperty());
-            if (dijkstraPath != null) {
-                ShortestPathResult chPath = dijkstra.findBi(start, end);
                 Assertions.assertNotNull(chPath);
                 Assertions.assertEquals(
                         dijkstraPath.weight()

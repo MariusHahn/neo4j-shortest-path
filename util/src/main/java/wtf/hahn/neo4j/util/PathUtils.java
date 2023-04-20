@@ -11,11 +11,17 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class PathUtils {
+
+
     public static boolean samePath(WeightedPath shortestPath, WeightedPath includePath) {
-        if (shortestPath.length() != includePath.length()) {
+        if (shortestPath.weight() != includePath.weight()) {
             return false;
         }
-        if (shortestPath.weight() != includePath.weight()) {
+        return samePath(shortestPath, (Path) includePath);
+    }
+
+    public static boolean samePath(Path shortestPath, Path includePath) {
+        if (shortestPath.length() != includePath.length()) {
             return false;
         }
         Iterator<Relationship> shortestPathIterator = shortestPath.relationships().iterator();
