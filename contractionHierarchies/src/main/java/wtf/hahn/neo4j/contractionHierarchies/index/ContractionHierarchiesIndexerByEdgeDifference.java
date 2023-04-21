@@ -6,12 +6,13 @@ import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContra
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedOutNodes;
 import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
@@ -60,9 +61,8 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
     EdgeDifferenceAndShortCuts shortCutsToInsert(Node nodeToContract) {
         final Node[] inNodes = getNotContractedInNodes(type, nodeToContract);
         final Node[] outNodes = getNotContractedOutNodes(type, nodeToContract);
-        final Collection<XShortcut> shortcuts = new ArrayList<>();
-        for (int i = 0, inNodesLength = inNodes.length; i < inNodesLength; i++) {
-            final Node inNode = inNodes[i];
+        final Collection<XShortcut> shortcuts = new ConcurrentLinkedDeque<>();
+        Arrays.stream(inNodes).parallel().forEach(inNode -> {
             final Map<Node, ShortestPathResult> shortestPaths = dijkstra.find(inNode, asList(outNodes), notYetContractedExpander);
             for (int j = 0, outNodesLength = outNodes.length; j < outNodesLength; j++) {
                 final Node outNode = outNodes[j];
@@ -74,7 +74,7 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
                     shortcuts.add(new XShortcut(rIter.next(), rIter.next(), includePath.weight()));
                 }
             }
-        }
+        });
         final int edgeDifference = shortcuts.size() - inNodes.length - outNodes.length;
         return new EdgeDifferenceAndShortCuts(nodeToContract, edgeDifference, shortcuts);
     }
@@ -115,5 +115,4 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
             return c.compare(this, o);
         }
     }
-
 }
