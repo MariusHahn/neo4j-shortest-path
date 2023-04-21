@@ -1,19 +1,17 @@
 package wtf.hahn.neo4j.contractionHierarchies.index;
 
-import static java.lang.Math.max;
+import static java.util.Arrays.asList;
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedInNodes;
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedNeighbors;
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedOutNodes;
 import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
@@ -60,31 +58,32 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
 
     record XShortcut(Relationship in, Relationship out , Double weight) {}
     EdgeDifferenceAndShortCuts shortCutsToInsert(Node nodeToContract) {
-        Node[] notContractedInNodes = getNotContractedInNodes(type, nodeToContract);
-        Node[] notContractedOutNodes = getNotContractedOutNodes(type, nodeToContract);
-        Collection<XShortcut> shortcutsToInsert = new ArrayList<>();
-        for (Node inNode : notContractedInNodes) {
-            Map<Node, ShortestPathResult> shortestPaths =
-                    dijkstra.find(inNode, Arrays.stream(notContractedOutNodes).toList(), notYetContractedExpander);
-            for (Node outNode : notContractedOutNodes) {
-                if (inNode == outNode) continue;
-                NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
-                WeightedPath includePath = dijkstra.find(inNode, outNode, includeExpander);
+        final Node[] inNodes = getNotContractedInNodes(type, nodeToContract);
+        final Node[] outNodes = getNotContractedOutNodes(type, nodeToContract);
+        final Collection<XShortcut> shortcuts = new ArrayList<>();
+        for (int i = 0, inNodesLength = inNodes.length; i < inNodesLength; i++) {
+            final Node inNode = inNodes[i];
+            final Map<Node, ShortestPathResult> shortestPaths = dijkstra.find(inNode, asList(outNodes), notYetContractedExpander);
+            for (int j = 0, outNodesLength = outNodes.length; j < outNodesLength; j++) {
+                final Node outNode = outNodes[j];
+                if (inNode == outNode) {continue;}
+                final NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
+                final WeightedPath includePath = dijkstra.find(inNode, outNode, includeExpander);
                 if (samePath(shortestPaths.get(outNode), includePath)) {
-                    Iterator<Relationship> relationshipIterator = includePath.relationships().iterator();
-                    shortcutsToInsert.add(new XShortcut(relationshipIterator.next(), relationshipIterator.next(), includePath.weight()));
+                    final Iterator<Relationship> rIter = includePath.relationships().iterator();
+                    shortcuts.add(new XShortcut(rIter.next(), rIter.next(), includePath.weight()));
                 }
             }
         }
-        int edgeDifference = shortcutsToInsert.size() - notContractedInNodes.length - notContractedOutNodes.length;
-        return new EdgeDifferenceAndShortCuts(nodeToContract, edgeDifference, shortcutsToInsert);
+        final int edgeDifference = shortcuts.size() - inNodes.length - outNodes.length;
+        return new EdgeDifferenceAndShortCuts(nodeToContract, edgeDifference, shortcuts);
     }
 
     public int insertShortcuts() {
         int insertionCounter = 0;
         Set<Node> nodes = graphLoader.loadAllNodes(type);
         LastInsertWinsPriorityQueue<EdgeDifferenceAndShortCuts>
-                queue  = new LastInsertWinsPriorityQueue<>(nodes.stream().map(this::shortCutsToInsert));
+                queue = new LastInsertWinsPriorityQueue<>(nodes.stream().map(this::shortCutsToInsert));
         int rank = 0;
         while (!queue.isEmpty()) {
             EdgeDifferenceAndShortCuts poll = queue.poll();
