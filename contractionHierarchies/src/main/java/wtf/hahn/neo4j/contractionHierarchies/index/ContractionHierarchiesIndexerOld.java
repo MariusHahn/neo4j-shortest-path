@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.index;
 
 import static org.neo4j.graphdb.Direction.INCOMING;
 import static org.neo4j.graphdb.Direction.OUTGOING;
@@ -24,10 +24,10 @@ import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.util.Iterables;
 
-public record ContractionHierarchiesIndexer(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
-                                            RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra, String rankPropertyName) {
+public record ContractionHierarchiesIndexerOld(RelationshipType type, String costProperty, Transaction transaction, List<Node> nodes,
+                                               RelationshipType shortcutType, Comparator<Node> contractionOrderComparator, NativeDijkstra dijkstra, String rankPropertyName) {
 
-    public ContractionHierarchiesIndexer(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator, GraphDatabaseService graphDatabaseService) {
+    public ContractionHierarchiesIndexerOld(String type, String costProperty, Transaction transaction, Comparator<Node> contractionOrderComparator, GraphDatabaseService graphDatabaseService) {
         this(
                 RelationshipType.withName(type)
                 , costProperty

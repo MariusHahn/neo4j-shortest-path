@@ -27,14 +27,13 @@ application {
     mainClass.set("Application")
 }
 
-tasks.jar {
-    manifest {
-        attributes["Main-Class"] = "Application"
-    }
+
+tasks.register<Jar>("uberJar") {
+    manifest.attributes["Main-Class"] = "Application"
+    archiveClassifier.set("uber")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    configurations.implementation.get().isCanBeResolved = true
-    val localDependencies = configurations.implementation.get()
-        .filter { it.name.endsWith("jar") }
-        .map{zipTree(it)}
-    from(localDependencies)
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    val jars = configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }
+    from(jars.map { zipTree(it) })
 }

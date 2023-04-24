@@ -22,11 +22,11 @@ tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
 
-tasks.jar {
+tasks.register<Jar>("uberJar") {
+    archiveClassifier.set("uber")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    configurations.implementation.get().isCanBeResolved = true
-    val localDependencies = configurations.implementation.get()
-        .filter { it.name.endsWith("jar") }
-        .map{zipTree(it)}
-    from(localDependencies)
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    val jars = configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }
+    from(jars.map { zipTree(it) })
 }

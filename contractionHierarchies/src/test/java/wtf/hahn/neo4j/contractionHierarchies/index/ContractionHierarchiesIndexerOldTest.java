@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.index;
 
 import static java.util.List.of;
 
@@ -9,21 +9,22 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerOld;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.testUtil.ShortcutTriple;
 
-public class ContractionHierarchiesIndexerTest extends IntegrationTest {
+public class ContractionHierarchiesIndexerOldTest extends IntegrationTest {
 
-    public ContractionHierarchiesIndexerTest() {
+    public ContractionHierarchiesIndexerOldTest() {
         super(of(), of(), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
     }
 
     @Test
     void chReverseDegreeTest() {
         try (Transaction transaction = database().beginTx()) {
-            new ContractionHierarchiesIndexer(
+            new ContractionHierarchiesIndexerOld(
                     relationshipType().name()
                     , costProperty()
                     , transaction

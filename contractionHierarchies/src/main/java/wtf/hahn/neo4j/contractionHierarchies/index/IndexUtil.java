@@ -10,11 +10,12 @@ import static org.neo4j.graphdb.Direction.OUTGOING;
 import static wtf.hahn.neo4j.model.Shortcuts.shortcutRelationshipType;
 
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class IndexUtil {
 
-    private static Node[] getNotContractedNeighbors(RelationshipType relationshipType, Node nodeToContract,
-                                                    Direction direction) {
+    public static Stream<Node> getNotContractedNeighbors(RelationshipType relationshipType, Node nodeToContract,
+                                                          Direction direction) {
         Function<Relationship, Node> getNeighbor = direction == OUTGOING
                 ? Relationship::getEndNode
                 : Relationship::getStartNode;
@@ -24,15 +25,14 @@ public class IndexUtil {
                 .parallel()
                 .map(getNeighbor)
                 .filter(n -> !n.hasProperty(Shortcuts.rankPropertyName(relationshipType)))
-                .distinct()
-                .toArray(Node[]::new);
+                .distinct();
     }
 
     public static Node[] getNotContractedOutNodes(RelationshipType relationshipType, Node nodeToContract) {
-        return getNotContractedNeighbors(relationshipType, nodeToContract, OUTGOING);
+        return getNotContractedNeighbors(relationshipType, nodeToContract, OUTGOING).toArray(Node[]::new);
     }
 
     public static Node[] getNotContractedInNodes(RelationshipType relationshipType, Node nodeToContract) {
-        return getNotContractedNeighbors(relationshipType, nodeToContract, INCOMING);
+        return getNotContractedNeighbors(relationshipType, nodeToContract, INCOMING).toArray(Node[]::new);
     }
 }

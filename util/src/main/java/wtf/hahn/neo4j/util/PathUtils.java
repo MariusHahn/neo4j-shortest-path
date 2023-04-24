@@ -1,14 +1,13 @@
 package wtf.hahn.neo4j.util;
 
+import java.util.Iterator;
+import java.util.stream.Stream;
+
 import org.neo4j.graphalgo.WeightedPath;
-import org.neo4j.graphalgo.impl.util.PathImpl;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
-
-import java.util.Iterator;
-import java.util.stream.Stream;
 
 public class PathUtils {
 
@@ -32,6 +31,78 @@ public class PathUtils {
             }
         }
         return true;
+    }
+
+    public static boolean contains(Path path, Node node) {
+        for (Node pNode : path.nodes()) if (pNode.equals(node)) {return true;}
+        return false;
+    }
+
+    public static WeightedPath joinSameMiddleNode(WeightedPath inwards, WeightedPath outwards) {
+        assert inwards.startNode() == outwards.startNode();
+        return new WeightedPath() {
+            @Override
+            public double weight() {
+                return inwards.weight() + outwards.weight();
+            }
+
+            @Override
+            public Node startNode() {
+                return inwards.lastRelationship().getEndNode();
+            }
+
+            @Override
+            public Node endNode() {
+                return outwards.lastRelationship().getEndNode();
+            }
+
+            @Override
+            public Relationship lastRelationship() {
+                return outwards.lastRelationship();
+            }
+
+            @Override
+            public Iterable<Relationship> relationships() {
+                return Stream.concat(
+                        Iterables.stream(inwards.reverseRelationships())
+                        , Iterables.stream(outwards.relationships())
+                )::iterator;
+            }
+
+            @Override
+            public Iterable<Relationship> reverseRelationships() {
+                return Stream.concat(
+                        Iterables.stream(outwards.reverseRelationships())
+                        , Iterables.stream(inwards.relationships())
+                )::iterator;
+            }
+
+            @Override
+            public Iterable<Node> nodes() {
+                return Stream.concat(
+                        Iterables.stream(inwards.reverseNodes())
+                        , Iterables.stream(outwards.nodes())
+                )::iterator;
+            }
+
+            @Override
+            public Iterable<Node> reverseNodes() {
+                return Stream.concat(
+                        Iterables.stream(outwards.reverseNodes())
+                        , Iterables.stream(inwards.nodes())
+                )::iterator;
+            }
+
+            @Override
+            public int length() {
+                return inwards.length() + outwards.length();
+            }
+
+            @Override
+            public Iterator<Entity> iterator() {
+                return new ZipIterator<>(nodes(), relationships());
+            }
+        };
     }
 
     public static Path bidirectional(Path forward, Path backward) {

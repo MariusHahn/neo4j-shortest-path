@@ -51,9 +51,9 @@ public class BidirectionChDijkstra {
         private final Map<Node, DijkstraState> forwardStates = new HashMap<>();
         private final Map<Node, DijkstraState> backwardStates = new HashMap<>();
         private ShortestPathResult shortestPathCandidate = new ShortestPathResult();
-        long rank = 0L;
-        boolean continueBackward = true;
-        boolean continueForward = true;
+        private long rank = 0L;
+        private boolean continueBackward = true;
+        private boolean continueForward = true;
 
         Query(Node start, Node goal) {
             this.start = start;
