@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedInNodes;
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedNeighbors;
 import static wtf.hahn.neo4j.contractionHierarchies.index.IndexUtil.getNotContractedOutNodes;
-import static wtf.hahn.neo4j.util.PathUtils.samePath;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,20 +16,19 @@ import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NotContractedWithShortcutsExpander;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.ShortestPathResult;
 import wtf.hahn.neo4j.model.inmemory.GraphLoader;
 import wtf.hahn.neo4j.util.LastInsertWinsPriorityQueue;
+import wtf.hahn.neo4j.util.PathUtils;
 
 public final class ContractionHierarchiesIndexerByEdgeDifference implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
@@ -67,11 +65,10 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
             for (int j = 0, outNodesLength = outNodes.length; j < outNodesLength; j++) {
                 final Node outNode = outNodes[j];
                 if (inNode == outNode) {continue;}
-                final NodeIncludeExpander includeExpander = new NodeIncludeExpander(nodeToContract, type, rankPropertyName);
-                final WeightedPath includePath = dijkstra.find(inNode, outNode, includeExpander);
-                if (samePath(shortestPaths.get(outNode), includePath)) {
-                    final Iterator<Relationship> rIter = includePath.relationships().iterator();
-                    shortcuts.add(new XShortcut(rIter.next(), rIter.next(), includePath.weight()));
+                ShortestPathResult shortestPath = shortestPaths.get(outNode);
+                if (!(shortestPath.length() != 2 || !PathUtils.contains(shortestPath, nodeToContract))) {
+                    final Iterator<Relationship> rIter = shortestPath.relationships().iterator();
+                    shortcuts.add(new XShortcut(rIter.next(), rIter.next(), shortestPath.weight()));
                 }
             }
         });
