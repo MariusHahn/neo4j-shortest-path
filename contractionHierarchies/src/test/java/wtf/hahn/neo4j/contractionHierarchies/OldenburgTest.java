@@ -46,15 +46,14 @@ public class OldenburgTest extends IntegrationTest {
     }
 
     private static Stream<Arguments> randomPaths() {
-        Random random = new Random(73);
-        return random.ints(200, 0, 6104)
-                .mapToObj(i -> random.ints(200, 0, 6104).filter(j -> j != i).mapToObj(j -> new int[] {i, j}))
+        return new Random(73).ints(31, 0, 6104)
+                .mapToObj(i -> new Random(37).ints(31, 0, 6104).filter(j -> j != i).mapToObj(j -> new int[] {i, j}))
                 .flatMap(Function.identity())
                 .map(x -> Arguments.of(x[0], x[1]));
     }
 
     @ParameterizedTest
-    @MethodSource({/*"randomPaths",*/ "fromTheoPaths",})
+    @MethodSource({"randomPaths", "fromTheoPaths",})
     void testNodeIdToNodeId(Integer s, Integer t) {
         try (Transaction transaction = database().beginTx()) {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);

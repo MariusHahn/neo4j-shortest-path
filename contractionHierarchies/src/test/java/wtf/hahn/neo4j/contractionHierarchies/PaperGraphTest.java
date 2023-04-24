@@ -17,6 +17,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerOld;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
@@ -30,7 +31,7 @@ public class PaperGraphTest extends IntegrationTest {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
             Comparator<Node> comparator = Comparator.comparingLong(node -> getLongProperty(node, RANK_PROPERTY_NAME));
-            new ContractionHierarchiesIndexer(dataset.relationshipTypeName, costProperty, transaction, comparator, database()).insertShortcuts();
+            new ContractionHierarchiesIndexerOld(dataset.relationshipTypeName, costProperty, transaction, comparator, database()).insertShortcuts();
             transaction.commit();
         }
     }

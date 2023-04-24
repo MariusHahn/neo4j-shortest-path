@@ -11,6 +11,7 @@ import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerOld;
 import wtf.hahn.neo4j.util.Iterables;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.EntityHelper;
@@ -24,7 +25,7 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
     @Test
     void sourceTargetCypher() {
         try (Transaction transaction = database().beginTx()) {
-            new ContractionHierarchiesIndexer(
+            new ContractionHierarchiesIndexerOld(
                     relationshipType().name()
                     , costProperty()
                     , transaction

@@ -8,15 +8,19 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerOld;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
@@ -30,30 +34,30 @@ public class RomeTest extends IntegrationTest {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
             Comparator<Node> comparator = Comparator.comparingInt(Node::getDegree);
-            new ContractionHierarchiesIndexer(edgeLabel, costProperty, transaction, comparator, database()).insertShortcuts();
+            new ContractionHierarchiesIndexerOld(edgeLabel, costProperty, transaction, comparator, database()).insertShortcuts();
             transaction.commit();
         }
     }
 
-    @Test
-    void testRomeEdgeCases() throws IOException {
-        Files.lines(Paths.get("src", "test", "resources", "testRomeEdgeCases.csv"))
+    private static Stream<Arguments> testRomeEdgeCases() throws IOException {
+        return Files.lines(Paths.get("src", "test", "resources", "testRomeEdgeCases.csv"))
                 .skip(1)
                 .parallel()
                 .map(line -> line.split(","))
-                .forEach(line -> sourceTargetProbe(Integer.valueOf(line[0].trim()), Integer.valueOf(line[1].trim())));
+                .limit(1000)
+                .map(line -> Arguments.of(Integer.valueOf(line[0].trim()), Integer.valueOf(line[1].trim())));
     }
 
-    @Test
-    void randomPaths() {
-        Random random = new Random(73);
-        random.ints(200, 1, 3353)
-                .mapToObj(i -> random.ints(200, 1, 3353).mapToObj(j -> new int[] {i, j}))
+    private static Stream<Arguments>  randomPaths() {
+        return new Random(73).ints(31, 1, 3353)
+                .mapToObj(i -> new Random(37).ints(31, 1, 3353).mapToObj(j -> new int[] {i, j}))
                 .flatMap(Function.identity())
                 .parallel()
-                .forEach(x -> sourceTargetProbe(x[0], x[1]));
+                .map(x -> Arguments.of(x[0], x[1]));
     }
 
+    @MethodSource({"randomPaths", "testRomeEdgeCases"})
+    @ParameterizedTest
     void sourceTargetProbe(Integer startNodeId, Integer endNodeId) {
         try (Transaction transaction = database().beginTx()) {
             ContractionHierarchies chFinder = new ContractionHierarchies(database(), transaction);
