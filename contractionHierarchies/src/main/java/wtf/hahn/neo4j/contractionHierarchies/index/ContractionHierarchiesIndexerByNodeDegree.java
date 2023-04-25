@@ -23,7 +23,8 @@ import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
-import wtf.hahn.neo4j.model.inmemory.GraphLoader;
+import wtf.hahn.neo4j.model.GraphLoader;
+import wtf.hahn.neo4j.model.inmemory.GraphLoaderInMemory;
 import wtf.hahn.neo4j.util.Iterables;
 
 public final class ContractionHierarchiesIndexerByNodeDegree implements ContractionHierarchiesIndexer {
@@ -39,7 +40,7 @@ public final class ContractionHierarchiesIndexerByNodeDegree implements Contract
         this.costProperty = costProperty;
         dijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, databaseService));
         rankPropertyName = Shortcuts.rankPropertyName(this.type);
-        graphLoader = new GraphLoader(transaction);
+        graphLoader = new GraphLoaderInMemory(transaction);
     }
 
     record XShortcut(Relationship in, Relationship out , Double weight) {}

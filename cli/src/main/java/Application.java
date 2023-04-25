@@ -68,8 +68,6 @@ public class Application {
             sqlite.setAutoCommit(false);
             PreparedStatement ps = sqlite.prepareStatement(sql);
             val evaluationContext = new BasicEvaluationContext(transaction, db);
-            val dijkstra = new NativeDijkstra(evaluationContext);
-            val finder = new ContractionHierarchiesFinder(evaluationContext, relationshipType, costProperty);
             Dijkstra dijkstra2 = new Dijkstra(relationshipType, costProperty);
             BidirectionChDijkstra bidirectionChDijkstra = new BidirectionChDijkstra(relationshipType, costProperty);
             Files.lines(sourceTargetCsvLocation)

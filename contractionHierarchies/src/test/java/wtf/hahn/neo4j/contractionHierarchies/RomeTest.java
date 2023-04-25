@@ -1,6 +1,8 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.DISK;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +22,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerOld;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
@@ -33,8 +35,7 @@ public class RomeTest extends IntegrationTest {
     public RomeTest() {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
-            Comparator<Node> comparator = Comparator.comparingInt(Node::getDegree);
-            new ContractionHierarchiesIndexerOld(edgeLabel, costProperty, transaction, comparator, database()).insertShortcuts();
+            new ContractionHierarchiesIndexerByEdgeDifference(edgeLabel, costProperty, transaction, DISK).insertShortcuts();
             transaction.commit();
         }
     }

@@ -13,12 +13,13 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.model.GraphLoader;
 import wtf.hahn.neo4j.model.Shortcuts;
 import static wtf.hahn.neo4j.model.inmemory.Modification.CREATED;
 import static wtf.hahn.neo4j.model.inmemory.Modification.DELETED;
 import static wtf.hahn.neo4j.model.inmemory.Modification.MODIFIED;
 
-public class GraphLoader {
+public class GraphLoaderInMemory implements GraphLoader {
 
     private final Transaction transaction;
     private final List<VRelationship> createdRelationships = new ArrayList<>();
@@ -47,10 +48,11 @@ public class GraphLoader {
         }
     }
 
-    public GraphLoader(Transaction transaction) {
+    public GraphLoaderInMemory(Transaction transaction) {
         this.transaction = transaction;
     }
 
+    @Override
     public Set<Node> loadAllNodes(RelationshipType type) {
         final Map<VNode, VNode> nodes = new HashMap<>();
         for (final Relationship relationship : (Iterable<Relationship>) () -> transaction.findRelationships(type)) {
@@ -63,6 +65,7 @@ public class GraphLoader {
         return Collections.unmodifiableSet(nodes.keySet());
     }
 
+    @Override
     public void saveAllNode(Collection<Node> nodes) {
         createAllRelationships();
         final Iterable<VNode> vNodes = nodes.stream().map(VNode.class::cast)::iterator;

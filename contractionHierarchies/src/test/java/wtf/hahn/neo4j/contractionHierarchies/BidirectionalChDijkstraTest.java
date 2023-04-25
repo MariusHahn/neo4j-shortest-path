@@ -2,6 +2,7 @@ package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
 import static org.neo4j.graphdb.Direction.OUTGOING;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +36,7 @@ public class BidirectionalChDijkstraTest extends IntegrationTest {
         super(of(), of(), of(), TestDataset.OLDENBURG);
         try (Transaction transaction = database().beginTx()) {
             new ContractionHierarchiesIndexerByEdgeDifference(
-                    edgeLabel, costProperty, transaction, database()
+                    edgeLabel, costProperty, transaction, INMEMORY
             ).insertShortcuts();
             transaction.commit();
         }

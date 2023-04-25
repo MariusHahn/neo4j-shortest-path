@@ -28,9 +28,9 @@ public class VNode extends VEntity implements Node {
     private final Map<Label, Modification> labels;
     private final List<Relationship> outgoing;
     private final List<Relationship> ingoing;
-    private final GraphLoader graphLoader;
+    private final GraphLoaderInMemory graphLoader;
 
-    public VNode(Node node, GraphLoader graphLoader) {
+    public VNode(Node node, GraphLoaderInMemory graphLoader) {
         super(node);
         this.graphLoader = graphLoader;
         outgoing = new ArrayList<>();
