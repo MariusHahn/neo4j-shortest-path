@@ -63,34 +63,22 @@ public class PathUtils {
 
             @Override
             public Iterable<Relationship> relationships() {
-                return Stream.concat(
-                        Iterables.stream(inwards.reverseRelationships())
-                        , Iterables.stream(outwards.relationships())
-                )::iterator;
+                return new JoinIterator<>(inwards.reverseRelationships(), outwards.relationships());
             }
 
             @Override
             public Iterable<Relationship> reverseRelationships() {
-                return Stream.concat(
-                        Iterables.stream(outwards.reverseRelationships())
-                        , Iterables.stream(inwards.relationships())
-                )::iterator;
+                return new JoinIterator<>(outwards.reverseRelationships(), inwards.relationships());
             }
 
             @Override
             public Iterable<Node> nodes() {
-                return Stream.concat(
-                        Iterables.stream(inwards.reverseNodes())
-                        , Iterables.stream(outwards.nodes())
-                )::iterator;
+                return new JoinIterator<>(inwards.reverseNodes(), outwards.nodes());
             }
 
             @Override
             public Iterable<Node> reverseNodes() {
-                return Stream.concat(
-                        Iterables.stream(outwards.reverseNodes())
-                        , Iterables.stream(inwards.nodes())
-                )::iterator;
+                return new JoinIterator<>(outwards.reverseNodes(),inwards.nodes());
             }
 
             @Override
@@ -124,28 +112,22 @@ public class PathUtils {
 
             @Override
             public Iterable<Relationship> relationships() {
-                return Stream.concat(
-                        Iterables.stream(forward.relationships())
-                        , Iterables.stream(backward.reverseRelationships())
-                )::iterator;
+                return new JoinIterator<>(forward.relationships(), backward.reverseRelationships());
             }
 
             @Override
             public Iterable<Relationship> reverseRelationships() {
-                return Stream.concat(
-                        Iterables.stream(forward.reverseRelationships())
-                        , Iterables.stream(backward.relationships())
-                )::iterator;
+                return new JoinIterator<>(forward.reverseRelationships(), backward.relationships());
             }
 
             @Override
             public Iterable<Node> nodes() {
-                return Stream.concat(Iterables.stream(forward.nodes()), Iterables.stream(backward.reverseNodes()))::iterator;
+                return new JoinIterator<>(forward.nodes(), backward.reverseNodes());
             }
 
             @Override
             public Iterable<Node> reverseNodes() {
-                return Stream.concat(Iterables.stream(backward.nodes()), Iterables.stream(forward.reverseNodes()))::iterator;
+                return new JoinIterator<>(backward.nodes(), forward.reverseNodes());
             }
 
             @Override
@@ -155,10 +137,8 @@ public class PathUtils {
 
             @Override
             public Iterator<Entity> iterator() {
-                Stream<Entity> forwardEntity = Iterables.stream(forward.iterator());
-                Stream<Entity> backwardEntity = Iterables.stream(
-                        (Iterable<Entity>) new ZipIterator<>(backward.reverseNodes(), backward.reverseRelationships()));
-                return Stream.concat(forwardEntity, backwardEntity).iterator();
+                Iterable<Entity> backwardEntity = new ZipIterator<>(backward.reverseNodes(), backward.reverseRelationships());
+                return new JoinIterator<>(forward, backwardEntity);
             }
         };
     }
