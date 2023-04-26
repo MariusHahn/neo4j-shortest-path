@@ -36,62 +36,85 @@ public class Dijkstra {
     }
 
     public ShortestPathResult find(Node start, Node goal, PathExpander<Double> expander) {
-        return new Query(start, Set.of(goal), expander).getResult().get(goal);
+        return new Query(start, Set.of(goal), expander, weightFunction).getResult().get(goal);
     }
 
     public ShortestPathResult find(Node start, Node goal) {
-        return new Query(start, Set.of(goal), baseExpander).getResult().get(goal);
+        return new Query(start, Set.of(goal), baseExpander, weightFunction).getResult().get(goal);
     }
     public Map<Node, ShortestPathResult> find(Node start, Collection<Node> goals) {
-        return new Query(start, new HashSet<>(goals), baseExpander).getResult();
+        return new Query(start, new HashSet<>(goals), baseExpander, weightFunction).getResult();
     }
 
     public Map<Node, ShortestPathResult> find(Node start, Collection<Node> goals, PathExpander<Double> expander) {
-        return new Query(start, new HashSet<>(goals), expander).getResult();
+        return new Query(start, new HashSet<>(goals), expander, weightFunction).getResult();
     }
 
-    class Query {
+    public static class Query {
         private final Set<Node> goals;
         private final PriorityQueue<DijkstraState> queue = new PriorityQueue<>();
         private final Map<Node, DijkstraState> seen = new HashMap<>();
         private final PathExpander<Double> expander;
         private final Map<Node, ShortestPathResult> shortestPaths;
+        private final CostEvaluator<Double> weightFunction;
+        private DijkstraState latestExpand;
 
-        Query(Node start,  Set<Node> goals, PathExpander<Double> expander) {
+        public Query(Node start, Set<Node> goals, PathExpander<Double> expander,
+                     CostEvaluator<Double> weightFunction) {
             this.goals = goals;
             this.expander = expander;
+            this.weightFunction = weightFunction;
             DijkstraState init = new DijkstraState(start);
             queue.offer(init);
             seen.put(start, init);
             shortestPaths = new HashMap<>(goals.size() * 4 / 3 );
         }
 
-        public Map<Node, ShortestPathResult> getResult() {
-            while (!queue.isEmpty() && goals.size() != shortestPaths.size()) {
-                final DijkstraState state = queue.poll();
-                if (goals.contains(state.getEndNode())) {
-                    shortestPaths.put(state.getEndNode(), new ShortestPathResult(state.getPath(), state.getCost(), 0, queue.size()));
-                }
-                final ResourceIterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
-                state.settled = true;
-                for (Relationship relationship : relationships) {
-                    final Node neighbor = relationship.getOtherNode(state.getEndNode());
-                    final Double cost = weightFunction.getCost(relationship, Direction.BOTH);
-                    if (mustUpdateNeighborState(state, neighbor, cost)) {
-                        final Path newPath = ExtendedPath.extend(state.getPath(), relationship);
-                        final DijkstraState newState = new DijkstraState(neighbor, newPath, state.getCost() + cost);
-                        queue.remove(newState);
-                        queue.offer(newState);
-                        seen.put(neighbor, newState);
-                    }
+        private Map<Node, ShortestPathResult> getResult() {
+            while (!isComplete()) {expandNext();}
+            return shortestPaths;
+        }
+
+        public void expandNext() {
+            final DijkstraState state = queue.poll();
+            latestExpand = state;
+            if (goals.contains(state.getEndNode()) || goals.isEmpty()) {
+                shortestPaths.put(state.getEndNode(), new ShortestPathResult(state.getPath(), state.getCost(), 0, queue.size()));
+            }
+            final ResourceIterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
+            state.settled = true;
+            for (Relationship relationship : relationships) {
+                final Node neighbor = relationship.getOtherNode(state.getEndNode());
+                final Double cost = weightFunction.getCost(relationship, Direction.BOTH);
+                if (mustUpdateNeighborState(state, neighbor, cost)) {
+                    final Path newPath = ExtendedPath.extend(state.getPath(), relationship);
+                    final DijkstraState newState = new DijkstraState(neighbor, newPath, state.getCost() + cost);
+                    queue.remove(newState);
+                    queue.offer(newState);
+                    seen.put(neighbor, newState);
                 }
             }
-            return shortestPaths;
+        }
+
+        public boolean isComplete() {
+            return queue.isEmpty() || (goals.size() == shortestPaths.size() && goals.size() != 0);
         }
 
         private boolean mustUpdateNeighborState(DijkstraState state, Node neighbor, Double cost) {
             return !seen.containsKey(neighbor) ||
                     !(seen.get(neighbor).settled || seen.get(neighbor).getCost() < state.getCost() + cost);
+        }
+
+        public Map<Node, ShortestPathResult> resultMap() {
+            return shortestPaths;
+        }
+
+        public Node latestExpand() {
+            return latestExpand.getEndNode();
+        }
+
+        public double latestWeight() {
+            return shortestPaths.get(latestExpand.getEndNode()).weight();
         }
     }
 }
