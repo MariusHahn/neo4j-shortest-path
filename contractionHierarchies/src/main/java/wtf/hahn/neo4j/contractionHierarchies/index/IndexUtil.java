@@ -22,7 +22,6 @@ public class IndexUtil {
         return nodeToContract.getRelationships(direction, relationshipType,
                         shortcutRelationshipType(relationshipType))
                 .stream()
-                .parallel()
                 .map(getNeighbor)
                 .filter(n -> !n.hasProperty(Shortcuts.rankPropertyName(relationshipType)))
                 .distinct();

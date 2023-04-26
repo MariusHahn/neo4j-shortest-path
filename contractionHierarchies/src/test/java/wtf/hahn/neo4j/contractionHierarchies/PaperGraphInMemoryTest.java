@@ -1,6 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -28,7 +29,7 @@ public class PaperGraphInMemoryTest extends IntegrationTest {
     public PaperGraphInMemoryTest() {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
-            int inse = new ContractionHierarchiesIndexerByEdgeDifference(dataset.relationshipTypeName, costProperty, transaction, database()).insertShortcuts();
+            int inse = new ContractionHierarchiesIndexerByEdgeDifference(dataset.relationshipTypeName, costProperty, transaction, INMEMORY).insertShortcuts();
             System.out.printf("%d shortCuts have been inserted%n", inse);
             transaction.commit();
         }

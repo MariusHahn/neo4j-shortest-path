@@ -1,6 +1,8 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.DISK;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
 import java.util.Comparator;
@@ -17,9 +19,12 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerOld;
+import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionChDijkstra;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
+import wtf.hahn.neo4j.model.Shortcuts;
+import wtf.hahn.neo4j.model.ShortestPathResult;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 public class PaperGraphTest extends IntegrationTest {
@@ -30,8 +35,9 @@ public class PaperGraphTest extends IntegrationTest {
     public PaperGraphTest() {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
-            Comparator<Node> comparator = Comparator.comparingLong(node -> getLongProperty(node, RANK_PROPERTY_NAME));
-            new ContractionHierarchiesIndexerOld(dataset.relationshipTypeName, costProperty, transaction, comparator, database()).insertShortcuts();
+            new ContractionHierarchiesIndexerByEdgeDifference(
+                    dataset.relationshipTypeName, costProperty, transaction, DISK
+            ).insertShortcuts();
             transaction.commit();
         }
     }
@@ -41,7 +47,7 @@ public class PaperGraphTest extends IntegrationTest {
     void testEachNodeToEveryOther(Number startNodeId, Number endNodeId) {
         try (Transaction transaction = database().beginTx()) {
             BasicEvaluationContext context = new BasicEvaluationContext(transaction, database());
-            TreeBasedCHSearch searcher = new TreeBasedCHSearch(context, relationshipType(), RANK_PROPERTY_NAME, costProperty);
+            TreeBasedCHSearch searcher = new TreeBasedCHSearch(context, relationshipType(), Shortcuts.rankPropertyName(relationshipType()), costProperty);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
             WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database())).shortestPathWithShortcuts(start, end, type, costProperty);

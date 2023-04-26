@@ -22,12 +22,10 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
-import wtf.hahn.neo4j.contractionHierarchies.ContractionHierarchiesFinder;
 import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionChDijkstra;
-import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
-import wtf.hahn.neo4j.util.GrFileImporter;
-import wtf.hahn.neo4j.util.GrFileLoader;
+import wtf.hahn.neo4j.util.importer.FileImporter;
+import wtf.hahn.neo4j.util.importer.GrFileLoader;
 import wtf.hahn.neo4j.util.SimpleSetting;
 import wtf.hahn.neo4j.util.StoppedResult;
 import static wtf.hahn.neo4j.util.EntityHelper.*;
@@ -51,8 +49,8 @@ public class Application {
         createSqlite();
         db = neo4j.defaultDatabaseService();
         log.debug("Start importing");
-        GrFileImporter grFileImporter = new GrFileImporter(new GrFileLoader(parser.getCypherLocation()), db);
-        grFileImporter.importAllNodes();
+        FileImporter fileImporter = new FileImporter(new GrFileLoader(parser.getCypherLocation()), db);
+        fileImporter.importAllNodes();
         log.debug("end importing");
         insertShortcuts(parser.getRelationshipType(), parser.getCostProperty());
         sourceTargetTests(parser.getSourceTargetCsvLocation());
@@ -68,8 +66,6 @@ public class Application {
             sqlite.setAutoCommit(false);
             PreparedStatement ps = sqlite.prepareStatement(sql);
             val evaluationContext = new BasicEvaluationContext(transaction, db);
-            val dijkstra = new NativeDijkstra(evaluationContext);
-            val finder = new ContractionHierarchiesFinder(evaluationContext, relationshipType, costProperty);
             Dijkstra dijkstra2 = new Dijkstra(relationshipType, costProperty);
             BidirectionChDijkstra bidirectionChDijkstra = new BidirectionChDijkstra(relationshipType, costProperty);
             Files.lines(sourceTargetCsvLocation)

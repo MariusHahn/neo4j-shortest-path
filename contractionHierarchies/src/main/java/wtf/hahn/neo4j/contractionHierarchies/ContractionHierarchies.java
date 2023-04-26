@@ -11,6 +11,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
 import wtf.hahn.neo4j.model.PathResult;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 
 @RequiredArgsConstructor
 public class ContractionHierarchies {
@@ -18,7 +19,7 @@ public class ContractionHierarchies {
     private final Transaction transaction;
 
     public int createContractionHierarchiesIndex(String type, String costProperty) {
-        return new ContractionHierarchiesIndexerByEdgeDifference(type, costProperty, transaction, graphDatabaseService).insertShortcuts();
+        return new ContractionHierarchiesIndexerByEdgeDifference(type, costProperty, transaction, INMEMORY).insertShortcuts();
     }
 
     public Stream<PathResult> sourceTargetCH(Node startNode, Node endNode, String type, String costProperty) {

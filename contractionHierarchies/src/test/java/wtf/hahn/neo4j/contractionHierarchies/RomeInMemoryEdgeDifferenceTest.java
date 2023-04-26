@@ -1,6 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,8 +34,7 @@ public class RomeInMemoryEdgeDifferenceTest extends IntegrationTest {
     public RomeInMemoryEdgeDifferenceTest() {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
-                new ContractionHierarchiesIndexerByEdgeDifference(edgeLabel, costProperty, transaction,
-                        database()).insertShortcuts();
+                new ContractionHierarchiesIndexerByEdgeDifference(edgeLabel, costProperty, transaction, INMEMORY).insertShortcuts();
             transaction.commit();
         }
     }

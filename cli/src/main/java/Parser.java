@@ -11,6 +11,9 @@ import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexer
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByNodeDegree;
 
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.DISK;
+import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -59,7 +62,8 @@ public class Parser {
     public ContractionHierarchiesIndexer getContractionAlgorithm(String relationshipType, String costProperty, Transaction tx, GraphDatabaseService db) {
         String alg = commandLine.getOptionValue(contractionAlgorithm);
         return switch (alg) {
-            case "edge-difference" -> new ContractionHierarchiesIndexerByEdgeDifference(relationshipType, costProperty, tx, db);
+            case "edge-difference" -> new ContractionHierarchiesIndexerByEdgeDifference(relationshipType, costProperty, tx, INMEMORY);
+            case "edge-difference-disk" -> new ContractionHierarchiesIndexerByEdgeDifference(relationshipType, costProperty, tx, DISK);
             case "node-degree" -> new ContractionHierarchiesIndexerByNodeDegree(relationshipType, costProperty, tx, db);
             //case "cch-edge-difference" -> "";
             //case "cch-node-degree" -> "";
