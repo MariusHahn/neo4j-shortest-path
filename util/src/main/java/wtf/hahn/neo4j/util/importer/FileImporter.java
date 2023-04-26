@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -20,29 +20,31 @@ public class FileImporter {
     private final FileLoader fileLoader;
     private final GraphDatabaseService db;
     private final Map<Integer, String> idMapping = new HashMap<>();
+    private final int periodicCommitEvery = 10000;
 
     public void importAllNodes() throws IOException {
-        Map<Integer, Node> nodes = new HashMap<>();
-        AtomicInteger counter = new AtomicInteger(0);
-        Iterator<LoadFileRelationship> relationshipIterator = fileLoader.loadFileRelationships().iterator();
+        val relationshipIterator = fileLoader.loadFileRelationships().iterator();
         while (relationshipIterator.hasNext()) {
             try (Transaction transaction = db.beginTx()){
-                for (int i = 0; i < 10000 && relationshipIterator.hasNext(); i++) {
-                    LoadFileRelationship grLine = relationshipIterator.next();
-                    nodes.computeIfAbsent(grLine.startId(), key -> getOrCreateNode(transaction, key));
-                    Node s = nodes.computeIfAbsent(grLine.startId(), key -> getOrCreateNode(transaction, key));
-                    idMapping.put(grLine.startId(), s.getElementId());
-                    Node t = nodes.computeIfAbsent(grLine.endId(), key -> getOrCreateNode(transaction, key));
-                    idMapping.put(grLine.endId(), s.getElementId());
-                    Relationship road = s.createRelationshipTo(t, RelationshipType.withName("ROAD"));
-                    road.setProperty("cost", grLine.distance());
-                    counter.incrementAndGet();
+                Map<Integer, Node> nodes = new HashMap<>();
+                for (int i = 0; i < periodicCommitEvery && relationshipIterator.hasNext(); i++) {
+                    importRelationship(nodes, relationshipIterator, transaction);
                 }
-                System.out.printf("%d nodes relationships%n", counter.get());
-                nodes.clear();
                 transaction.commit();
             }
         }
+    }
+
+    private void importRelationship(Map<Integer, Node> nodes, Iterator<LoadFileRelationship> relationshipIterator,
+                           Transaction transaction) {
+        LoadFileRelationship grLine = relationshipIterator.next();
+        nodes.computeIfAbsent(grLine.startId(), key -> getOrCreateNode(transaction, key));
+        Node s = nodes.computeIfAbsent(grLine.startId(), key -> getOrCreateNode(transaction, key));
+        idMapping.put(grLine.startId(), s.getElementId());
+        Node t = nodes.computeIfAbsent(grLine.endId(), key -> getOrCreateNode(transaction, key));
+        idMapping.put(grLine.endId(), s.getElementId());
+        Relationship road = s.createRelationshipTo(t, RelationshipType.withName("ROAD"));
+        road.setProperty("cost", grLine.distance());
     }
 
     private Node getOrCreateNode(Transaction transaction, Integer id) {
