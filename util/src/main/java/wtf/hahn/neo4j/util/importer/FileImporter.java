@@ -42,7 +42,7 @@ public class FileImporter {
         Node s = nodes.computeIfAbsent(grLine.startId(), key -> getOrCreateNode(transaction, key));
         idMapping.put(grLine.startId(), s.getElementId());
         Node t = nodes.computeIfAbsent(grLine.endId(), key -> getOrCreateNode(transaction, key));
-        idMapping.put(grLine.endId(), s.getElementId());
+        idMapping.put(grLine.endId(), t.getElementId());
         Relationship road = s.createRelationshipTo(t, RelationshipType.withName("ROAD"));
         road.setProperty("cost", grLine.distance());
     }
