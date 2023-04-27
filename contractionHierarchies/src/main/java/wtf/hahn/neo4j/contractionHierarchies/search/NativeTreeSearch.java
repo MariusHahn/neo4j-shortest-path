@@ -20,7 +20,7 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Uniqueness;
 import wtf.hahn.neo4j.contractionHierarchies.expander.ContractionHierarchiesExpander;
 import wtf.hahn.neo4j.model.WeightedPathImpl;
-import wtf.hahn.neo4j.util.Iterables;
+import wtf.hahn.neo4j.util.iterable.Iterables;
 
 public class NativeTreeSearch {
     private final EvaluationContext context;

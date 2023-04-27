@@ -11,6 +11,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
 import wtf.hahn.neo4j.model.PathResult;
+import wtf.hahn.neo4j.model.Shortcuts;
 import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
 
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class ContractionHierarchies {
         WeightedPath path = new ContractionHierarchiesFinder(evaluationContext,  relationshipType, costProperty)
                 .find(startNode, endNode);
         return path != null
-                ? Stream.of(new PathResult(new WeightedCHPath(path, transaction)))
+                ? Stream.of(new PathResult(Shortcuts.resolve(path, transaction)))
                 : Stream.of(PathResult.noPath());
 
     }

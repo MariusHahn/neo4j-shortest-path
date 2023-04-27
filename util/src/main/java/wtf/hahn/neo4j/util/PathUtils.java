@@ -1,14 +1,18 @@
 package wtf.hahn.neo4j.util;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
+import wtf.hahn.neo4j.util.iterable.Iterables;
+import wtf.hahn.neo4j.util.iterable.JoinIterable;
+import wtf.hahn.neo4j.util.iterable.MappingIterable;
+import wtf.hahn.neo4j.util.iterable.PrependIterable;
+import wtf.hahn.neo4j.util.iterable.ReverseIterator;
+import wtf.hahn.neo4j.util.iterable.ZipIterable;
 
 public class PathUtils {
 
@@ -64,22 +68,22 @@ public class PathUtils {
 
             @Override
             public Iterable<Relationship> relationships() {
-                return new JoinIterator<>(inwards.reverseRelationships(), outwards.relationships());
+                return new JoinIterable<>(inwards.reverseRelationships(), outwards.relationships());
             }
 
             @Override
             public Iterable<Relationship> reverseRelationships() {
-                return new JoinIterator<>(outwards.reverseRelationships(), inwards.relationships());
+                return new JoinIterable<>(outwards.reverseRelationships(), inwards.relationships());
             }
 
             @Override
             public Iterable<Node> nodes() {
-                return new JoinIterator<>(inwards.reverseNodes(), outwards.nodes());
+                return new JoinIterable<>(inwards.reverseNodes(), outwards.nodes());
             }
 
             @Override
             public Iterable<Node> reverseNodes() {
-                return new JoinIterator<>(outwards.reverseNodes(),inwards.nodes());
+                return new JoinIterable<>(outwards.reverseNodes(),inwards.nodes());
             }
 
             @Override
@@ -89,7 +93,7 @@ public class PathUtils {
 
             @Override
             public Iterator<Entity> iterator() {
-                return new ZipIterator<>(nodes(), relationships());
+                return new ZipIterable<>(nodes(), relationships()).iterator();
             }
         };
     }
@@ -113,22 +117,22 @@ public class PathUtils {
 
             @Override
             public Iterable<Relationship> relationships() {
-                return new JoinIterator<>(forward.relationships(), backward.reverseRelationships());
+                return new JoinIterable<>(forward.relationships(), backward.reverseRelationships());
             }
 
             @Override
             public Iterable<Relationship> reverseRelationships() {
-                return new JoinIterator<>(forward.reverseRelationships(), backward.relationships());
+                return new JoinIterable<>(forward.reverseRelationships(), backward.relationships());
             }
 
             @Override
             public Iterable<Node> nodes() {
-                return new JoinIterator<>(forward.nodes(), backward.reverseNodes());
+                return new JoinIterable<>(forward.nodes(), backward.reverseNodes());
             }
 
             @Override
             public Iterable<Node> reverseNodes() {
-                return new JoinIterator<>(backward.nodes(), forward.reverseNodes());
+                return new JoinIterable<>(backward.nodes(), forward.reverseNodes());
             }
 
             @Override
@@ -138,32 +142,27 @@ public class PathUtils {
 
             @Override
             public Iterator<Entity> iterator() {
-                Iterable<Entity> backwardEntity = new ZipIterator<>(backward.reverseNodes(), backward.reverseRelationships());
-                return new JoinIterator<>(forward, backwardEntity);
+                Iterable<Entity> backwardEntity = new ZipIterable<>(backward.reverseNodes(), backward.reverseRelationships());
+                return new JoinIterable<>(forward, backwardEntity).iterator();
             }
         };
     }
 
-    public static Path from(Iterable<Relationship> relationships) {
-        assert relationships.iterator().hasNext();
+    public static Path from(Node start, Iterable<Relationship> relationships) {
         return new Path() {
             @Override
             public Node startNode() {
-                return relationships.iterator().next().getStartNode();
+                return start;
             }
 
             @Override
             public Node endNode() {
-                Node endNode = null;
-                for (Relationship relationship : relationships) endNode = relationship.getEndNode();
-                return endNode;
+                return Iterables.lastElement(relationships).getEndNode();
             }
 
             @Override
             public Relationship lastRelationship() {
-                Relationship lastRelationship = null;
-                for (Relationship relationship : relationships) lastRelationship = relationship;
-                return lastRelationship;
+                return Iterables.lastElement(relationships);
             }
 
             @Override
@@ -173,32 +172,28 @@ public class PathUtils {
 
             @Override
             public Iterable<Relationship> reverseRelationships() {
-                List<Relationship> r = new ArrayList<>();
-                for (Relationship relationship : relationships) r.add(relationship);
-                return new ReverseIterator<>(r);
+                return new ReverseIterator<>(relationships);
             }
 
             @Override
             public Iterable<Node> nodes() {
-                Iterable<Node> nodes = () -> new MappingIterator<>(relationships, Relationship::getEndNode);
-                return () -> new PrependIterator<>(startNode(), nodes);
+                Iterable<Node> nodes = new MappingIterable<>(relationships, Relationship::getEndNode);
+                return new PrependIterable<>(startNode(), nodes);
             }
 
             @Override
             public Iterable<Node> reverseNodes() {
-                List<Node> n = new ArrayList<>(); for (Node node : nodes()) n.add(node);
-                return new ReverseIterator<>(n);
+                return new ReverseIterator<>(nodes());
             }
 
             @Override
             public int length() {
-                int length = 0; for (Relationship ignored : relationships) length++;
-                return length;
+                return Iterables.size(relationships);
             }
 
             @Override
             public Iterator<Entity> iterator() {
-                return new ZipIterator<>(nodes(), relationships());
+                return new ZipIterable<>(nodes(), relationships()).iterator();
             }
         };
     }
