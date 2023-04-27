@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -23,10 +24,9 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.expander.NotContractedWithShortcutsExpander;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
+import wtf.hahn.neo4j.model.GraphLoader;
 import wtf.hahn.neo4j.model.GraphLoaderDisk;
 import wtf.hahn.neo4j.model.Shortcuts;
-import wtf.hahn.neo4j.model.ShortestPathResult;
-import wtf.hahn.neo4j.model.GraphLoader;
 import wtf.hahn.neo4j.model.inmemory.GraphLoaderInMemory;
 import wtf.hahn.neo4j.util.LastInsertWinsPriorityQueue;
 import wtf.hahn.neo4j.util.PathUtils;
@@ -65,11 +65,11 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
         final Node[] outNodes = getNotContractedOutNodes(type, nodeToContract);
         final Collection<Shortcut> shortcuts = new ConcurrentLinkedDeque<>();
         (mode == Mode.DISK ? stream(inNodes) : stream(inNodes).parallel()).forEach(inNode -> {
-            final Map<Node, ShortestPathResult> shortestPaths = dijkstra.find(inNode, asList(outNodes), notYetContractedExpander);
+            final Map<Node, WeightedPath> shortestPaths = dijkstra.find(inNode, asList(outNodes), notYetContractedExpander);
             for (int j = 0, outNodesLength = outNodes.length; j < outNodesLength; j++) {
                 final Node outNode = outNodes[j];
                 if (inNode == outNode) {continue;}
-                final ShortestPathResult shortestPath = shortestPaths.get(outNode);
+                final WeightedPath shortestPath = shortestPaths.get(outNode);
                 if (!(shortestPath.length() != 2 || !PathUtils.contains(shortestPath, nodeToContract))) {
                     final Iterator<Relationship> rIter = shortestPath.relationships().iterator();
                     shortcuts.add(new Shortcut(rIter.next(), rIter.next(), shortestPath.weight()));

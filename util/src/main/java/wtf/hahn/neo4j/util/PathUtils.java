@@ -1,7 +1,8 @@
 package wtf.hahn.neo4j.util;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Entity;
@@ -143,4 +144,62 @@ public class PathUtils {
         };
     }
 
+    public static Path from(Iterable<Relationship> relationships) {
+        assert relationships.iterator().hasNext();
+        return new Path() {
+            @Override
+            public Node startNode() {
+                return relationships.iterator().next().getStartNode();
+            }
+
+            @Override
+            public Node endNode() {
+                Node endNode = null;
+                for (Relationship relationship : relationships) endNode = relationship.getEndNode();
+                return endNode;
+            }
+
+            @Override
+            public Relationship lastRelationship() {
+                Relationship lastRelationship = null;
+                for (Relationship relationship : relationships) lastRelationship = relationship;
+                return lastRelationship;
+            }
+
+            @Override
+            public Iterable<Relationship> relationships() {
+                return relationships;
+            }
+
+            @Override
+            public Iterable<Relationship> reverseRelationships() {
+                List<Relationship> r = new ArrayList<>();
+                for (Relationship relationship : relationships) r.add(relationship);
+                return new ReverseIterator<>(r);
+            }
+
+            @Override
+            public Iterable<Node> nodes() {
+                Iterable<Node> nodes = () -> new MappingIterator<>(relationships, Relationship::getEndNode);
+                return () -> new PrependIterator<>(startNode(), nodes);
+            }
+
+            @Override
+            public Iterable<Node> reverseNodes() {
+                List<Node> n = new ArrayList<>(); for (Node node : nodes()) n.add(node);
+                return new ReverseIterator<>(n);
+            }
+
+            @Override
+            public int length() {
+                int length = 0; for (Relationship ignored : relationships) length++;
+                return length;
+            }
+
+            @Override
+            public Iterator<Entity> iterator() {
+                return new ZipIterator<>(nodes(), relationships());
+            }
+        };
+    }
 }
