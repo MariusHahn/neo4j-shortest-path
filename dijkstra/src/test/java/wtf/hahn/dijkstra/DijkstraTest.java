@@ -1,7 +1,6 @@
 package wtf.hahn.dijkstra;
 
 import static java.util.List.of;
-import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toSet;
 import static org.neo4j.graphdb.Direction.OUTGOING;
 
@@ -10,7 +9,6 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
@@ -26,7 +24,6 @@ import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
-import wtf.hahn.neo4j.model.ShortestPathResult;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 public class DijkstraTest extends IntegrationTest {
@@ -53,7 +50,7 @@ public class DijkstraTest extends IntegrationTest {
             PathExpander<Double> standardExpander = PathExpanders.forTypeAndDirection(relationshipType(), OUTGOING);
             WeightedPath dijkstraPath = nativeDijkstra.shortestPath(start, end, standardExpander, costProperty());
             if (dijkstraPath != null) {
-                ShortestPathResult chPath = dijkstra.find(start, end);
+                WeightedPath chPath = dijkstra.find(start, end);
                 Assertions.assertNotNull(chPath);
                 Assertions.assertEquals(
                         dijkstraPath.weight()
@@ -72,12 +69,12 @@ public class DijkstraTest extends IntegrationTest {
             Node start = transaction.findNode(() -> "Location", "id", 1);
             Set<Node> goals = ids.stream().map(id -> transaction.findNode(() -> "Location", "id", id)).collect(toSet());
             PathExpander<Double> standardExpander = PathExpanders.forTypeAndDirection(relationshipType(), OUTGOING);
-            Map<Node, ShortestPathResult> shortestPaths = dijkstra.find(start, goals, standardExpander);
+            Map<Node, WeightedPath> shortestPaths = dijkstra.find(start, goals, standardExpander);
             NativeDijkstra nativeDijkstra = new NativeDijkstra(new BasicEvaluationContext(transaction, database()));
             for (Node goal : goals) {
                 WeightedPath dijkstraPath = nativeDijkstra.shortestPath(start, goal, standardExpander, costProperty());
                 if (dijkstraPath != null) {
-                    ShortestPathResult shortestPath = shortestPaths.get(goal);
+                    WeightedPath shortestPath = shortestPaths.get(goal);
                     Assertions.assertNotNull(shortestPath);
                     Assertions.assertEquals(
                             dijkstraPath.weight()

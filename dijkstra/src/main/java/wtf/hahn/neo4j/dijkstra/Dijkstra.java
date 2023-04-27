@@ -1,6 +1,7 @@
 package wtf.hahn.neo4j.dijkstra;
 
 import org.neo4j.graphalgo.CostEvaluator;
+import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -11,7 +12,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.impl.ExtendedPath;
 import org.neo4j.graphdb.traversal.BranchState;
-import wtf.hahn.neo4j.model.ShortestPathResult;
+import wtf.hahn.neo4j.model.WeightedPathImpl;
 
 import static wtf.hahn.neo4j.util.EntityHelper.*;
 
@@ -35,18 +36,18 @@ public class Dijkstra {
         this(relationshipType, ((relationship, direction) -> getDoubleProperty(relationship, costProperty)));
     }
 
-    public ShortestPathResult find(Node start, Node goal, PathExpander<Double> expander) {
+    public WeightedPath find(Node start, Node goal, PathExpander<Double> expander) {
         return new Query(start, Set.of(goal), expander, weightFunction).getResult().get(goal);
     }
 
-    public ShortestPathResult find(Node start, Node goal) {
+    public WeightedPath find(Node start, Node goal) {
         return new Query(start, Set.of(goal), baseExpander, weightFunction).getResult().get(goal);
     }
-    public Map<Node, ShortestPathResult> find(Node start, Collection<Node> goals) {
+    public Map<Node, WeightedPath> find(Node start, Collection<Node> goals) {
         return new Query(start, new HashSet<>(goals), baseExpander, weightFunction).getResult();
     }
 
-    public Map<Node, ShortestPathResult> find(Node start, Collection<Node> goals, PathExpander<Double> expander) {
+    public Map<Node, WeightedPath> find(Node start, Collection<Node> goals, PathExpander<Double> expander) {
         return new Query(start, new HashSet<>(goals), expander, weightFunction).getResult();
     }
 
@@ -55,7 +56,7 @@ public class Dijkstra {
         private final PriorityQueue<DijkstraState> queue = new PriorityQueue<>();
         private final Map<Node, DijkstraState> seen = new HashMap<>();
         private final PathExpander<Double> expander;
-        private final Map<Node, ShortestPathResult> shortestPaths;
+        private final Map<Node, WeightedPath> shortestPaths;
         private final CostEvaluator<Double> weightFunction;
         private DijkstraState latestExpand;
 
@@ -70,7 +71,7 @@ public class Dijkstra {
             shortestPaths = new HashMap<>(goals.size() * 4 / 3 );
         }
 
-        private Map<Node, ShortestPathResult> getResult() {
+        private Map<Node, WeightedPath> getResult() {
             while (!isComplete()) {expandNext();}
             return shortestPaths;
         }
@@ -79,7 +80,7 @@ public class Dijkstra {
             final DijkstraState state = queue.poll();
             latestExpand = state;
             if (goals.contains(state.getEndNode()) || goals.isEmpty()) {
-                shortestPaths.put(state.getEndNode(), new ShortestPathResult(state.getPath(), state.getCost(), 0, queue.size()));
+                shortestPaths.put(state.getEndNode(), new WeightedPathImpl(state.getCost(), state.getPath()));
             }
             final ResourceIterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
             state.settled = true;
@@ -105,7 +106,7 @@ public class Dijkstra {
                     !(seen.get(neighbor).settled || seen.get(neighbor).getCost() < state.getCost() + cost);
         }
 
-        public Map<Node, ShortestPathResult> resultMap() {
+        public Map<Node, WeightedPath> resultMap() {
             return shortestPaths;
         }
 

@@ -7,19 +7,18 @@ import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
+import wtf.hahn.neo4j.util.PathUtils;
 
 import java.util.Iterator;
 
-public record WeightedPathImpl(CostEvaluator<Double> costEvaluator, Path path) implements WeightedPath, Comparable<WeightedPath> {
+public record WeightedPathImpl(double weight, Path path) implements WeightedPath, Comparable<WeightedPath> {
 
+    public WeightedPathImpl(WeightedPath forward, WeightedPath backward) {
+        this(forward.weight() + backward.weight(), PathUtils.bidirectional(forward, backward));
+    }
 
-    @Override
-    public double weight() {
-        double cost = 0;
-        for (Relationship relationship : path.relationships()) {
-            cost += costEvaluator.getCost(relationship, Direction.OUTGOING);
-        }
-        return cost;
+    public WeightedPathImpl(CostEvaluator<Double> costEvaluator, Path path) {
+        this(calculateWeight(costEvaluator, path), path) ;
     }
 
     @Override
@@ -71,4 +70,13 @@ public record WeightedPathImpl(CostEvaluator<Double> costEvaluator, Path path) i
     public int compareTo(WeightedPath o) {
         return Double.compare(weight(), o.weight());
     }
+
+    private static double calculateWeight(CostEvaluator<Double> costEvaluator, Path path) {
+        double cost = 0;
+        for (Relationship relationship : path.relationships()) {
+            cost += costEvaluator.getCost(relationship, Direction.BOTH);
+        }
+        return cost;
+    }
+
 }
