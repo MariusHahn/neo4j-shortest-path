@@ -17,10 +17,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
-import wtf.hahn.neo4j.contractionHierarchies.search.TreeBasedCHSearch;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeSearch;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
-import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 public class PaperGraphInMemoryTest extends IntegrationTest {
@@ -40,9 +38,7 @@ public class PaperGraphInMemoryTest extends IntegrationTest {
     @MethodSource("allSourceTarget")
     void testEachNodeToEveryOther(Number startNodeId, Number endNodeId) {
         try (Transaction transaction = database().beginTx()) {
-            BasicEvaluationContext context = new BasicEvaluationContext(transaction, database());
             TreeSearch treeSearch = new TreeSearch(relationshipType(), costProperty);
-            TreeBasedCHSearch searcher = new TreeBasedCHSearch(context, relationshipType(), Shortcuts.rankPropertyName(relationshipType()), costProperty);
             Node start = transaction.findNode(() -> "Location", "id", startNodeId);
             Node end = transaction.findNode(() -> "Location", "id", endNodeId);
             WeightedPath dijkstraPath = new NativeDijkstra(new BasicEvaluationContext(transaction, database())).shortestPathWithShortcuts(start, end, type, costProperty);

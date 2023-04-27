@@ -15,18 +15,18 @@ import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.WeightedPathImpl;
 
-public class BiChSearch {
+public class BidirectionalDijkstra {
 
     private final PathExpander<Double> forwardExpander;
     private final CostEvaluator<Double> weightFunction;
 
-    public BiChSearch(RelationshipType type, CostEvaluator<Double> weightFunction) {
+    public BidirectionalDijkstra(RelationshipType type, CostEvaluator<Double> weightFunction) {
         final String rankProperty = Shortcuts.rankPropertyName(type);
         forwardExpander = ContractionHierarchiesExpander.upwards(type, rankProperty);
         this.weightFunction = weightFunction;
     }
 
-    public BiChSearch(RelationshipType type, String costProperty) {
+    public BidirectionalDijkstra(RelationshipType type, String costProperty) {
         this(type, (relationship, direction) -> getDoubleProperty(relationship, costProperty));
     }
 
@@ -42,8 +42,8 @@ public class BiChSearch {
             if (!query.isComplete()) query.expandNext(); else continue;
             final Node latest = query.latestExpand();
             if (other.resultMap().containsKey(latest)) {
-                WeightedPath forwardPath = forwardQuery.resultMap().get(latest);
-                WeightedPath backwardPath = backwardQuery.resultMap().get(latest);
+                final WeightedPath forwardPath = forwardQuery.resultMap().get(latest);
+                final WeightedPath backwardPath = backwardQuery.resultMap().get(latest);
                 candidates.offer(new WeightedPathImpl(forwardPath, backwardPath));
             }
         }
@@ -51,7 +51,8 @@ public class BiChSearch {
     }
 
     private static boolean isComplete(Dijkstra.Query forwardQuery, Dijkstra.Query backwardQuery, WeightedPath currentBest) {
-        return forwardQuery.isComplete() && backwardQuery.isComplete() || shortestFound(forwardQuery, backwardQuery, currentBest);
+        return forwardQuery.isComplete() && backwardQuery.isComplete()
+                || shortestFound(forwardQuery, backwardQuery, currentBest);
     }
 
     private static boolean shortestFound(Dijkstra.Query forwardQuery, Dijkstra.Query backwardQuery, WeightedPath currentBest) {

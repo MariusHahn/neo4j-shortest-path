@@ -20,19 +20,17 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
-import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionChDijkstra;
+import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionalDijkstra;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
-import wtf.hahn.neo4j.model.ShortestPathResult;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
-public class BidirectionalChDijkstraTest extends IntegrationTest {
+public class BidirectionalDijkstraTest extends IntegrationTest {
 
     private final String costProperty = dataset.costProperty;
     private final String edgeLabel = dataset.relationshipTypeName;
-    private final BidirectionChDijkstra
-            bidirectionChDijkstra = new BidirectionChDijkstra(relationshipType(), costProperty());
+    private final BidirectionalDijkstra chDijkstra = new BidirectionalDijkstra(relationshipType(), costProperty());
 
-    public BidirectionalChDijkstraTest() {
+    public BidirectionalDijkstraTest() {
         super(of(), of(), of(), TestDataset.OLDENBURG);
         try (Transaction transaction = database().beginTx()) {
             new ContractionHierarchiesIndexerByEdgeDifference(
@@ -58,9 +56,8 @@ public class BidirectionalChDijkstraTest extends IntegrationTest {
             PathExpander<Double> standardExpander = PathExpanders.forTypeAndDirection(relationshipType(), OUTGOING);
             WeightedPath dijkstraPath = dijkstra.shortestPath(start, end, standardExpander, costProperty());
             if (dijkstraPath != null) {
-                ShortestPathResult chPath = bidirectionChDijkstra.find(start, end);
+                WeightedPath chPath = chDijkstra.find(start, end);
                 Assertions.assertNotNull(chPath);
-                //System.err.printf("path length %s, searchSpace size %s%n", dijkstraPath.length(), chPath.searchSpaceSize());
                 Assertions.assertEquals(
                         dijkstraPath.weight()
                         , chPath.weight()

@@ -1,3 +1,5 @@
+import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,20 +17,18 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.FileUtils;
-import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
-import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionChDijkstra;
+import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionalDijkstra;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
-import wtf.hahn.neo4j.util.importer.FileImporter;
-import wtf.hahn.neo4j.util.importer.GrFileLoader;
 import wtf.hahn.neo4j.util.SimpleSetting;
 import wtf.hahn.neo4j.util.StoppedResult;
-import static wtf.hahn.neo4j.util.EntityHelper.*;
+import wtf.hahn.neo4j.util.importer.FileImporter;
+import wtf.hahn.neo4j.util.importer.GrFileLoader;
 
 @Slf4j
 public class Application {
@@ -65,9 +65,8 @@ public class Application {
         try (val transaction = db.beginTx(); val sqlite = DriverManager.getConnection(connectionString())) {
             sqlite.setAutoCommit(false);
             PreparedStatement ps = sqlite.prepareStatement(sql);
-            val evaluationContext = new BasicEvaluationContext(transaction, db);
             Dijkstra dijkstra2 = new Dijkstra(relationshipType, costProperty);
-            BidirectionChDijkstra bidirectionChDijkstra = new BidirectionChDijkstra(relationshipType, costProperty);
+            BidirectionalDijkstra chDijkstra = new BidirectionalDijkstra(relationshipType, costProperty);
             Files.lines(sourceTargetCsvLocation)
                     .map(line -> Arrays.stream(line.split(",")).map(Integer::parseInt).toArray(Integer[]::new))
                     .forEach(nodeIds -> {
@@ -75,7 +74,7 @@ public class Application {
                         val target = transaction.findNode(() -> "Location", "id", nodeIds[1]);
                         val dijkstraResult = new StoppedResult<>(() -> dijkstra2.find(source, target));
                         if (Objects.nonNull(dijkstraResult.getResult())) {
-                            val chResult = new StoppedResult<>(() -> bidirectionChDijkstra.find(source, target));
+                            val chResult = new StoppedResult<>(() -> chDijkstra.find(source, target));
                             saveSearchResults(ps, chResult, dijkstraResult);
                         }
                     });

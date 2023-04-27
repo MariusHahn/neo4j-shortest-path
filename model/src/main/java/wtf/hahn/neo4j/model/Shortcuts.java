@@ -1,8 +1,10 @@
 package wtf.hahn.neo4j.model;
 
+import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.util.PathUtils;
 
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
@@ -41,6 +43,14 @@ public class Shortcuts {
 
     public static boolean isShortcut(RelationshipType type) {
         return type.name().startsWith(SHORTCUT_PREFIX);
+    }
+
+    public static WeightedPath resolve(WeightedPath pathWithShortcuts, Transaction transaction) {
+        List<Relationship> relationships  = new ArrayList<>();
+        for (Relationship relationship : pathWithShortcuts.relationships()) {
+            relationships.addAll(resolveRelationships(relationship, transaction));
+        }
+        return new WeightedPathImpl(pathWithShortcuts.weight(), PathUtils.from(relationships));
     }
 
     public static List<Relationship> resolveRelationships(Relationship relationship, Transaction transaction) {

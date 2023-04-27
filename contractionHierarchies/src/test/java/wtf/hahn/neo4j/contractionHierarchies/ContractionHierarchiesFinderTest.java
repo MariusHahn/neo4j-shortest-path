@@ -12,6 +12,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.EntityHelper;
 import wtf.hahn.neo4j.util.Iterables;
@@ -41,12 +42,13 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
                     , relationshipType()
                     , costProperty()
             );
-            WeightedPath path = finder.find(start, goal);
-            Assertions.assertEquals(160.0, path.weight());
-            String namesResolved = pathToString(new WeightedCHPath(path, transaction).nodes());
+            WeightedPath chPath = finder.find(start, goal);
+            Assertions.assertEquals(160.0, chPath.weight());
+            WeightedPath resolvedPath = Shortcuts.resolve(chPath, transaction);
+            String namesResolved = pathToString(resolvedPath.nodes());
             System.out.println(namesResolved);
             Assertions.assertEquals("A, B, D, E, F", namesResolved);
-            System.out.printf("Result: %s%n", path.weight());
+            System.out.printf("Result: %s%n", chPath.weight());
         }
     }
 

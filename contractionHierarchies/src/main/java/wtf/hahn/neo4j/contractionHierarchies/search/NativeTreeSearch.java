@@ -22,14 +22,14 @@ import wtf.hahn.neo4j.contractionHierarchies.expander.ContractionHierarchiesExpa
 import wtf.hahn.neo4j.model.WeightedPathImpl;
 import wtf.hahn.neo4j.util.Iterables;
 
-public class TreeBasedCHSearch {
+public class NativeTreeSearch {
     private final EvaluationContext context;
     private final RelationshipType type;
     private final String rankProperty;
     private final String costProperty;
     private final CostEvaluator<Double> costEvaluator;
 
-    public TreeBasedCHSearch(EvaluationContext context, RelationshipType type, String rankProperty, String costProperty) {
+    public NativeTreeSearch(EvaluationContext context, RelationshipType type, String rankProperty, String costProperty) {
         this.context = context;
         this.type = type;
         this.rankProperty = rankProperty;

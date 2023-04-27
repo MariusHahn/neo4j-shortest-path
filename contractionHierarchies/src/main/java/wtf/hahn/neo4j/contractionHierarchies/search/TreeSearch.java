@@ -22,6 +22,7 @@ public class TreeSearch {
     private final PathExpander<Double> backwardExpander;
     private final CostEvaluator<Double> weightFunction;
     private final RelationshipType type;
+    private final Dijkstra dijkstra;
 
     public TreeSearch(RelationshipType type, CostEvaluator<Double> weightFunction) {
         final String rankProperty = Shortcuts.rankPropertyName(type);
@@ -29,6 +30,7 @@ public class TreeSearch {
         forwardExpander = ContractionHierarchiesExpander.upwards(this.type, rankProperty);
         backwardExpander = forwardExpander.reverse();
         this.weightFunction = weightFunction;
+        dijkstra = new Dijkstra(type, weightFunction);
     }
 
     public TreeSearch(RelationshipType type, String costProperty) {
@@ -36,7 +38,6 @@ public class TreeSearch {
     }
 
     public WeightedPath find(Node start, Node goal) {
-        Dijkstra dijkstra = new Dijkstra(type, weightFunction);
         Map<Node, WeightedPath> forwardPaths = dijkstra.find(start, Set.of(), forwardExpander);
         Map<Node, WeightedPath> backwardPaths = dijkstra.find(goal, Set.of(), backwardExpander);
         PriorityQueue<WeightedPathImpl> candidates = new PriorityQueue<>();
