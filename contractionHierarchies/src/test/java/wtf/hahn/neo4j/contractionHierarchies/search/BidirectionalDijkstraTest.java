@@ -1,4 +1,4 @@
-package wtf.hahn.neo4j.contractionHierarchies;
+package wtf.hahn.neo4j.contractionHierarchies.search;
 
 import static java.util.List.of;
 import static org.neo4j.graphdb.Direction.OUTGOING;
@@ -19,6 +19,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
+import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
 import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
 import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionalDijkstra;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
