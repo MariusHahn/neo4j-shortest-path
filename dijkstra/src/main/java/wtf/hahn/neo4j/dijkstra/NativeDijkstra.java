@@ -25,10 +25,6 @@ public class NativeDijkstra {
         return dijkstraFinder.findSinglePath(startNode, endNode);
     }
 
-    public WeightedPath shortestPath(Node startNode, Node endNode, RelationshipType type, String costProperty) {
-        return shortestPath(startNode, endNode, PathExpanders.forTypeAndDirection(type, OUTGOING), costProperty);
-    }
-
     public WeightedPath shortestPathWithShortcuts(Node startNode, Node endNode, RelationshipType type, String costProperty) {
         PathExpander<Double> standardExpander = PathExpanders.forTypesAndDirections(
                 type
@@ -37,21 +33,5 @@ public class NativeDijkstra {
                 , OUTGOING
         );
         return shortestPath(startNode, endNode, standardExpander, costProperty);
-    }
-
-    public Iterable<WeightedPath> shortestPathsWithShortcuts(Node startNode, Node endNode, RelationshipType type,
-                                                             String costProperty, String rankPropertyName) {
-        PathExpander<Double> standardExpander = PathExpanderBuilder
-                .empty()
-                .add(type, OUTGOING)
-                .add(Shortcuts.shortcutRelationshipType(type), OUTGOING)
-                .addNodeFilter(node -> !node.hasProperty(rankPropertyName))
-                .build();
-        PathFinder<WeightedPath> dijkstraFinder = GraphAlgoFactory.dijkstra(
-                context,
-                standardExpander,
-                (relationship, direction) -> EntityHelper.getDoubleProperty(relationship, costProperty)
-        );
-        return dijkstraFinder.findAllPaths(startNode, endNode);
     }
 }

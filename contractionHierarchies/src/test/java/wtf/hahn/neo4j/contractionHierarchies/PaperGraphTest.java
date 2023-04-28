@@ -1,7 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
-import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.DISK;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference.Mode.DISK;
 
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -16,7 +16,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference;
 import wtf.hahn.neo4j.contractionHierarchies.search.NativeTreeSearch;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
@@ -29,7 +29,7 @@ public class PaperGraphTest extends IntegrationTest {
     public PaperGraphTest() {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
-            new ContractionHierarchiesIndexerByEdgeDifference(
+            new IndexerByEdgeDifference(
                     dataset.relationshipTypeName, costProperty, transaction, DISK
             ).insertShortcuts();
             transaction.commit();

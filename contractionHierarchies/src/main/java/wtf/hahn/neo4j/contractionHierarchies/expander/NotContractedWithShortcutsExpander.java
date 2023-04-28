@@ -1,8 +1,8 @@
 package wtf.hahn.neo4j.contractionHierarchies.expander;
 
-import static wtf.hahn.neo4j.contractionHierarchies.expander.NodeIncludeExpander.notYetContracted;
 import static wtf.hahn.neo4j.model.Shortcuts.shortcutRelationshipType;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanderBuilder;
@@ -29,5 +29,9 @@ public record NotContractedWithShortcutsExpander(PathExpander<Double> expander) 
     @Override
     public PathExpander<Double> reverse() {
         return new NotContractedWithShortcutsExpander(expander.reverse());
+    }
+
+    private static boolean notYetContracted(String rankPropertyName, Node node) {
+        return !node.hasProperty(rankPropertyName);
     }
 }

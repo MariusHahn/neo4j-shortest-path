@@ -1,7 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
-import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -16,7 +16,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference;
 import wtf.hahn.neo4j.contractionHierarchies.search.TreeSearch;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
@@ -28,7 +28,7 @@ public class PaperGraphInMemoryTest extends IntegrationTest {
     public PaperGraphInMemoryTest() {
         super(of(), of(), of(), TestDataset.SEMINAR_PAPER);
         try (Transaction transaction = database().beginTx()) {
-            int inse = new ContractionHierarchiesIndexerByEdgeDifference(dataset.relationshipTypeName, costProperty, transaction, INMEMORY).insertShortcuts();
+            int inse = new IndexerByEdgeDifference(dataset.relationshipTypeName, costProperty, transaction, INMEMORY).insertShortcuts();
             System.out.printf("%d shortCuts have been inserted%n", inse);
             transaction.commit();
         }
