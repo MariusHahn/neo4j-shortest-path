@@ -15,7 +15,7 @@ import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexer
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.EntityHelper;
-import wtf.hahn.neo4j.util.Iterables;
+import wtf.hahn.neo4j.util.iterable.Iterables;
 
 public class ContractionHierarchiesFinderTest extends IntegrationTest {
 

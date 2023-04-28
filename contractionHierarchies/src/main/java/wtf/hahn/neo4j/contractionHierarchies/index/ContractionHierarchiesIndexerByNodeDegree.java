@@ -25,7 +25,7 @@ import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.model.GraphLoader;
 import wtf.hahn.neo4j.model.inmemory.GraphLoaderInMemory;
-import wtf.hahn.neo4j.util.Iterables;
+import wtf.hahn.neo4j.util.iterable.Iterables;
 
 public final class ContractionHierarchiesIndexerByNodeDegree implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
