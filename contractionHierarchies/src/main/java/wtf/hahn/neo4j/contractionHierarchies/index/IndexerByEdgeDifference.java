@@ -31,7 +31,7 @@ import wtf.hahn.neo4j.model.inmemory.GraphLoaderInMemory;
 import wtf.hahn.neo4j.util.LastInsertWinsPriorityQueue;
 import wtf.hahn.neo4j.util.PathUtils;
 
-public final class ContractionHierarchiesIndexerByEdgeDifference implements ContractionHierarchiesIndexer {
+public final class IndexerByEdgeDifference implements ContractionHierarchiesIndexer {
     private final RelationshipType type;
     private final String costProperty;
     private final Dijkstra dijkstra;
@@ -41,7 +41,7 @@ public final class ContractionHierarchiesIndexerByEdgeDifference implements Cont
     private final Mode mode;
     public enum Mode {DISK, INMEMORY}
 
-    public ContractionHierarchiesIndexerByEdgeDifference(String type, String costProperty, Transaction transaction, Mode mode) {
+    public IndexerByEdgeDifference(String type, String costProperty, Transaction transaction, Mode mode) {
         this.mode = mode;
         this.type = RelationshipType.withName(type);
         this.costProperty = costProperty;

@@ -1,7 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
-import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.*;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference.*;
 
 import java.util.stream.Collectors;
 
@@ -11,7 +11,7 @@ import org.neo4j.graphalgo.BasicEvaluationContext;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference;
 import wtf.hahn.neo4j.model.Shortcuts;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.EntityHelper;
@@ -22,7 +22,7 @@ public class ContractionHierarchiesFinderTest extends IntegrationTest {
     public ContractionHierarchiesFinderTest() {
         super(of(), of(), of(), TestDataset.DIJKSTRA_SOURCE_TARGET_SAMPLE);
         try (Transaction transaction = database().beginTx()) {
-            new ContractionHierarchiesIndexerByEdgeDifference(
+            new IndexerByEdgeDifference(
                     relationshipType().name()
                     , costProperty()
                     , transaction

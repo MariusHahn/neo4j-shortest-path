@@ -1,7 +1,7 @@
 package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
-import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -21,7 +20,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
@@ -34,7 +33,7 @@ public class RomeInMemoryEdgeDifferenceTest extends IntegrationTest {
     public RomeInMemoryEdgeDifferenceTest() {
         super(of(), of(), of(), TestDataset.ROME);
         try (Transaction transaction = database().beginTx()) {
-                new ContractionHierarchiesIndexerByEdgeDifference(edgeLabel, costProperty, transaction, INMEMORY).insertShortcuts();
+                new IndexerByEdgeDifference(edgeLabel, costProperty, transaction, INMEMORY).insertShortcuts();
             transaction.commit();
         }
     }

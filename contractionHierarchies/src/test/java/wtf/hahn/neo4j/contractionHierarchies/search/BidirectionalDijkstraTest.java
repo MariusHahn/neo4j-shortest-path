@@ -2,7 +2,7 @@ package wtf.hahn.neo4j.contractionHierarchies.search;
 
 import static java.util.List.of;
 import static org.neo4j.graphdb.Direction.OUTGOING;
-import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,8 +20,7 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
 import wtf.hahn.neo4j.contractionHierarchies.TestDataset;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
-import wtf.hahn.neo4j.contractionHierarchies.search.BidirectionalDijkstra;
+import wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
@@ -34,9 +33,7 @@ public class BidirectionalDijkstraTest extends IntegrationTest {
     public BidirectionalDijkstraTest() {
         super(of(), of(), of(), TestDataset.OLDENBURG);
         try (Transaction transaction = database().beginTx()) {
-            new ContractionHierarchiesIndexerByEdgeDifference(
-                    edgeLabel, costProperty, transaction, INMEMORY
-            ).insertShortcuts();
+            new IndexerByEdgeDifference(edgeLabel, costProperty, transaction, INMEMORY).insertShortcuts();
             transaction.commit();
         }
     }

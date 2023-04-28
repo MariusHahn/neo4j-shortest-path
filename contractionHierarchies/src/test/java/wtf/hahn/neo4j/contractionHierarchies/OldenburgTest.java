@@ -2,7 +2,7 @@ package wtf.hahn.neo4j.contractionHierarchies;
 
 import static java.util.List.of;
 import static org.neo4j.graphdb.Direction.OUTGOING;
-import static wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference.Mode.INMEMORY;
+import static wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference.Mode.INMEMORY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +21,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.contractionHierarchies.index.ContractionHierarchiesIndexerByEdgeDifference;
+import wtf.hahn.neo4j.contractionHierarchies.index.IndexerByEdgeDifference;
 import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
@@ -33,7 +33,7 @@ public class OldenburgTest extends IntegrationTest {
     public OldenburgTest() {
         super(of(), of(), of(), TestDataset.OLDENBURG);
         try (Transaction transaction = database().beginTx()) {
-            new ContractionHierarchiesIndexerByEdgeDifference(
+            new IndexerByEdgeDifference(
                     edgeLabel, costProperty, transaction, INMEMORY
             ).insertShortcuts();
             transaction.commit();
