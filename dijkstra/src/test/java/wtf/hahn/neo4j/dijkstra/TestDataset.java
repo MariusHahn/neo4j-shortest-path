@@ -1,4 +1,4 @@
-package wtf.hahn.dijkstra;
+package wtf.hahn.neo4j.dijkstra;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

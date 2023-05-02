@@ -1,4 +1,4 @@
-package wtf.hahn.dijkstra;
+package wtf.hahn.neo4j.dijkstra;
 
 import static java.util.List.of;
 import static java.util.stream.Collectors.toSet;
@@ -22,8 +22,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanders;
 import org.neo4j.graphdb.Transaction;
-import wtf.hahn.neo4j.dijkstra.Dijkstra;
-import wtf.hahn.neo4j.dijkstra.NativeDijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 
 public class DijkstraTest extends IntegrationTest {

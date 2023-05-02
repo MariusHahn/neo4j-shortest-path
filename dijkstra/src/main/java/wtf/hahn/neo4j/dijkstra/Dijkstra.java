@@ -1,5 +1,14 @@
 package wtf.hahn.neo4j.dijkstra;
 
+import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
+
 import org.neo4j.graphalgo.CostEvaluator;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Direction;
@@ -9,19 +18,9 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PathExpanderBuilder;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.impl.ExtendedPath;
 import org.neo4j.graphdb.traversal.BranchState;
 import wtf.hahn.neo4j.model.WeightedPathImpl;
-
-import static wtf.hahn.neo4j.util.EntityHelper.*;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
 
 public class Dijkstra {
     private final PathExpander<Double> baseExpander;
@@ -80,16 +79,17 @@ public class Dijkstra {
             final DijkstraState state = queue.poll();
             latestExpand = state;
             if (goals.contains(state.getEndNode()) || goals.isEmpty()) {
-                shortestPaths.put(state.getEndNode(), new WeightedPathImpl(state.getCost(), state.getPath()));
+                shortestPaths.put(state.getEndNode(), state.getPath());
             }
-            final ResourceIterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
+            final Iterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
             state.settled = true;
             for (Relationship relationship : relationships) {
                 final Node neighbor = relationship.getOtherNode(state.getEndNode());
                 final Double cost = weightFunction.getCost(relationship, Direction.BOTH);
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
                     final Path newPath = ExtendedPath.extend(state.getPath(), relationship);
-                    final DijkstraState newState = new DijkstraState(neighbor, newPath, state.getCost() + cost);
+                    final WeightedPath weightedPath = new WeightedPathImpl(state.weight() + cost, newPath);
+                    final DijkstraState newState = new DijkstraState(neighbor, weightedPath);
                     queue.remove(newState);
                     queue.offer(newState);
                     seen.put(neighbor, newState);
@@ -103,7 +103,7 @@ public class Dijkstra {
 
         private boolean mustUpdateNeighborState(DijkstraState state, Node neighbor, Double cost) {
             return !seen.containsKey(neighbor) ||
-                    !(seen.get(neighbor).settled || seen.get(neighbor).getCost() < state.getCost() + cost);
+                    !(seen.get(neighbor).settled || seen.get(neighbor).weight() < state.weight() + cost);
         }
 
         public Map<Node, WeightedPath> resultMap() {
