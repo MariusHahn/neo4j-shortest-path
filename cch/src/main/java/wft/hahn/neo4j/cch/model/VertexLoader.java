@@ -23,7 +23,7 @@ public class VertexLoader {
             final Vertex start = nodes.computeIfAbsent(new Vertex(relationship.getStartNode()), Function.identity());
             final Vertex end = nodes.computeIfAbsent(new Vertex(relationship.getEndNode()), Function.identity());
             long weight = EntityHelper.getLongProperty(relationship, weightProperty);
-            final Arc arc = new Arc(start, end, (int) weight, null);
+            final Arc arc = new Arc(start, end, (float) weight);
             start.addArc(arc);
             end.addArc(arc);
         }

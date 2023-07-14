@@ -51,7 +51,7 @@ public class VertexDijkstra {
             state.settled = true;
             for (Arc arc : arcs) {
                 final Vertex neighbor = arc.otherVertex(state.getEndVertex());
-                final float cost = arc.weight();
+                final float cost = arc.weight;
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
                     final VertexPath newPath = ExtendedVertexPath.extend(state.getPath(), arc);
                     final VertexDijkstraState newState = new VertexDijkstraState(neighbor, newPath);
