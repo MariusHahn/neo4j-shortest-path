@@ -17,17 +17,12 @@ public class DiskDijkstraState implements Comparable<DiskDijkstraState>{
     private final SearchVertex endVertex;
     private final SearchPath path;
     private final DiskDijkstra.VertexManager vertexManager;
-
-    public boolean isSettled() {
-        return settled;
-    }
+    public boolean settled;
 
     public void settle() {
-        Collection<SearchArc> arcs = vertexManager.arcs(endVertex.rank);
+        vertexManager.addArcs(endVertex);
         this.settled = true;
     }
-
-    private boolean settled;
 
     public DiskDijkstraState(SearchVertex endVertex, DiskDijkstra.VertexManager vertexManager) {
         this.endVertex = endVertex;
