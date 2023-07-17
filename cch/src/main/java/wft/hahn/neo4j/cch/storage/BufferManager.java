@@ -19,7 +19,7 @@ import org.neo4j.fabric.eval.Catalog;
 public class BufferManager implements AutoCloseable {
     private final RandomAccessFile arcFile;
     private final RandomAccessFile positionFile;
-    private final Mode mode;
+    public final Mode mode;
     private final Map<Integer, Collection<BufferArc>> buffer = new HashMap<>();
     private final Map<Integer, Integer> positions = new HashMap<>();
 
@@ -45,7 +45,8 @@ public class BufferManager implements AutoCloseable {
                     positions.put(block * 1024 + i, ByteBuffer.wrap(bytes, i * 4, 4).getInt());
                 }
             }
-            final byte[] bytes = new byte[4096];
+            final ByteBuffer readBlock = ByteBuffer.allocate(4096);
+            final byte[] bytes = readBlock.array();
             try {
                 arcFile.seek(positions.getOrDefault(rank, -1));
                 arcFile.read(bytes, 0, 4096);
@@ -54,11 +55,11 @@ public class BufferManager implements AutoCloseable {
                 throw new RuntimeException(e.getMessage(), e);
             }
             for (int i = 0, l = bytes.length / 16; i < l; i++) {
-                final ByteBuffer wrap = ByteBuffer.wrap(bytes, i * 16, 16);
-                final int startRank = wrap.getInt(0);
-                final int endRank = wrap.getInt(4);
-                final int middleRank = wrap.getInt(12);
-                final float weight = wrap.getFloat(8);
+                final int offset = i * 16;
+                final int startRank = readBlock.getInt(offset);
+                final int endRank = readBlock.getInt(offset + 4);
+                final int middleRank = readBlock.getInt(offset + 8);
+                final float weight = readBlock.getFloat(offset + 12);
                 if (Mode.OUT.equals(mode)) {
                     Collection<BufferArc> arcs = buffer.computeIfAbsent(startRank, x -> new HashSet<>());
                     arcs.add(new BufferArc(startRank, endRank, middleRank, weight));
@@ -69,7 +70,7 @@ public class BufferManager implements AutoCloseable {
                 }
             }
         }
-        return buffer.get(rank);
+        return buffer.getOrDefault(rank, List.of());
     }
 
     @Override

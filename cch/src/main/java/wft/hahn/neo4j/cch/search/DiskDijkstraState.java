@@ -3,12 +3,6 @@ package wft.hahn.neo4j.cch.search;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import wft.hahn.neo4j.cch.model.Vertex;
-import wft.hahn.neo4j.cch.model.VertexPath;
-import wft.hahn.neo4j.cch.model.VertexPaths;
-import wft.hahn.neo4j.cch.storage.BufferManager;
-
-import java.util.Collection;
 
 @RequiredArgsConstructor
 @Getter

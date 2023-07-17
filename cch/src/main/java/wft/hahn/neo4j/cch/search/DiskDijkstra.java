@@ -11,19 +11,23 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.storage.BufferManager;
+import wft.hahn.neo4j.cch.storage.Mode;
 
 @RequiredArgsConstructor
 public class DiskDijkstra {
 
-    enum Mode {UPWARD, DOWNWARD, CLASSIC}
     private final BufferManager bufferManager;
 
-    public SearchPath find(int startRank, int goalRank, Mode mode) {
-        return new Query(startRank, Set.of(goalRank), bufferManager, mode).getResult().get(goalRank);
+    public Map<Integer, SearchPath> find(int startRank) {
+        return new Query(startRank, Set.of(), bufferManager).getResult();
     }
 
-    public Map<Integer, SearchPath> find(int startRank, Collection<Integer> goals, Mode mode) {
-        return new Query(startRank, new HashSet<>(goals), bufferManager, mode).getResult();
+    public SearchPath find(int startRank, int goalRank) {
+        return new Query(startRank, Set.of(goalRank), bufferManager).getResult().get(goalRank);
+    }
+
+    public Map<Integer, SearchPath> find(int startRank, Collection<Integer> goals) {
+        return new Query(startRank, new HashSet<>(goals), bufferManager).getResult();
     }
 
     public static class Query {
@@ -34,10 +38,9 @@ public class DiskDijkstra {
         private DiskDijkstraState latestExpand;
         private final VertexManager vertexManager;
 
-        public Query(int start, Set<Integer> goals, BufferManager bufferManager,
-                     Mode mode) {
+        public Query(int start, Set<Integer> goals, BufferManager bufferManager) {
             this.goals = goals;
-            this.vertexManager = new VertexManager(bufferManager, mode);
+            this.vertexManager = new VertexManager(bufferManager);
             DiskDijkstraState init = new DiskDijkstraState(vertexManager.getVertex(start), vertexManager);
             queue.offer(init);
             seen.put(start, init);
@@ -95,17 +98,16 @@ public class DiskDijkstra {
     @RequiredArgsConstructor
     public static class VertexManager {
         private final BufferManager bufferManager;
-        private final Mode mode;
         private final Map<Integer, SearchVertex> vertices = new HashMap<>();
 
         public SearchVertex getVertex(int rank) {
-            if (!vertices.containsKey(rank)) {
+            if (!vertices.containsKey(rank) && rank > -1) {
+                SearchVertex start = vertices.computeIfAbsent(rank, SearchVertex::new);
                 Collection<BufferManager.BufferArc> arcs = bufferManager.arcs(rank);
                 for (BufferManager.BufferArc arc : arcs) {
-                    SearchVertex start = vertices.computeIfAbsent(arc.s(), SearchVertex::new);
                     SearchVertex end = vertices.computeIfAbsent(arc.t(), SearchVertex::new);
                     if (arc.m() != Vertex.UNSET) {
-                        vertices.computeIfAbsent(arc.s(), SearchVertex::new);
+                        vertices.computeIfAbsent(arc.m(), SearchVertex::new);
                     }
                     start.addArc(new SearchArc(start, end, vertices.get(arc.m()), arc.weight()));
                 }
@@ -115,14 +117,16 @@ public class DiskDijkstra {
 
         void addArcs(SearchVertex vertex) {
             final int rank = vertex.rank;
-            for (BufferManager.BufferArc arc : bufferManager.arcs(rank)) {
-                if (Mode.UPWARD.equals(mode) && rank < arc.t()) {
-                    vertex.addArc(new SearchArc(vertex, getVertex(arc.t()), getVertex(arc.m()), arc.weight()));
+            Collection<BufferManager.BufferArc> arcs = bufferManager.arcs(rank);
+            for (BufferManager.BufferArc arc : arcs) {
+                if (Mode.OUT.equals(bufferManager.mode) && rank < arc.t()) {
+                    SearchVertex target = getVertex(arc.t());
+                    SearchVertex middle = getVertex(arc.m());
+                    vertex.addArc(new SearchArc(vertex, target, middle, arc.weight()));
                 }
-                if (Mode.DOWNWARD.equals(mode) && rank > arc.t()) {
+                if (Mode.IN.equals(bufferManager.mode) && rank > arc.t()) {
                     vertex.addArc(new SearchArc(getVertex(arc.t()), vertex, getVertex(arc.m()), arc.weight()));
                 }
-                vertex.addArc(new SearchArc(vertex, getVertex(arc.t()), getVertex(arc.m()), arc.weight()));
             }
         }
     }

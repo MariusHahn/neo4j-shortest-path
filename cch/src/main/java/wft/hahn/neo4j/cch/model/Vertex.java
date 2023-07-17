@@ -9,7 +9,7 @@ import lombok.ToString;
 import org.neo4j.graphdb.Node;
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
-@ToString(of = {"name"})
+@ToString(of = {"name", "rank"})
 public final class Vertex implements PathElement {
     public static final int UNSET = -1;
     private final String name;

@@ -16,6 +16,7 @@ public class SearchVertexPaths {
     }
 
     public static SearchPath singleSearchVertexPath(SearchVertex vertex) {
+        assert vertex != null;
         return new SingleSearchVertexPath(vertex);
     }
 
@@ -70,5 +71,11 @@ public class SearchVertexPaths {
         public float weight() {
             return 0;
         }
+    }
+
+    public static String toString(SearchPath path) {
+        StringBuilder builder = new StringBuilder("len(%3.2f): (%d)".formatted(path.weight(), path.start().rank));
+        for (SearchArc arc : path.arcs()) builder.append("-[%.2f]->(%d)".formatted(arc.weight, arc.end.rank));
+        return builder.toString();
     }
 }

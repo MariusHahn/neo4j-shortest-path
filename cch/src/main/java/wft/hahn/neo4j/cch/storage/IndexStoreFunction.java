@@ -20,7 +20,7 @@ import lombok.val;
 import wft.hahn.neo4j.cch.model.Arc;
 import wft.hahn.neo4j.cch.model.Vertex;
 
-public class IndexStoreFunction implements AutoCloseable{
+public class IndexStoreFunction implements AutoCloseable {
     private final Deque<Iterator<Vertex>> stack;
     private final Mode mode;
     private final Writer writer;
@@ -103,6 +103,7 @@ public class IndexStoreFunction implements AutoCloseable{
             flushBuffer();
             if (arcFile != null) arcFile.close();
             writeBufferPosition = 0;
+            for (int i = 0, writeBufferLength = writeBuffer.length; i < writeBufferLength; i++) writeBuffer[i] = -1;
             blockPosition = 0;
             try (val positionFile = new RandomAccessFile(mode.name() + ".positions", "rw")) {
                 final int packSize = 4;
@@ -116,7 +117,7 @@ public class IndexStoreFunction implements AutoCloseable{
                     System.arraycopy(pack.array(), 0, writeBuffer, writeBufferPosition, pack.array().length);
                     writeBufferPosition += packSize;
                 }
-                flush(positionFile, pack.array());
+                flush(positionFile, writeBuffer);
             }
 
         }
@@ -133,7 +134,7 @@ public class IndexStoreFunction implements AutoCloseable{
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         writer.close();
     }
 }
