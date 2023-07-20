@@ -46,7 +46,7 @@ public class IndexStoreFunction implements AutoCloseable {
     }
 
     private Iterator<Vertex> neighbors(Vertex vertex) {
-        return (mode == OUT ? vertex.outNeighbors() : vertex.inNeighbors())
+        return (mode == IN ? vertex.outNeighbors() : vertex.inNeighbors())
                 .sorted((Comparator.comparingInt(o -> o.rank))).iterator();
     }
 
@@ -54,7 +54,7 @@ public class IndexStoreFunction implements AutoCloseable {
         public static final int DISK_BLOCK_SIZE = 4096;
         private final Mode mode;
         private final Map<Vertex, Integer> positions = new HashMap<>();
-        private byte[] writeBuffer = new byte[DISK_BLOCK_SIZE];
+        private final byte[] writeBuffer = new byte[DISK_BLOCK_SIZE];
         private int writeBufferPosition = 0;
         private int blockPosition = 0;
         private RandomAccessFile arcFile = null;
@@ -70,6 +70,13 @@ public class IndexStoreFunction implements AutoCloseable {
         }
 
         private void flushBuffer() {
+            final byte[] minusOne = ByteBuffer.allocate(4).putInt(-1).array();
+            for (int i = writeBufferPosition; i < DISK_BLOCK_SIZE; i = i+16) {
+                writeBuffer[i] = minusOne[0];
+                writeBuffer[i+1] = minusOne[1];
+                writeBuffer[i+2] = minusOne[2];
+                writeBuffer[i+3] = minusOne[3];
+            }
             try {
                 arcFile.seek((long) DISK_BLOCK_SIZE * blockPosition++);
                 arcFile.write(writeBuffer);
