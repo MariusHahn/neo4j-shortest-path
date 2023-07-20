@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -25,11 +26,11 @@ public class IndexStoreFunction implements AutoCloseable {
     private final Mode mode;
     private final Writer writer;
 
-    public IndexStoreFunction(Vertex topNode, Mode mode) {
+    public IndexStoreFunction(Vertex topNode, Mode mode, Path path) {
         stack = new LinkedList<>();
         stack.push(List.of(topNode).iterator());
         this.mode = mode;
-        this.writer = new Writer(mode);
+        this.writer = new Writer(mode, path);
 
     }
 
@@ -55,13 +56,15 @@ public class IndexStoreFunction implements AutoCloseable {
         private final Mode mode;
         private final Map<Vertex, Integer> positions = new HashMap<>();
         private final byte[] writeBuffer = new byte[DISK_BLOCK_SIZE];
+        private final Path path;
         private int writeBufferPosition = 0;
         private int blockPosition = 0;
         private RandomAccessFile arcFile = null;
 
-        public Writer(Mode mode) {
+        public Writer(Mode mode, Path path) {
+            this.path = path;
             try {
-                arcFile = new RandomAccessFile(mode.name() + ".storage", "rw");
+                arcFile = new RandomAccessFile( path.resolve(mode.name()).toFile() + ".storage", "rw");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -88,7 +91,7 @@ public class IndexStoreFunction implements AutoCloseable {
 
 
         void write(Vertex vertex) {
-            val arcs = mode == OUT ? vertex.outArcs() : vertex.inArcs();
+            val arcs = mode == OUT ? vertex.inArcs() : vertex.outArcs();
             val pack = new byte[arcs.size() * BYTE_SIZE];
             int packIndex = 0;
             for (final Arc arc : arcs) if (isSearchArc(arc, vertex)) {
@@ -101,8 +104,7 @@ public class IndexStoreFunction implements AutoCloseable {
         }
 
         private boolean isSearchArc(Arc arc, Vertex vertex) {
-            return mode == OUT && arc.otherVertex(vertex).rank > vertex.rank
-                    || mode == IN && arc.otherVertex(vertex).rank < vertex.rank;
+            return arc.otherVertex(vertex).rank < vertex.rank;
         }
 
         @Override
@@ -112,7 +114,7 @@ public class IndexStoreFunction implements AutoCloseable {
             writeBufferPosition = 0;
             for (int i = 0, writeBufferLength = writeBuffer.length; i < writeBufferLength; i++) writeBuffer[i] = -1;
             blockPosition = 0;
-            try (val positionFile = new RandomAccessFile(mode.name() + ".positions", "rw")) {
+            try (val positionFile = new RandomAccessFile(path.resolve(mode.name() + ".positions").toFile(), "rw")) {
                 final int packSize = 4;
                 val pack = ByteBuffer.allocate(packSize);
                 for (val entry : positionsSortedByRank(positions)) {
@@ -126,7 +128,6 @@ public class IndexStoreFunction implements AutoCloseable {
                 }
                 flush(positionFile, writeBuffer);
             }
-
         }
 
         private static Iterable<Map.Entry<Vertex, Integer>> positionsSortedByRank(Map<Vertex, Integer> positions) {
