@@ -146,4 +146,9 @@ public class ExtendedSearchPath implements SearchPath {
     public static SearchPath extend(SearchPath path, SearchArc withArc) {
         return new ExtendedSearchPath(path, withArc);
     }
+
+    @Override
+    public String toString() {
+        return SearchVertexPaths.toString(this);
+    }
 }

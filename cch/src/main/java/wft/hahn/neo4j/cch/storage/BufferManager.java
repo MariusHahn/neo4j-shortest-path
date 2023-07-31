@@ -4,17 +4,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-import org.neo4j.fabric.eval.Catalog;
+import java.io.File;
 
 public class BufferManager implements AutoCloseable {
     private final RandomAccessFile arcFile;
@@ -23,17 +19,18 @@ public class BufferManager implements AutoCloseable {
     private final Map<Integer, Collection<BufferArc>> buffer = new HashMap<>();
     private final Map<Integer, Integer> positions = new HashMap<>();
 
-    public BufferManager(Mode mode) {
-        this.arcFile = open(mode.name() + ".storage");
-        this.positionFile = open(mode.name() + ".positions");
+    public BufferManager(Mode mode, Path path) {
+        this.arcFile = open(path.resolve("%s.storage".formatted(mode.name())).toFile());
+        this.positionFile = open(path.resolve("%s.positions".formatted(mode.name())).toFile());
         this.mode = mode;
     }
 
     public Collection<BufferArc> arcs(int rank) {
+        final ByteBuffer allocate = ByteBuffer.allocate(4096);
         if (!buffer.containsKey(rank)) {
             if (!positions.containsKey(rank)) {
                 final int block = rank / 1024;
-                final byte[] bytes = new byte[4096];
+                final byte[] bytes = allocate.array();
                 try {
                     positionFile.seek(block * 1024);
                     positionFile.read(bytes, 0, 4096);
@@ -42,7 +39,10 @@ public class BufferManager implements AutoCloseable {
                     throw new RuntimeException(e.getMessage(), e);
                 }
                 for (int i = 0, end = bytes.length / 4; i < end; i++) {
-                    positions.put(block * 1024 + i, ByteBuffer.wrap(bytes, i * 4, 4).getInt());
+                    int position = allocate.getInt(i * 4);
+                    if (position != -1) {
+                        positions.put(block * 1024 + i, position);
+                    }
                 }
             }
             final ByteBuffer readBlock = ByteBuffer.allocate(4096);
@@ -60,6 +60,7 @@ public class BufferManager implements AutoCloseable {
                 final int endRank = readBlock.getInt(offset + 4);
                 final int middleRank = readBlock.getInt(offset + 8);
                 final float weight = readBlock.getFloat(offset + 12);
+                if (startRank == -1 || endRank == -1) continue;
                 if (Mode.OUT.equals(mode)) {
                     Collection<BufferArc> arcs = buffer.computeIfAbsent(startRank, x -> new HashSet<>());
                     arcs.add(new BufferArc(startRank, endRank, middleRank, weight));
@@ -79,7 +80,7 @@ public class BufferManager implements AutoCloseable {
         if (positionFile != null) positionFile.close();
     }
 
-    private static RandomAccessFile open(String name) {
+    private static RandomAccessFile open(File name) {
         try {
             return new RandomAccessFile(name, "r");
         } catch (FileNotFoundException e) {

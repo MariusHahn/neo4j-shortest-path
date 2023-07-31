@@ -4,10 +4,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 
-import wft.hahn.neo4j.cch.model.Arc;
-import wft.hahn.neo4j.cch.model.PathElement;
-import wft.hahn.neo4j.cch.model.Vertex;
-
 public class SearchVertexPaths {
 
     public static boolean contains(SearchPath path, SearchVertex node) {
@@ -70,6 +66,11 @@ public class SearchVertexPaths {
         @Override
         public float weight() {
             return 0;
+        }
+
+        @Override
+        public String toString() {
+            return SearchVertexPaths.toString(this);
         }
     }
 

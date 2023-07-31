@@ -21,13 +21,13 @@ public class IntegrationTest {
 
     public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures,
                            Collection<Class> functions, DatasetEnum datasetEnum) {
-        final Dataset dataset = datasetEnum.dataset();
+        final Dataset dataset = datasetEnum == null ? null : datasetEnum.dataset();
         Neo4jBuilder neo4jBuilder = Neo4jBuilders
                 .newInProcessBuilder()
                 .withDisabledServer()
-                .withFixture(dataset.cypherPath())
                 .withConfig(new SimpleSetting<>("server.directories.import", resourcePath().toAbsolutePath()), resourcePath().toAbsolutePath())
                 ;
+        if (dataset != null) neo4jBuilder = neo4jBuilder.withFixture(dataset.cypherPath());
         aggregationFunctions.forEach(neo4jBuilder::withAggregationFunction);
         procedures.forEach(neo4jBuilder::withProcedure);
         functions.forEach(neo4jBuilder::withFunction);

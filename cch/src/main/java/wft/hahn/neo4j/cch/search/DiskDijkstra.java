@@ -9,9 +9,9 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.storage.BufferManager;
-import wft.hahn.neo4j.cch.storage.Mode;
 
 @RequiredArgsConstructor
 public class DiskDijkstra {
@@ -116,17 +116,10 @@ public class DiskDijkstra {
         }
 
         void addArcs(SearchVertex vertex) {
-            final int rank = vertex.rank;
-            Collection<BufferManager.BufferArc> arcs = bufferManager.arcs(rank);
-            for (BufferManager.BufferArc arc : arcs) {
-                if (Mode.OUT.equals(bufferManager.mode) && rank < arc.t()) {
-                    SearchVertex target = getVertex(arc.t());
-                    SearchVertex middle = getVertex(arc.m());
-                    vertex.addArc(new SearchArc(vertex, target, middle, arc.weight()));
-                }
-                if (Mode.IN.equals(bufferManager.mode) && rank > arc.t()) {
-                    vertex.addArc(new SearchArc(getVertex(arc.t()), vertex, getVertex(arc.m()), arc.weight()));
-                }
+            for (BufferManager.BufferArc arc : bufferManager.arcs(vertex.rank)) {
+                val target = getVertex(arc.t());
+                val middle = getVertex(arc.m());
+                vertex.addArc(new SearchArc(vertex, target, middle, arc.weight()));
             }
         }
     }
