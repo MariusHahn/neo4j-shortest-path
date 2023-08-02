@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.storage.BufferManager;
+import wft.hahn.neo4j.cch.storage.Mode;
 
 @RequiredArgsConstructor
 public class DiskDijkstra {
@@ -35,11 +36,13 @@ public class DiskDijkstra {
         private final PriorityQueue<DiskDijkstraState> queue = new PriorityQueue<>();
         private final Map<Integer, DiskDijkstraState> seen = new HashMap<>();
         private final Map<Integer, SearchPath> shortestPaths;
+        private final Mode mode;
         private DiskDijkstraState latestExpand;
         private final VertexManager vertexManager;
 
         public Query(int start, Set<Integer> goals, BufferManager bufferManager) {
             this.goals = goals;
+            this.mode = bufferManager.mode;
             this.vertexManager = new VertexManager(bufferManager);
             DiskDijkstraState init = new DiskDijkstraState(vertexManager.getVertex(start), vertexManager);
             queue.offer(init);
@@ -64,7 +67,7 @@ public class DiskDijkstra {
                 final SearchVertex neighbor = arc.otherVertex(state.getEndVertex());
                 final float cost = arc.weight;
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
-                    final SearchPath newPath = ExtendedSearchPath.extend(state.getPath(), arc);
+                    final SearchPath newPath = ExtendedSearchPath.extend(state.getPath(), mode == Mode.OUT ? arc : SearchArc.reverse(arc));
                     final DiskDijkstraState newState = new DiskDijkstraState(neighbor, newPath, vertexManager);
                     queue.remove(newState);
                     queue.offer(newState);

@@ -21,9 +21,9 @@ import wtf.hahn.neo4j.cch.storage.IndexStoreFunctionTest;
 public class DiskDijkstraUpDownTest {
 
     private static void setupPaperGraphTest(Vertex topNode, Path path) {
-        try (/*val x = new IndexStoreFunction(topNode, Mode.OUT, path);*/
+        try (val x = new IndexStoreFunction(topNode, Mode.OUT, path);
              val y = new IndexStoreFunction(topNode, Mode.IN, path)) {
-            //x.go();
+            x.go();
             y.go();
         } catch (IOException e) {
             e.printStackTrace();
