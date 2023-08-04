@@ -1,3 +1,5 @@
+package wtf.hahn.neo4j.cch;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;

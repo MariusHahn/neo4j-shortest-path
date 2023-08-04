@@ -12,7 +12,7 @@ import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 @ToString(of = {"name", "rank"})
 public final class Vertex implements PathElement {
     public static final int UNSET = -1;
-    private final String name;
+    public final String name;
     public int rank;
     public int contractedLevel;
     public final String elementId;

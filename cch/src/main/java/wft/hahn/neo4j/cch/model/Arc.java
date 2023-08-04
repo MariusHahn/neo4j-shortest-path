@@ -10,9 +10,9 @@ public final class Arc implements PathElement {
     public static final int BYTE_SIZE = 16;
     public final Vertex start;
     public final Vertex end;
-    public final float weight;
-    public final Vertex middle;
-    public final int hopLength;
+    public float weight;
+    public Vertex middle;
+    public int hopLength;
 
     public Arc(Vertex start, Vertex end, float weight) {
         this.start = start;

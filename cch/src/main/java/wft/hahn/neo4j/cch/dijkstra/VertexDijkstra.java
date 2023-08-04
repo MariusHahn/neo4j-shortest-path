@@ -49,7 +49,7 @@ public class VertexDijkstra {
             }
             final Iterable<Arc> arcs = state.getEndVertex().outArcs();
             state.settled = true;
-            for (Arc arc : arcs) {
+            for (Arc arc : arcs) if (arc.end.rank == Vertex.UNSET) {
                 final Vertex neighbor = arc.otherVertex(state.getEndVertex());
                 final float cost = arc.weight;
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
