@@ -22,26 +22,47 @@ public class FifoBuffer implements AutoCloseable {
         this.bufferSize = bufferSize;
         this.mode = mode;
         arcReader = new ArcReader(this.mode, basePath);
-
     }
 
-    public Iterable<DiskArc> arcs(int rank) {
+    public List<DiskArc> arcs(int rank) {
         List<DiskArc> arcs = new LinkedList<>();
-        if (!positions.containsKey(rank)) {
+        if (!alreadyLoaded(rank)) {
             loadArcs(rank);
         }
-        for (int readPointer = positions.get(rank); allArcsRead(rank, readPointer); readPointer++) {
-            arcs.add(buffer[readPointer % (bufferSize - 1)]);
+        for (int readPointer = positions.get(rank); continueReadArcs(rank, readPointer); readPointer++) {
+            DiskArc diskArc = buffer[readPointer % (bufferSize)];
+            arcs.add(diskArc);
         }
         return arcs;
     }
 
-    private boolean allArcsRead(int rank, int readPointer) {
-        if (readPointer + bufferSize > bufferSize * 2) {
+    private boolean alreadyLoaded(int rank) {
+        if (positions.containsKey(rank)) {
+            final int position = positions.get(rank);
+            if (mode == Mode.OUT) {
+                if (buffer[position].start() != rank) {
+                    positions.remove(rank, position);
+                } else {
+                    return true;
+                }
+            }
+            if (mode == Mode.IN) {
+                if (buffer[position].end() != rank) {
+                    positions.remove(rank, position);
+                } else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean continueReadArcs(int rank, int readPointer) {
+        if ((bufferSize * 2) + 1 < readPointer) {
             throw new IllegalStateException();
         }
         if (buffer[readPointer % bufferSize] == null) {
-            return true;
+            return false;
         }
         return mode == Mode.OUT
                 ? buffer[readPointer % bufferSize].start() == rank
@@ -49,10 +70,11 @@ public class FifoBuffer implements AutoCloseable {
     }
 
     private void loadArcs(int rank) {
-        final Iterable<DiskArc> arcs = arcReader.getArcs(rank);
+        final List<DiskArc> arcs = arcReader.getArcs(rank);
+        if (arcs.isEmpty()) return;
         for (DiskArc arc : arcs) {
             buffer[position] = arc;
-            positions.put(mode == Mode.OUT ? arc.start() : arc.end(), position);
+            positions.computeIfAbsent(mode == Mode.OUT ? arc.start() : arc.end(), key ->  position);
             position = (position + 1) % bufferSize;
         }
     }

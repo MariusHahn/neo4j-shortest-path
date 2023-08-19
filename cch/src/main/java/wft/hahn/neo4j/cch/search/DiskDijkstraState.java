@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class DiskDijkstraState implements Comparable<DiskDijkstraState>{
     private final SearchVertex endVertex;
     private final SearchPath path;
-    private final DiskDijkstra.VertexManager vertexManager;
+    private final VertexManager vertexManager;
     public boolean settled;
 
     public void settle() {
@@ -18,7 +18,7 @@ public class DiskDijkstraState implements Comparable<DiskDijkstraState>{
         this.settled = true;
     }
 
-    public DiskDijkstraState(SearchVertex endVertex, DiskDijkstra.VertexManager vertexManager) {
+    public DiskDijkstraState(SearchVertex endVertex, VertexManager vertexManager) {
         this.endVertex = endVertex;
         path = SearchVertexPaths.singleSearchVertexPath(endVertex);
         settled = false;
