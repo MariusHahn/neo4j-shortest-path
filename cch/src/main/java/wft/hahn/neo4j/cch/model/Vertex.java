@@ -5,11 +5,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import lombok.AllArgsConstructor;
 import lombok.ToString;
 import org.neo4j.graphdb.Node;
 import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
-@ToString(of = {"name", "rank"})
+@ToString(of = {"name", "rank"}) @AllArgsConstructor
 public final class Vertex implements PathElement {
     public static final int UNSET = -1;
     public final String name;

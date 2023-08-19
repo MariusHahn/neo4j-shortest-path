@@ -6,17 +6,17 @@ import java.util.Set;
 
 import wft.hahn.neo4j.cch.model.BidirectionalSearchPath;
 import wft.hahn.neo4j.cch.search.DiskDijkstra.Query;
-import wft.hahn.neo4j.cch.storage.BufferManager;
+import wft.hahn.neo4j.cch.storage.FifoBuffer;
 import wft.hahn.neo4j.cch.storage.Mode;
 
 public class DiskChDijkstra implements AutoCloseable {
 
-    private final BufferManager outBuffer;
-    private final BufferManager inBuffer;
+    private final FifoBuffer outBuffer;
+    private final FifoBuffer inBuffer;
 
     public DiskChDijkstra(Path basePath) {
-        outBuffer = new BufferManager(Mode.OUT, basePath);
-        inBuffer = new BufferManager(Mode.IN, basePath);
+        outBuffer = new FifoBuffer(256, Mode.OUT, basePath);
+        inBuffer = new FifoBuffer(256, Mode.IN, basePath);
     }
 
     public SearchPath find(int start, int goal) {

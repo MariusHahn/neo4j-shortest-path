@@ -2,7 +2,6 @@ package wtf.hahn.neo4j.cch.search;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -13,19 +12,17 @@ import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskDijkstra;
 import wft.hahn.neo4j.cch.search.SearchPath;
 import wft.hahn.neo4j.cch.search.SearchVertexPaths;
-import wft.hahn.neo4j.cch.storage.BufferManager;
-import wft.hahn.neo4j.cch.storage.IndexStoreFunction;
+import wft.hahn.neo4j.cch.storage.FifoBuffer;
 import wft.hahn.neo4j.cch.storage.Mode;
+import wft.hahn.neo4j.cch.storage.StoreFunction;
 import wtf.hahn.neo4j.cch.storage.IndexStoreFunctionTest;
 
 public class DiskDijkstraUpDownTest {
 
-    private static void setupPaperGraphTest(Vertex topNode, Path path) {
-        try (val x = new IndexStoreFunction(topNode, Mode.OUT, path);
-             val y = new IndexStoreFunction(topNode, Mode.IN, path)) {
+    private static void setupPaperGraphTest(Vertex topNode, Path path, Mode mode) {
+        try (val x = new StoreFunction(topNode, mode, path)) {
             x.go();
-            y.go();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -35,8 +32,8 @@ public class DiskDijkstraUpDownTest {
     void dijkstraOutTest(@TempDir Path tempPath) {
         Vertex[] vertices = IndexStoreFunctionTest.fillVertices();
         IndexStoreFunctionTest.fillUpwards(vertices);
-        setupPaperGraphTest(vertices[10], tempPath);
-        DiskDijkstra dijkstra = new DiskDijkstra(new BufferManager(Mode.OUT, tempPath));
+        setupPaperGraphTest(vertices[10], tempPath, Mode.OUT);
+        DiskDijkstra dijkstra = new DiskDijkstra(new FifoBuffer(256, Mode.OUT, tempPath));
         Map<Integer, SearchPath> paths = dijkstra.find(0);
         paths.forEach((rank, path) -> System.out.println(SearchVertexPaths.toString(path)));
         assertEquals(6, paths.size());
@@ -58,8 +55,8 @@ public class DiskDijkstraUpDownTest {
     void dijkstraInTest(@TempDir Path tempPath) {
         Vertex[] vertices = IndexStoreFunctionTest.fillVertices();
         IndexStoreFunctionTest.fillDownwards(vertices);
-        setupPaperGraphTest(vertices[10], tempPath);
-        DiskDijkstra dijkstra = new DiskDijkstra(new BufferManager(Mode.IN, tempPath));
+        setupPaperGraphTest(vertices[10], tempPath, Mode.IN);
+        DiskDijkstra dijkstra = new DiskDijkstra(new FifoBuffer(256, Mode.IN, tempPath));
         Map<Integer, SearchPath> paths = dijkstra.find(0);
         paths.forEach((rank, path) -> System.out.println(SearchVertexPaths.toString(path)));
         assertEquals(6, paths.size());

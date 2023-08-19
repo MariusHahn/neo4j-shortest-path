@@ -1,6 +1,5 @@
 package wtf.hahn.neo4j.cch.search;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -14,18 +13,18 @@ import wft.hahn.neo4j.cch.model.BidirectionalSearchPath;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskChDijkstra;
 import wft.hahn.neo4j.cch.search.SearchVertexPaths;
-import wft.hahn.neo4j.cch.storage.IndexStoreFunction;
 import wft.hahn.neo4j.cch.storage.Mode;
+import wft.hahn.neo4j.cch.storage.StoreFunction;
 import wtf.hahn.neo4j.cch.storage.IndexStoreFunctionTest;
 
 public class DiskChDijkstraTest {
 
     private static void setupPaperGraphTest(Vertex topNode, Path path) {
-        try (val x = new IndexStoreFunction(topNode, Mode.OUT, path);
-             val y = new IndexStoreFunction(topNode, Mode.IN, path)) {
+        try (val x = new StoreFunction(topNode, Mode.OUT, path);
+             val y = new StoreFunction(topNode, Mode.IN, path)) {
             x.go();
             y.go();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

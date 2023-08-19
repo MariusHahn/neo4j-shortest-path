@@ -8,6 +8,7 @@ import wft.hahn.neo4j.cch.search.SearchPath;
 import wft.hahn.neo4j.cch.search.SearchPathElement;
 import wft.hahn.neo4j.cch.search.SearchVertex;
 import wtf.hahn.neo4j.util.iterable.JoinIterable;
+import wtf.hahn.neo4j.util.iterable.MappingIterable;
 import wtf.hahn.neo4j.util.iterable.ReverseIterator;
 import wtf.hahn.neo4j.util.iterable.ZipIterable;
 
@@ -30,7 +31,7 @@ public record BidirectionalSearchPath(SearchPath forward, SearchPath backward) i
 
     @Override
     public Iterable<SearchArc> arcs() {
-        return new JoinIterable<>(forward.arcs(), new ReverseIterator<>(backward.arcs()));
+        return new JoinIterable<>(forward.arcs(), new MappingIterable<>(new ReverseIterator<>(backward.arcs()), SearchArc::reverse));
     }
 
     @Override
@@ -67,9 +68,4 @@ public record BidirectionalSearchPath(SearchPath forward, SearchPath backward) i
     public int compareTo(BidirectionalSearchPath o) {
         return Float.compare(weight(), o.weight());
     }
-
-/*    @Override
-    public String toString() {
-        return SearchVertexPaths.toString(this);
-    }*/
 }

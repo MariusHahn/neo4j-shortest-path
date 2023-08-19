@@ -1,9 +1,9 @@
 package wtf.hahn.neo4j.cch.storage;
 
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,96 +12,94 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import wft.hahn.neo4j.cch.model.Arc;
 import wft.hahn.neo4j.cch.model.Vertex;
-import wft.hahn.neo4j.cch.storage.IndexStoreFunction;
+import wft.hahn.neo4j.cch.storage.DiskArc;
 import wft.hahn.neo4j.cch.storage.Mode;
+import wft.hahn.neo4j.cch.storage.StoreFunction;
 
 public class IndexStoreFunctionTest {
 
+    @TempDir
+    static Path tempPath;
+
     @Test
-    void outTest(@TempDir Path path) throws IOException {
+    void outTest() throws Exception {
         Vertex[] vertices = fillVertices();
         fillUpwards(vertices);
-        try (IndexStoreFunction indexStoreFunction = new IndexStoreFunction(vertices[10], Mode.OUT, path)) {
+        try (StoreFunction indexStoreFunction = new StoreFunction(vertices[10], Mode.OUT, tempPath)) {
             indexStoreFunction.go();
         }
-        List<Edge> edges = new LinkedList<>();
-        try (RandomAccessFile outFile = new RandomAccessFile(path.resolve("OUT.storage").toFile(), "r")) {
+        List<DiskArc> edges = new LinkedList<>();
+        try (RandomAccessFile outFile = new RandomAccessFile(tempPath.resolve("OUT.cch").toFile(), "r")) {
             ByteBuffer buffer = ByteBuffer.allocate(4096);
             outFile.read(buffer.array());
-            for (int i = 0; i < 4096; i=i+16) {
-                Edge edge = new Edge(buffer.getInt(i), buffer.getInt(i + 4), buffer.getInt(i + 8)
-                        , buffer.getFloat(i + 12));
-                if (edge.fromRank == -1) break;
-                System.out.println(edge);
-                edges.add(edge);
+            while (buffer.position() < buffer.capacity()) {
+                DiskArc arc = new DiskArc(buffer);
+                if (arc.start() == -1) break;
+                System.out.println(arc);
+                edges.add(arc);
             }
         }
         Assertions.assertEquals(19, edges.size());
-        Assertions.assertEquals(new Edge(9, 10, -1, 1.f), edges.get(0));
-        Assertions.assertEquals(new Edge(0, 10, -1, 2.f), edges.get(1));
-        Assertions.assertEquals(new Edge(7, 9, -1, 1.0f), edges.get(2));
-        Assertions.assertEquals(new Edge(8, 9, -1, 2.0f), edges.get(3));
-        Assertions.assertEquals(new Edge(1, 9, -1, 4.0f), edges.get(4));
-        Assertions.assertEquals(new Edge(0, 7, -1, 2.0f), edges.get(5));
-        Assertions.assertEquals(new Edge(5, 7, -1, 1.0f), edges.get(6));
-        Assertions.assertEquals(new Edge(0, 5, -1, 2.0f), edges.get(7));
-        Assertions.assertEquals(new Edge(4, 5, -1, 1.0f), edges.get(8));
-        Assertions.assertEquals(new Edge(2, 5, -1, 3.0f), edges.get(9));
-        Assertions.assertEquals(new Edge(1, 2, -1, 4.0f), edges.get(10));
-        Assertions.assertEquals(new Edge(0, 4, -1, 2.0f), edges.get(11));
-        Assertions.assertEquals(new Edge(2, 4, -1, 2.0f), edges.get(12));
-        Assertions.assertEquals(new Edge(3, 4,  2, 4.0f), edges.get(13));
-        Assertions.assertEquals(new Edge(2, 3, -1, 2.0f), edges.get(14));
-        Assertions.assertEquals(new Edge(1, 8, -1, 2.0f), edges.get(15));
-        Assertions.assertEquals(new Edge(6, 8, -1, 1.0f), edges.get(16));
-        Assertions.assertEquals(new Edge(1, 6, -1, 1.0f), edges.get(17));
-        Assertions.assertEquals(new Edge(3, 6, -1, 2.0f), edges.get(18));
-    }
-
-    record Edge(int fromRank, int toRank, int middle, float weight) {
-        @Override public String toString() {
-            return "(%02d)-[%.2f]->(%02d), via: %02d".formatted(fromRank, weight, toRank, middle); }
+        Assertions.assertEquals(new DiskArc(9, 10, -1, 1.f), edges.get(0));
+        Assertions.assertEquals(new DiskArc(0, 10, -1, 2.f), edges.get(1));
+        Assertions.assertEquals(new DiskArc(7, 9, -1, 1.0f), edges.get(2));
+        Assertions.assertEquals(new DiskArc(8, 9, -1, 2.0f), edges.get(3));
+        Assertions.assertEquals(new DiskArc(1, 9, -1, 4.0f), edges.get(4));
+        Assertions.assertEquals(new DiskArc(0, 7, -1, 2.0f), edges.get(5));
+        Assertions.assertEquals(new DiskArc(5, 7, -1, 1.0f), edges.get(6));
+        Assertions.assertEquals(new DiskArc(0, 5, -1, 2.0f), edges.get(7));
+        Assertions.assertEquals(new DiskArc(4, 5, -1, 1.0f), edges.get(8));
+        Assertions.assertEquals(new DiskArc(2, 5, -1, 3.0f), edges.get(9));
+        Assertions.assertEquals(new DiskArc(1, 2, -1, 4.0f), edges.get(10));
+        Assertions.assertEquals(new DiskArc(0, 4, -1, 2.0f), edges.get(11));
+        Assertions.assertEquals(new DiskArc(2, 4, -1, 2.0f), edges.get(12));
+        Assertions.assertEquals(new DiskArc(3, 4,  2, 4.0f), edges.get(13));
+        Assertions.assertEquals(new DiskArc(2, 3, -1, 2.0f), edges.get(14));
+        Assertions.assertEquals(new DiskArc(1, 8, -1, 2.0f), edges.get(15));
+        Assertions.assertEquals(new DiskArc(6, 8, -1, 1.0f), edges.get(16));
+        Assertions.assertEquals(new DiskArc(1, 6, -1, 1.0f), edges.get(17));
+        Assertions.assertEquals(new DiskArc(3, 6, -1, 2.0f), edges.get(18));
     }
 
     @Test
-    void inTest(@TempDir Path path) throws IOException {
+    void inTest() throws Exception {
         Vertex[] vertices = fillVertices();
         fillDownwards(vertices);
-        try (IndexStoreFunction indexStoreFunction = new IndexStoreFunction(vertices[10], Mode.IN, path)) {
+        try (StoreFunction indexStoreFunction = new StoreFunction(vertices[10], Mode.IN, tempPath)) {
             indexStoreFunction.go();
         }
-        List<Edge> edges = new LinkedList<>();
-        try (RandomAccessFile outFile = new RandomAccessFile(path.resolve("IN.storage").toFile(), "r")) {
+        List<DiskArc> edges = new LinkedList<>();
+        try (RandomAccessFile outFile = new RandomAccessFile(tempPath.resolve("IN.cch").toFile(), "r")) {
             ByteBuffer buffer = ByteBuffer.allocate(4096);
             outFile.read(buffer.array());
             for (int i = 0; i < 4096; i=i+16) {
-                Edge edge = new Edge(buffer.getInt(i), buffer.getInt(i + 4), buffer.getInt(i + 8)
+                DiskArc edge = new DiskArc(buffer.getInt(i), buffer.getInt(i + 4), buffer.getInt(i + 8)
                         , buffer.getFloat(i + 12));
-                if (edge.fromRank == -1) break;
+                if (edge.start() == -1) break;
                 System.out.println(edge);
                 edges.add(edge);
             }
         }
         Assertions.assertEquals(19, edges.size());
-        Assertions.assertEquals(new Edge(10, 9, -1, 1.f), edges.get(0));
-        Assertions.assertEquals(new Edge(10, 0, -1, 2.f), edges.get(1));
-        Assertions.assertEquals(new Edge(9, 7, -1, 1.0f), edges.get(2));
-        Assertions.assertEquals(new Edge(9, 8, -1, 2.0f), edges.get(3));
-        Assertions.assertEquals(new Edge(9, 1, -1, 4.0f), edges.get(4));
-        Assertions.assertEquals(new Edge(7, 0, -1, 2.0f), edges.get(5));
-        Assertions.assertEquals(new Edge(7, 5, -1, 1.0f), edges.get(6));
-        Assertions.assertEquals(new Edge(5, 0, -1, 2.0f), edges.get(7));
-        Assertions.assertEquals(new Edge(5, 4, -1, 1.0f), edges.get(8));
-        Assertions.assertEquals(new Edge(5, 2, -1, 3.0f), edges.get(9));
-        Assertions.assertEquals(new Edge(2, 1, -1, 4.0f), edges.get(10));
-        Assertions.assertEquals(new Edge(4, 0, -1, 2.0f), edges.get(11));
-        Assertions.assertEquals(new Edge(4, 2, -1, 2.0f), edges.get(12));
-        Assertions.assertEquals(new Edge(4, 3,  2, 4.0f), edges.get(13));
-        Assertions.assertEquals(new Edge(3, 2, -1, 2.0f), edges.get(14));
-        Assertions.assertEquals(new Edge(8, 1, -1, 2.0f), edges.get(15));
-        Assertions.assertEquals(new Edge(8, 6, -1, 1.0f), edges.get(16));
-        Assertions.assertEquals(new Edge(6, 1, -1, 1.0f), edges.get(17));
-        Assertions.assertEquals(new Edge(6, 3, -1, 2.0f), edges.get(18));
+        Assertions.assertEquals(new DiskArc(10, 9, -1, 1.f), edges.get(0));
+        Assertions.assertEquals(new DiskArc(10, 0, -1, 2.f), edges.get(1));
+        Assertions.assertEquals(new DiskArc(9, 7, -1, 1.0f), edges.get(2));
+        Assertions.assertEquals(new DiskArc(9, 8, -1, 2.0f), edges.get(3));
+        Assertions.assertEquals(new DiskArc(9, 1, -1, 4.0f), edges.get(4));
+        Assertions.assertEquals(new DiskArc(7, 0, -1, 2.0f), edges.get(5));
+        Assertions.assertEquals(new DiskArc(7, 5, -1, 1.0f), edges.get(6));
+        Assertions.assertEquals(new DiskArc(5, 0, -1, 2.0f), edges.get(7));
+        Assertions.assertEquals(new DiskArc(5, 4, -1, 1.0f), edges.get(8));
+        Assertions.assertEquals(new DiskArc(5, 2, -1, 3.0f), edges.get(9));
+        Assertions.assertEquals(new DiskArc(2, 1, -1, 4.0f), edges.get(10));
+        Assertions.assertEquals(new DiskArc(4, 0, -1, 2.0f), edges.get(11));
+        Assertions.assertEquals(new DiskArc(4, 2, -1, 2.0f), edges.get(12));
+        Assertions.assertEquals(new DiskArc(4, 3,  2, 4.0f), edges.get(13));
+        Assertions.assertEquals(new DiskArc(3, 2, -1, 2.0f), edges.get(14));
+        Assertions.assertEquals(new DiskArc(8, 1, -1, 2.0f), edges.get(15));
+        Assertions.assertEquals(new DiskArc(8, 6, -1, 1.0f), edges.get(16));
+        Assertions.assertEquals(new DiskArc(6, 1, -1, 1.0f), edges.get(17));
+        Assertions.assertEquals(new DiskArc(6, 3, -1, 2.0f), edges.get(18));
     }
 
     public static void fillDownwards(Vertex[] vertices) {

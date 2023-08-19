@@ -11,24 +11,25 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import wft.hahn.neo4j.cch.model.Vertex;
-import wft.hahn.neo4j.cch.storage.BufferManager;
+import wft.hahn.neo4j.cch.storage.DiskArc;
+import wft.hahn.neo4j.cch.storage.FifoBuffer;
 import wft.hahn.neo4j.cch.storage.Mode;
 
 @RequiredArgsConstructor
 public class DiskDijkstra {
 
-    private final BufferManager bufferManager;
+    private final FifoBuffer fifoBuffer;
 
     public Map<Integer, SearchPath> find(int startRank) {
-        return new Query(startRank, Set.of(), bufferManager).getResult();
+        return new Query(startRank, Set.of(), fifoBuffer).getResult();
     }
 
     public SearchPath find(int startRank, int goalRank) {
-        return new Query(startRank, Set.of(goalRank), bufferManager).getResult().get(goalRank);
+        return new Query(startRank, Set.of(goalRank), fifoBuffer).getResult().get(goalRank);
     }
 
     public Map<Integer, SearchPath> find(int startRank, Collection<Integer> goals) {
-        return new Query(startRank, new HashSet<>(goals), bufferManager).getResult();
+        return new Query(startRank, new HashSet<>(goals), fifoBuffer).getResult();
     }
 
     public static class Query {
@@ -36,14 +37,12 @@ public class DiskDijkstra {
         private final PriorityQueue<DiskDijkstraState> queue = new PriorityQueue<>();
         private final Map<Integer, DiskDijkstraState> seen = new HashMap<>();
         private final Map<Integer, SearchPath> shortestPaths;
-        private final Mode mode;
         private DiskDijkstraState latestExpand;
         private final VertexManager vertexManager;
 
-        public Query(int start, Set<Integer> goals, BufferManager bufferManager) {
+        public Query(int start, Set<Integer> goals, FifoBuffer fifoBuffer) {
             this.goals = goals;
-            this.mode = bufferManager.mode;
-            this.vertexManager = new VertexManager(bufferManager);
+            this.vertexManager = new VertexManager(fifoBuffer);
             DiskDijkstraState init = new DiskDijkstraState(vertexManager.getVertex(start), vertexManager);
             queue.offer(init);
             seen.put(start, init);
@@ -67,7 +66,7 @@ public class DiskDijkstra {
                 final SearchVertex neighbor = arc.otherVertex(state.getEndVertex());
                 final float cost = arc.weight;
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
-                    final SearchPath newPath = ExtendedSearchPath.extend(state.getPath(), mode == Mode.OUT ? arc : SearchArc.reverse(arc));
+                    final SearchPath newPath = ExtendedSearchPath.extend(state.getPath(), arc);
                     final DiskDijkstraState newState = new DiskDijkstraState(neighbor, newPath, vertexManager);
                     queue.remove(newState);
                     queue.offer(newState);
@@ -100,28 +99,28 @@ public class DiskDijkstra {
 
     @RequiredArgsConstructor
     public static class VertexManager {
-        private final BufferManager bufferManager;
+        private final FifoBuffer fifoBuffer;
         private final Map<Integer, SearchVertex> vertices = new HashMap<>();
 
         public SearchVertex getVertex(int rank) {
             if (!vertices.containsKey(rank) && rank > -1) {
                 SearchVertex start = vertices.computeIfAbsent(rank, SearchVertex::new);
-                Collection<BufferManager.BufferArc> arcs = bufferManager.arcs(rank);
-                for (BufferManager.BufferArc arc : arcs) {
-                    SearchVertex end = vertices.computeIfAbsent(arc.t(), SearchVertex::new);
-                    if (arc.m() != Vertex.UNSET) {
-                        vertices.computeIfAbsent(arc.m(), SearchVertex::new);
+                Iterable<DiskArc> arcs = fifoBuffer.arcs(rank);
+                for (DiskArc arc : arcs) {
+                    SearchVertex end = vertices.computeIfAbsent(arc.end(), SearchVertex::new);
+                    if (arc.middle() != Vertex.UNSET) {
+                        vertices.computeIfAbsent(arc.middle(), SearchVertex::new);
                     }
-                    start.addArc(new SearchArc(start, end, vertices.get(arc.m()), arc.weight()));
+                    start.addArc(new SearchArc(start, end, vertices.get(arc.middle()), arc.weight()));
                 }
             }
             return vertices.get(rank);
         }
 
         void addArcs(SearchVertex vertex) {
-            for (BufferManager.BufferArc arc : bufferManager.arcs(vertex.rank)) {
-                val target = getVertex(arc.t());
-                val middle = getVertex(arc.m());
+            for (DiskArc arc : fifoBuffer.arcs(vertex.rank)) {
+                val target = getVertex(arc.end());
+                val middle = getVertex(arc.middle());
                 vertex.addArc(new SearchArc(vertex, target, middle, arc.weight()));
             }
         }

@@ -34,12 +34,4 @@ public final class Arc implements PathElement {
         return start.equals(vertex) ? end : start;
     }
 
-    public byte[] toBytes() {
-        return ByteBuffer.allocate(BYTE_SIZE)
-                .putInt(0, start.rank)
-                .putInt(4, end.rank)
-                .putInt(8, middle == null ? Vertex.UNSET : middle.rank)
-                .putFloat(12, weight)
-                .array();
-    }
 }
