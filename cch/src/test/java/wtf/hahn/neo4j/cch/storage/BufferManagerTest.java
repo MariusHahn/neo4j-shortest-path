@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -59,17 +60,48 @@ public class BufferManagerTest {
                 .distinct()
                 .collect(Collectors.groupingBy(DiskArc::start));
         int sum = arcGroup.values().stream().mapToInt(Collection::size).sum();
-        try (ArcWriter arcWriter = new ArcWriter(Mode.OUT, basePath);
-             PositionWriter positionWriter = new PositionWriter(Mode.OUT, basePath, sum)) {
+        Mode out = Mode.OUT;
+        try (ArcWriter arcWriter = new ArcWriter(out, basePath);
+             PositionWriter positionWriter = new PositionWriter(out, basePath, sum)) {
             arcGroup.forEach((rank, arcs) -> positionWriter.write(rank, arcWriter.write(arcs)));
         }
-        try (FifoBuffer fifoBuffer = new FifoBuffer(1024, Mode.OUT, basePath)) {
-            final List<Integer> ranks = new ArrayList<>(arcGroup.keySet());
-            Collections.shuffle(ranks);
-            for (Integer rank : ranks) {
-                List<DiskArc> arcs = arcGroup.get(rank);
-                List<DiskArc> loadArcs = new ArrayList<>(fifoBuffer.arcs(rank));
-                assertThat(loadArcs).hasSameElementsAs(arcs);
+        try (FifoBuffer fifoBuffer = new FifoBuffer(1024, out, basePath)) {
+            for (int i = 0; i < 1000; i++) {
+                final List<Integer> ranks = new ArrayList<>(arcGroup.keySet());
+                Collections.shuffle(ranks, new Random(i));
+                for (Integer rank : ranks) {
+                    List<DiskArc> arcs = arcGroup.get(rank);
+                    List<DiskArc> loadArcs = new ArrayList<>(fifoBuffer.arcs(rank));
+                    assertThat(loadArcs).hasSameElementsAs(arcs);
+                }
+            }
+        }
+    }
+
+    @Test
+    void readShuffleInTest() throws Exception {
+        Map<Integer, List<DiskArc>> arcGroup = Files.lines(Paths.get("src", "test", "resources", "rome99.csv"))
+                .map(line -> Arrays.stream(line.split(",")))
+                .map(stream -> stream.map(String::trim).toArray(String[]::new))
+                .map(line -> new DiskArc(parseInt(line[0]), parseInt(line[1]), -1, parseFloat(line[2])))
+                .filter(diskArc -> diskArc.start() > diskArc.end())
+                .distinct()
+                .collect(Collectors.groupingBy(DiskArc::start));
+        int sum = arcGroup.values().stream().mapToInt(Collection::size).sum();
+        Mode mode = Mode.IN;
+        try (ArcWriter arcWriter = new ArcWriter(mode, basePath);
+             PositionWriter positionWriter = new PositionWriter(mode, basePath, sum)) {
+            arcGroup.forEach((rank, arcs) -> positionWriter.write(rank, arcWriter.write(arcs)));
+        }
+        try (FifoBuffer fifoBuffer = new FifoBuffer(1024, mode, basePath)) {
+            for (int i = 0; i < 1000; i++) {
+                final List<Integer> ranks = new ArrayList<>(arcGroup.keySet());
+                Collections.shuffle(ranks, new Random(i));
+                for (Integer rank : ranks) {
+                    List<DiskArc> arcs = arcGroup.get(rank);
+                    List<DiskArc> loadArcs = new ArrayList<>(fifoBuffer.arcs(rank));
+                    assertThat(loadArcs).hasSameElementsAs(arcs);
+                }
             }
         }
     }

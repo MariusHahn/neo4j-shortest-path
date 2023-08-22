@@ -40,19 +40,10 @@ public class FifoBuffer implements AutoCloseable {
     private boolean alreadyLoaded(int rank) {
         if (positions.containsKey(rank)) {
             final int position = positions.get(rank);
-            if (mode == Mode.OUT) {
-                if (buffer[position] == null || buffer[position].start() != rank) {
-                    positions.remove(rank);
-                } else {
-                    return true;
-                }
-            }
-            if (mode == Mode.IN) {
-                if (buffer[position] == null || buffer[position].end() != rank) {
-                    positions.remove(rank);
-                } else {
-                    return true;
-                }
+            if (buffer[position] == null || buffer[position].start() != rank) {
+                positions.remove(rank);
+            } else {
+                return true;
             }
         }
         return false;
@@ -60,28 +51,26 @@ public class FifoBuffer implements AutoCloseable {
 
     private boolean continueReadArcs(int rank, int readPointer) {
         final DiskArc arc = buffer[readPointer % bufferSize];
-        if (arc == null) {return false;}
-        return mode == Mode.OUT ? arc.start() == rank : arc.end() == rank;
+        if (arc == null) {
+            return false;
+        }
+        return arc.start() == rank;
     }
 
     private void loadArcs(int rank) {
         final List<DiskArc> arcs = arcReader.getArcs(rank);
         for (DiskArc arc : arcs) {
             buffer[position] = arc;
-            positions.put(mode == Mode.OUT ? arc.start() : arc.end(), position);
+            positions.put(arc.start(), position);
             position = (position + 1) % bufferSize;
         }
-        removePobablyInCompleteArcSet();
+        removeProbablyInCompleteArcSet();
     }
 
-    private void removePobablyInCompleteArcSet() {
+    private void removeProbablyInCompleteArcSet() {
         final DiskArc diskArc = buffer[(position) % bufferSize];
         if (diskArc != null) {
-            if (mode == Mode.OUT) {
-                positions.remove(diskArc.start());
-            } else {
-                positions.remove(diskArc.end());
-            }
+            positions.remove(diskArc.start());
         }
     }
 
