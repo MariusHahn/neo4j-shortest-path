@@ -68,7 +68,7 @@ public class BufferManagerTest {
             Collections.shuffle(ranks);
             for (Integer rank : ranks) {
                 List<DiskArc> arcs = arcGroup.get(rank);
-                List<DiskArc> loadArcs = new ArrayList<>(fifoBuffer.arcs(rank, arcs.size()));
+                List<DiskArc> loadArcs = new ArrayList<>(fifoBuffer.arcs(rank));
                 assertThat(loadArcs).hasSameElementsAs(arcs);
             }
         }

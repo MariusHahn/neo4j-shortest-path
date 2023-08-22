@@ -26,15 +26,12 @@ public class FifoBuffer implements AutoCloseable {
     }
 
     public Set<DiskArc> arcs(int rank) {
-        return arcs(rank, 0);
-    }
-    public Set<DiskArc> arcs(int rank, int count) {
         Set<DiskArc> arcs = new LinkedHashSet<>();
         if (!alreadyLoaded(rank)) {
             loadArcs(rank);
         }
         for (int readPointer = positions.get(rank) + bufferSize; continueReadArcs(rank, readPointer); readPointer--) {
-            DiskArc diskArc = buffer[readPointer % (bufferSize)];
+            final DiskArc diskArc = buffer[readPointer % (bufferSize)];
             arcs.add(diskArc);
         }
         return arcs;
@@ -62,12 +59,9 @@ public class FifoBuffer implements AutoCloseable {
     }
 
     private boolean continueReadArcs(int rank, int readPointer) {
-        if (buffer[readPointer % bufferSize] == null) {
-            return false;
-        }
-        return mode == Mode.OUT
-                ? buffer[readPointer % bufferSize].start() == rank
-                : buffer[readPointer % bufferSize].end() == rank;
+        final DiskArc arc = buffer[readPointer % bufferSize];
+        if (arc == null) {return false;}
+        return mode == Mode.OUT ? arc.start() == rank : arc.end() == rank;
     }
 
     private void loadArcs(int rank) {
@@ -77,7 +71,11 @@ public class FifoBuffer implements AutoCloseable {
             positions.put(mode == Mode.OUT ? arc.start() : arc.end(), position);
             position = (position + 1) % bufferSize;
         }
-        DiskArc diskArc = buffer[(position) % bufferSize];
+        removePobablyInCompleteArcSet();
+    }
+
+    private void removePobablyInCompleteArcSet() {
+        final DiskArc diskArc = buffer[(position) % bufferSize];
         if (diskArc != null) {
             if (mode == Mode.OUT) {
                 positions.remove(diskArc.start());
