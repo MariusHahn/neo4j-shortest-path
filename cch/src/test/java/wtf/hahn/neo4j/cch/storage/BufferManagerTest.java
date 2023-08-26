@@ -86,7 +86,7 @@ public class BufferManagerTest {
                 .map(line -> new DiskArc(parseInt(line[0]), parseInt(line[1]), -1, parseFloat(line[2])))
                 .filter(diskArc -> diskArc.start() > diskArc.end())
                 .distinct()
-                .collect(Collectors.groupingBy(DiskArc::start));
+                .collect(Collectors.groupingBy(DiskArc::end));
         int sum = arcGroup.values().stream().mapToInt(Collection::size).sum();
         Mode mode = Mode.IN;
         try (ArcWriter arcWriter = new ArcWriter(mode, basePath);

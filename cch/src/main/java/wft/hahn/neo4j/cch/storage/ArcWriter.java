@@ -22,7 +22,7 @@ public class ArcWriter extends Writer implements AutoCloseable {
     }
 
     public int write(Vertex vertex) {
-        final Set<Arc> arcs = (mode == Mode.OUT ? vertex.inArcs() : vertex.outArcs());
+        final Set<Arc> arcs = mode == OUT ? vertex.outArcs() : vertex.inArcs();
         List<DiskArc> diskArcs = getDiskArcs(arcs);
         return write(diskArcs);
     }

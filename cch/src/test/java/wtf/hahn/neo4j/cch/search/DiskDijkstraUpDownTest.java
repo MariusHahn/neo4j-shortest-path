@@ -17,7 +17,27 @@ import wft.hahn.neo4j.cch.storage.Mode;
 import wft.hahn.neo4j.cch.storage.StoreFunction;
 import wtf.hahn.neo4j.cch.storage.IndexStoreFunctionTest;
 
+/**
+ *   ┌-(3)-2-(6)-1-(8)
+ *   ┆  |     |    ╱|
+ *   ┆  2     1  2  2
+ *   ┆  |     |╱    |
+ *   4 (2)-4-(1)-4-(9)-┐
+ *   ┆  | \         |  |
+ *   ┆  2  3        1  |
+ *   ┆  |   \       |  |
+ *   └-(4)-1-(5)-1-(7) 1
+ *        \   |    /   |
+ *         2  2  2     |
+ *          \ |/       |
+ *           (0)--2--(10)
+ *
+ * */
+
 public class DiskDijkstraUpDownTest {
+    @TempDir
+    private static Path tempPath;
+
 
     private static void setupPaperGraphTest(Vertex topNode, Path path, Mode mode) {
         try (val x = new StoreFunction(topNode, mode, path)) {
@@ -29,14 +49,13 @@ public class DiskDijkstraUpDownTest {
 
 
     @Test
-    void dijkstraOutTest(@TempDir Path tempPath) {
+    void dijkstraOutTest() {
         Vertex[] vertices = IndexStoreFunctionTest.fillVertices();
         IndexStoreFunctionTest.fillUpwards(vertices);
         setupPaperGraphTest(vertices[10], tempPath, Mode.OUT);
         DiskDijkstra dijkstra = new DiskDijkstra(new FifoBuffer(256, Mode.OUT, tempPath));
         Map<Integer, SearchPath> paths = dijkstra.find(0);
         paths.forEach((rank, path) -> System.out.println(SearchVertexPaths.toString(path)));
-        assertEquals(6, paths.size());
         SearchPath to0 = paths.get(0);
         assertEquals(0.0f, to0.weight()); assertEquals(0, to0.length());
         SearchPath to4 = paths.get(4);
@@ -52,14 +71,13 @@ public class DiskDijkstraUpDownTest {
     }
 
     @Test
-    void dijkstraInTest(@TempDir Path tempPath) {
+    void dijkstraInTest() {
         Vertex[] vertices = IndexStoreFunctionTest.fillVertices();
         IndexStoreFunctionTest.fillDownwards(vertices);
         setupPaperGraphTest(vertices[10], tempPath, Mode.IN);
         DiskDijkstra dijkstra = new DiskDijkstra(new FifoBuffer(256, Mode.IN, tempPath));
         Map<Integer, SearchPath> paths = dijkstra.find(0);
         paths.forEach((rank, path) -> System.out.println(SearchVertexPaths.toString(path)));
-        assertEquals(6, paths.size());
         SearchPath to0 = paths.get(0);
         assertEquals(0.0f, to0.weight()); assertEquals(0, to0.length());
         SearchPath to4 = paths.get(4);

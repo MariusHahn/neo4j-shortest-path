@@ -7,6 +7,7 @@ public class SearchArc implements SearchPathElement {
     public SearchArc(SearchVertex start, SearchVertex end, SearchVertex middle, float weight) {
         assert start != null;
         assert end != null;
+        assert start.rank != end.rank;
         this.start = start;
         this.end = end;
         this.middle = middle;

@@ -1,6 +1,7 @@
 package wft.hahn.neo4j.cch.storage;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,13 +27,16 @@ public class FifoBuffer implements AutoCloseable {
     }
 
     public Set<DiskArc> arcs(int rank) {
-        Set<DiskArc> arcs = new LinkedHashSet<>();
         if (!alreadyLoaded(rank)) {
             loadArcs(rank);
         }
-        for (int readPointer = positions.get(rank) + bufferSize; continueReadArcs(rank, readPointer); readPointer--) {
+        if (!positions.containsKey(rank)) return Collections.emptySet();
+        Set<DiskArc> arcs = new LinkedHashSet<>();
+        int readPointer = positions.getOrDefault(rank, -1) + bufferSize;
+        while (continueReadArcs(rank, readPointer)) {
             final DiskArc diskArc = buffer[readPointer % (bufferSize)];
             arcs.add(diskArc);
+            readPointer--;
         }
         return arcs;
     }
@@ -40,7 +44,8 @@ public class FifoBuffer implements AutoCloseable {
     private boolean alreadyLoaded(int rank) {
         if (positions.containsKey(rank)) {
             final int position = positions.get(rank);
-            if (buffer[position] == null || buffer[position].start() != rank) {
+            int sigRank = mode == Mode.OUT ? buffer[position].start() : buffer[position].end();
+            if (buffer[position] == null || sigRank != rank) {
                 positions.remove(rank);
             } else {
                 return true;
@@ -54,14 +59,15 @@ public class FifoBuffer implements AutoCloseable {
         if (arc == null) {
             return false;
         }
-        return arc.start() == rank;
+        int edgeRank = mode == Mode.OUT ? arc.start() : arc.end();
+        return edgeRank == rank;
     }
 
     private void loadArcs(int rank) {
         final List<DiskArc> arcs = arcReader.getArcs(rank);
         for (DiskArc arc : arcs) {
             buffer[position] = arc;
-            positions.put(arc.start(), position);
+            positions.put(mode == Mode.OUT ? arc.start() : arc.end(), position);
             position = (position + 1) % bufferSize;
         }
         removeProbablyInCompleteArcSet();
@@ -70,7 +76,7 @@ public class FifoBuffer implements AutoCloseable {
     private void removeProbablyInCompleteArcSet() {
         final DiskArc diskArc = buffer[(position) % bufferSize];
         if (diskArc != null) {
-            positions.remove(diskArc.start());
+            positions.remove(mode == Mode.OUT ? diskArc.start() : diskArc.end());
         }
     }
 
