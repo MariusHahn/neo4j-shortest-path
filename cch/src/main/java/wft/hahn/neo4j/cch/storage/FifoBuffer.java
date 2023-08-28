@@ -70,7 +70,7 @@ public class FifoBuffer implements AutoCloseable {
             positions.put(mode == Mode.OUT ? arc.start() : arc.end(), position);
             position = (position + 1) % bufferSize;
         }
-        removeProbablyInCompleteArcSet();
+        if (arcs.size() != bufferSize) removeProbablyInCompleteArcSet();
     }
 
     private void removeProbablyInCompleteArcSet() {
