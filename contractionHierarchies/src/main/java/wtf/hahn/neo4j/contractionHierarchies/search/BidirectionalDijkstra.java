@@ -34,7 +34,7 @@ public class BidirectionalDijkstra {
         boolean pickForward = true;
         final PriorityQueue<WeightedPathImpl> candidates = new PriorityQueue<>();
         final Dijkstra.Query forwardQuery = new Dijkstra.Query(start, Set.of(), forwardExpander, weightFunction);
-        final Dijkstra.Query backwardQuery = new Dijkstra.Query(goal, Set.of(), forwardExpander, weightFunction);
+        final Dijkstra.Query backwardQuery = new Dijkstra.Query(goal, Set.of(), forwardExpander.reverse(), weightFunction);
         while (!isComplete(forwardQuery, backwardQuery, candidates.peek())) {
             final Dijkstra.Query query = pickForward ? forwardQuery : backwardQuery;
             final Dijkstra.Query other = pickForward ? backwardQuery : forwardQuery;
