@@ -53,7 +53,7 @@ public final class IndexerByImportanceWithSearchGraph {
 
     public Vertex insertShortcuts() {
         int insertionCounter = 0;
-        Set<Vertex> vertices = vertexLoader.loadAllVertices(type, costProperty);
+        Set<Vertex> vertices = vertexLoader.loadAllVertices(costProperty, type);
         LastInsertWinsPriorityQueue<EdgeDifferenceAndShortcuts> queue =
                 new LastInsertWinsPriorityQueue<>(vertices.stream().map(this::shortcutsToInsert));
         int rank = 0;

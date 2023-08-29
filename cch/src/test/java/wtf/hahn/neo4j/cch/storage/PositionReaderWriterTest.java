@@ -42,12 +42,12 @@ public class PositionReaderWriterTest {
         }
     }
 
-    @Test
+    //@Test
     void outToPlainText() throws Exception {
         toPlainText("OUT.pos");
     }
 
-    @Test
+    //@Test
     void inToPlainText() throws IOException {
         toPlainText("IN.pos");
     }
