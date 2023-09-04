@@ -6,7 +6,10 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,11 +29,13 @@ import wft.hahn.neo4j.cch.IndexerByImportanceWithSearchGraph;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskChDijkstra;
 import wft.hahn.neo4j.cch.search.SearchPath;
+import wft.hahn.neo4j.cch.storage.FifoBuffer;
 import wft.hahn.neo4j.cch.storage.Mode;
 import wft.hahn.neo4j.cch.storage.StoreFunction;
 import wtf.hahn.neo4j.cch.TestDataset;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
+import wtf.hahn.neo4j.util.StoppedResult;
 
 public class OldenburgGraphTest extends IntegrationTest {
     public static final Label LABEL = () -> "Location";
@@ -92,14 +97,45 @@ public class OldenburgGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
 
-    //@Test
+    @Test
+    void smallPerformanceTest() {
+        Stream<Arguments> argumentsStream = randomSourceTarget();
+        AtomicLong overAll = new AtomicLong(0);
+        AtomicInteger denominator = new AtomicInteger(0);
+        FifoBuffer outBuffer = new FifoBuffer(18000, Mode.OUT, tempPath);
+        FifoBuffer inBuffer = new FifoBuffer(18000, Mode.IN, tempPath);
+        try (Transaction transaction = database().beginTx();
+             DiskChDijkstra diskChDijkstra = new DiskChDijkstra(outBuffer, inBuffer)) {
+            argumentsStream.forEach(arg -> {
+                int start = (int) arg.get()[0];
+                int goal = (int) arg.get()[1];
+                Node s = transaction.findNode(LABEL, "ROAD_rank", start);
+                Node t = transaction.findNode(LABEL, "ROAD_rank", goal);
+                WeightedPath weightedPath = dijkstra.find(s, t);
+                if (weightedPath != null) {
+                    StoppedResult<SearchPath> result = new StoppedResult<>(() -> diskChDijkstra.find(start, goal));
+                    SearchPath cchPath = result.getResult();
+                    System.out.println(result.getMillis());
+                    overAll.addAndGet(result.getMillis());
+                    denominator.incrementAndGet();
+                    Assertions.assertEquals(weightedPath.weight(), cchPath.weight());
+                }
+            });
+            double avg = overAll.doubleValue() / denominator.doubleValue();
+            System.out.printf("avg : %s with %d load invocations%n", avg, diskChDijkstra.loadInvocations());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     void allSourceTargetTest() throws IOException {
         final BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("fail.csv", true));
         final int maxId = 6104;
         bufferedWriter.append("from,to,dijkstraLength,cchLength\n");
         IntStream.rangeClosed(0, maxId).parallel().forEach(from -> {
             try (Transaction transaction = database().beginTx()) {
-                for (int to = 0; to < maxId; to++) if (from != to) {
+                for (int to = 0; to <= maxId; to++) if (from != to) {
                     Node s = transaction.findNode(LABEL, "ROAD_rank", from);
                     Node t = transaction.findNode(LABEL, "ROAD_rank", to);
                     WeightedPath dijkstraPath = dijkstra.find(s, t);

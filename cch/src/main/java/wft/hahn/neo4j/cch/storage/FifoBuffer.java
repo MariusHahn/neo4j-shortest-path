@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class FifoBuffer implements AutoCloseable {
+public class FifoBuffer implements Buffer {
 
     private final DiskArc[] buffer;
     public final Mode mode;
@@ -17,6 +17,7 @@ public class FifoBuffer implements AutoCloseable {
     private final Map<Integer, Integer> positions;
     private final int bufferSize;
     private final ArcReader arcReader;
+    private int loadInvocations;
 
     public FifoBuffer(int bufferSize, Mode mode, Path basePath) {
         buffer = new DiskArc[bufferSize];
@@ -30,9 +31,9 @@ public class FifoBuffer implements AutoCloseable {
         if (!alreadyLoaded(rank)) {
             loadArcs(rank);
         }
-        if (!positions.containsKey(rank)) return Collections.emptySet();
+        if (!positions.containsKey(rank) || positions.get(rank) == -1) return Collections.emptySet();
         Set<DiskArc> arcs = new LinkedHashSet<>();
-        int readPointer = positions.getOrDefault(rank, -1) + bufferSize;
+        int readPointer = positions.get(rank) + bufferSize;
         while (continueReadArcs(rank, readPointer)) {
             final DiskArc diskArc = buffer[readPointer % (bufferSize)];
             arcs.add(diskArc);
@@ -44,6 +45,7 @@ public class FifoBuffer implements AutoCloseable {
     private boolean alreadyLoaded(int rank) {
         if (positions.containsKey(rank)) {
             final int position = positions.get(rank);
+            if (position == -1) return true;
             int sigRank = mode == Mode.OUT ? buffer[position].start() : buffer[position].end();
             if (buffer[position] == null || sigRank != rank) {
                 positions.remove(rank);
@@ -64,7 +66,9 @@ public class FifoBuffer implements AutoCloseable {
     }
 
     private void loadArcs(int rank) {
+        loadInvocations++;
         final List<DiskArc> arcs = arcReader.getArcs(rank);
+        positions.put(rank, -1);
         for (DiskArc arc : arcs) {
             buffer[position] = arc;
             positions.put(mode == Mode.OUT ? arc.start() : arc.end(), position);
@@ -84,4 +88,15 @@ public class FifoBuffer implements AutoCloseable {
     public void close() throws Exception {
         arcReader.close();
     }
+
+    @Override
+    public Mode mode() {
+        return mode;
+    }
+
+    @Override
+    public int getLoadInvocations() {
+        return loadInvocations;
+    }
+
 }

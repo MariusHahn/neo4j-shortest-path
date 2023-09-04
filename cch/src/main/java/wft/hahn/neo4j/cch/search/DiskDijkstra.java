@@ -9,6 +9,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
+import wft.hahn.neo4j.cch.storage.Buffer;
 import wft.hahn.neo4j.cch.storage.FifoBuffer;
 
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class DiskDijkstra {
         private DiskDijkstraState latestExpand;
         private final VertexManager vertexManager;
 
-        public Query(int start, Set<Integer> goals, FifoBuffer fifoBuffer) {
+        public Query(int start, Set<Integer> goals, Buffer fifoBuffer) {
             this.goals = goals;
             this.vertexManager = new VertexManager(fifoBuffer);
             DiskDijkstraState init = new DiskDijkstraState(vertexManager.getVertex(start), vertexManager);
