@@ -31,12 +31,12 @@ public class PositionReader extends Reader {
     }
 
     private void loadPositions(int rank) {
-        int blockNumber = rank / 1024;
+        int blockNumber = rank / BLOCK_DIVISOR;
         try {
             buffer.position(0);
-            file.seek(blockNumber * 4096L);
-            file.readFully(buffer.array());
-            int readRank = blockNumber * 1024;
+            file.seek((long) blockNumber * DISK_BLOCK_SIZE);
+            file.read(buffer.array());
+            int readRank = blockNumber * BLOCK_DIVISOR;
             while (buffer.position() < buffer.capacity()) {
                 final int fileBlockPosition = buffer.getInt();
                 positions.put(readRank++, fileBlockPosition);

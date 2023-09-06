@@ -18,16 +18,17 @@ import wtf.hahn.neo4j.util.SimpleSetting;
 public class IntegrationTest {
     protected final Neo4j neo4j;
     protected final Dataset dataset;
+    Path p = Paths.get("/","home","marius","vcs","neo4j-shortest-path","cch","data","ec2681cd6c3f87ffe0829dc7873aa27a");
 
     public IntegrationTest(Collection<Class> aggregationFunctions, Collection<Class> procedures,
                            Collection<Class> functions, DatasetEnum datasetEnum) {
         final Dataset dataset = datasetEnum == null ? null : datasetEnum.dataset();
         Neo4jBuilder neo4jBuilder = Neo4jBuilders
-                .newInProcessBuilder()
-                .withDisabledServer()
+                .newInProcessBuilder()//.withWorkingDir(Paths.get("data"))
+                .withDisabledServer()//.copyFrom(p.toAbsolutePath())
                 .withConfig(new SimpleSetting<>("server.directories.import", resourcePath().toAbsolutePath()), resourcePath().toAbsolutePath())
                 ;
-        if (dataset != null) neo4jBuilder = neo4jBuilder.withFixture(dataset.cypherPath());
+        if (!(dataset == null || dataset.fileName == null)) neo4jBuilder = neo4jBuilder.withFixture(dataset.cypherPath());
         aggregationFunctions.forEach(neo4jBuilder::withAggregationFunction);
         procedures.forEach(neo4jBuilder::withProcedure);
         functions.forEach(neo4jBuilder::withFunction);

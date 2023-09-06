@@ -13,8 +13,17 @@ import wtf.hahn.neo4j.util.iterable.MappingIterable;
 import wtf.hahn.neo4j.util.iterable.PrependIterable;
 import wtf.hahn.neo4j.util.iterable.ReverseIterator;
 import wtf.hahn.neo4j.util.iterable.ZipIterable;
+import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
+import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
 public class PathUtils {
+
+
+    public static String toRankString(WeightedPath path) {
+        StringBuilder builder = new StringBuilder("len(%3.2f): (%d)".formatted(path.weight(), getLongProperty(path.startNode(), "ROAD_rank")));
+        for (var arc : path.relationships()) builder.append("-[%.2f]->(%d)".formatted(getDoubleProperty(arc, "cost"), getLongProperty(arc.getEndNode(), "ROAD_rank")));
+        return builder.toString();
+    }
 
 
     public static boolean samePath(WeightedPath shortestPath, WeightedPath includePath) {

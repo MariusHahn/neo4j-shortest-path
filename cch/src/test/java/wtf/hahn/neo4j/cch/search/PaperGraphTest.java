@@ -3,9 +3,7 @@ package wtf.hahn.neo4j.cch.search;
 import static java.util.List.of;
 import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;

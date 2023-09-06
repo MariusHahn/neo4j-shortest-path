@@ -1,14 +1,16 @@
 package wft.hahn.neo4j.cch.model;
 
-import java.util.HashSet;
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import org.neo4j.graphdb.Node;
-import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 @ToString(of = {"name", "rank"}) @AllArgsConstructor
 public final class Vertex implements PathElement {
@@ -17,15 +19,15 @@ public final class Vertex implements PathElement {
     public int rank;
     public int contractedLevel;
     public final String elementId;
-    private final Set<Arc> inArcs;
-    private final Set<Arc> outArcs;
+    private final Map<Vertex, Arc> inArcs;
+    private final Map<Vertex, Arc> outArcs;
 
     public Vertex(String elementId, String name) {
         this.name = name;
         rank = UNSET;
         this.elementId = elementId;
-        this.inArcs = new HashSet<>();
-        this.outArcs = new HashSet<>();
+        this.inArcs = new HashMap<>();
+        this.outArcs = new HashMap<>();
         contractedLevel = 0;
     }
 
@@ -33,34 +35,45 @@ public final class Vertex implements PathElement {
         this(node.getElementId(), getProperty(node, "name"));
     }
 
-    public Set<Arc> outArcs() {
-        return outArcs;
+    public Collection<Arc> outArcs() {
+        return outArcs.values();
     }
 
-    public Set<Arc> inArcs() {
-        return inArcs;
+    public Collection<Arc> inArcs() {
+        return inArcs.values();
     }
 
     public Stream<Vertex> outNeighbors() {
-        return outArcs.stream().map(arc -> arc.end);
+        return outArcs.values().stream().map(arc -> arc.end);
     }
 
     public Stream<Vertex> inNeighbors() {
-        return inArcs.stream().map(arc -> arc.start);
+        return inArcs.values().stream().map(arc -> arc.start);
     }
 
     public Stream<Arc> arcs() {
-        return Stream.concat(outArcs.stream(), inArcs.stream());
+        return Stream.concat(outArcs.values().stream(), inArcs.values().stream());
     }
 
-    public void addArc(Arc arc) {
-        if (arc.start.equals(this)){
-            outArcs.add(arc);
-        } else if (arc.end.equals(this)) {
-            inArcs.add(arc);
-        } else {
-            throw new IllegalStateException("arc doesn't belong to vertex");
+
+    public boolean addArc(Vertex other, float weight) {
+        return addArc(other, null, weight, 1);
+    }
+
+    public boolean addArc(Vertex other, Vertex middle, float weight, int hopLength) {
+        if (!outArcs.containsKey(other)) {
+            Arc arc = new Arc(this, other, weight, middle, hopLength);
+            this.outArcs.put(other, arc);
+            other.inArcs.put(this, arc);
+            return true;
         }
+        if (weight < outArcs.get(other).weight) {
+            Arc arc = outArcs.get(other);
+            arc.weight = weight;
+            arc.middle = middle;
+            arc.hopLength = hopLength;
+        }
+        return false;
     }
 
     @Override
@@ -84,5 +97,12 @@ public final class Vertex implements PathElement {
 
     public int getDegree() {
         return inArcs.size() + outArcs.size();
+    }
+
+    public int sumOfAtoDxHa() {
+        int sum = 0;
+        for (Arc arc : inArcs()) sum += arc.hopLength;
+        for (Arc arc : outArcs()) sum += arc.hopLength;
+        return sum;
     }
 }

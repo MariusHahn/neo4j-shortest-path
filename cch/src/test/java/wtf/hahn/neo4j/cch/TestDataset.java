@@ -9,6 +9,7 @@ public enum TestDataset implements IntegrationTest.DatasetEnum {
     SEMINAR_PAPER("seminar_paper_graph.cql", "cost", "ROAD"),
     ROME("rome.cql", "cost", "ROAD"),
     OLDENBURG("oldenburg.cql", "cost", "ROAD"),
+    NO_IMPORT_FILE(null, "cost", "ROAD"),
     DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql", "cost", "ROAD");
     private final String fileName, costProperty, relationshipTypeName;
 }

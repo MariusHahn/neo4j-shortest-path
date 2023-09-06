@@ -104,71 +104,64 @@ public class IndexStoreFunctionTest {
     }
 
     public static void fillDownwards(Vertex[] vertices) {
-        Arc[] arcs = new Arc[] {
-                new Arc(vertices[0], vertices[1], 1),
-                new Arc(vertices[0], vertices[6], 2),
-                new Arc(vertices[0], vertices[7], 4),
+                vertices[0].addArc(vertices[1], 1);
+                vertices[0].addArc(vertices[6], 2);
+                vertices[0].addArc(vertices[7], 4);
 
-                new Arc(vertices[1], vertices[2], 2),
-                new Arc(vertices[1], vertices[4], 1),
+                vertices[1].addArc(vertices[2], 2);
+                vertices[1].addArc(vertices[4], 1);
 
-                new Arc(vertices[3], vertices[2], 2),
-                new Arc(vertices[3], vertices[5], 2),
-                new Arc(vertices[3], vertices[8], 4, vertices[5], 2),
+                vertices[3].addArc(vertices[2], 2);
+                vertices[3].addArc(vertices[5], 2);
+                vertices[3].addArc(vertices[8], vertices[5], 4, 2);
 
-                new Arc(vertices[4], vertices[2], 2),
-                new Arc(vertices[4], vertices[3], 1),
-                new Arc(vertices[4], vertices[5], 3),
+                vertices[4].addArc(vertices[2], 2);
+                vertices[4].addArc(vertices[3], 1);
+                vertices[4].addArc(vertices[5], 3);
 
-                new Arc(vertices[5], vertices[7], 4),
+                vertices[5].addArc(vertices[7], 4);
 
-                new Arc(vertices[6], vertices[7], 2),
-                new Arc(vertices[6], vertices[9], 1),
+                vertices[6].addArc(vertices[7], 2);
+                vertices[6].addArc(vertices[9], 1);
 
-                new Arc(vertices[8], vertices[5], 2),
+                vertices[8].addArc(vertices[5], 2);
 
-                new Arc(vertices[9], vertices[7], 1),
-                new Arc(vertices[9], vertices[8], 2),
+                vertices[9].addArc(vertices[7], 1);
+                vertices[9].addArc(vertices[8], 2);
 
-                new Arc(vertices[10], vertices[0], 1),
-                new Arc(vertices[10], vertices[2], 2),
-        };
-        for (Arc arc : arcs) { arc.start.addArc(arc); arc.end.addArc(arc); }
-
+                vertices[10].addArc(vertices[0], 1);
+                vertices[10].addArc(vertices[2], 2);
     }
 
     public static void fillUpwards(Vertex[] vertices) {
-        Arc[] arcs = new Arc[] {
-                new Arc(vertices[0], vertices[10], 1),
+                vertices[0].addArc(vertices[10], 1);
 
-                new Arc(vertices[1], vertices[0], 1),
+                vertices[1].addArc(vertices[0], 1);
 
-                new Arc(vertices[2], vertices[1], 2),
-                new Arc(vertices[2], vertices[3], 2),
-                new Arc(vertices[2], vertices[4], 2),
-                new Arc(vertices[2], vertices[10], 2),
+                vertices[2].addArc(vertices[1], 2);
+                vertices[2].addArc(vertices[3], 2);
+                vertices[2].addArc(vertices[4], 2);
+                vertices[2].addArc(vertices[10], 2);
 
-                new Arc(vertices[3], vertices[4], 1),
+                vertices[3].addArc(vertices[4], 1);
 
-                new Arc(vertices[4], vertices[1], 1),
+                vertices[4].addArc(vertices[1], 1);
 
-                new Arc(vertices[5], vertices[3], 2),
-                new Arc(vertices[5], vertices[4], 3),
-                new Arc(vertices[5], vertices[8], 2),
+                vertices[5].addArc(vertices[3], 2);
+                vertices[5].addArc(vertices[4], 3);
+                vertices[5].addArc(vertices[8], 2);
 
-                new Arc(vertices[6], vertices[0], 2),
+                vertices[6].addArc(vertices[0], 2);
 
-                new Arc(vertices[7], vertices[0], 4),
-                new Arc(vertices[7], vertices[5], 4),
-                new Arc(vertices[7], vertices[6], 2),
-                new Arc(vertices[7], vertices[9], 1),
+                vertices[7].addArc(vertices[0], 4);
+                vertices[7].addArc(vertices[5], 4);
+                vertices[7].addArc(vertices[6], 2);
+                vertices[7].addArc(vertices[9], 1);
 
-                new Arc(vertices[8], vertices[3], 4, vertices[5], 2),
-                new Arc(vertices[8], vertices[9], 2),
+                vertices[8].addArc(vertices[3], vertices[5], 4, 2);
+                vertices[8].addArc(vertices[9], 2);
 
-                new Arc(vertices[9], vertices[6], 1),
-        };
-        for (Arc arc : arcs) { arc.start.addArc(arc); arc.end.addArc(arc); }
+                vertices[9].addArc(vertices[6], 1);
     }
 
     public static Vertex[] fillVertices() {

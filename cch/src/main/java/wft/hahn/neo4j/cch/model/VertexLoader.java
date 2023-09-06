@@ -27,9 +27,7 @@ public class VertexLoader {
             final Vertex start = nodes.computeIfAbsent(new Vertex(relationship.getStartNode()), Function.identity());
             final Vertex end = nodes.computeIfAbsent(new Vertex(relationship.getEndNode()), Function.identity());
             final double weight = getDoubleProperty(relationship, weightProperty);
-            final Arc arc = new Arc(start, end, (float) weight);
-            start.addArc(arc);
-            end.addArc(arc);
+            start.addArc(end, (float) weight);
         }
         return Collections.unmodifiableSet(nodes.keySet());
     }

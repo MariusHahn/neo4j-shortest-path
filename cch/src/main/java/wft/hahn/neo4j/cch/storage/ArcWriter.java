@@ -4,6 +4,7 @@ import static wft.hahn.neo4j.cch.storage.Mode.OUT;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +23,7 @@ public class ArcWriter extends Writer implements AutoCloseable {
     }
 
     public int write(Vertex vertex) {
-        final Set<Arc> arcs = mode == OUT ? vertex.outArcs() : vertex.inArcs();
+        final Set<Arc> arcs = new HashSet<>(mode == OUT ? vertex.outArcs() : vertex.inArcs());
         List<DiskArc> diskArcs = getDiskArcs(arcs);
         return write(diskArcs);
     }

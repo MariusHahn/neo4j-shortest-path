@@ -1,5 +1,7 @@
 package wft.hahn.neo4j.cch.storage;
 
+import static wft.hahn.neo4j.cch.storage.Writer.DISK_BLOCK_SIZE;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -20,7 +22,7 @@ public class ArcReader extends Reader {
         final List<DiskArc> diskArcs = new LinkedList<>();
         try {
             buffer.position(0);
-            file.seek(blockPositionForRank * 4096L);
+            file.seek((long) blockPositionForRank * DISK_BLOCK_SIZE);
             file.read(buffer.array());
             while (buffer.position() < buffer.capacity()) {
                 final DiskArc diskArc = new DiskArc(buffer);
