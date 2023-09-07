@@ -18,7 +18,7 @@ import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wft.hahn.neo4j.cch.IndexerByImportanceWithSearchGraph;
+import wft.hahn.neo4j.cch.indexer.IndexerByImportanceWithSearchGraph;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskChDijkstra;
 import wft.hahn.neo4j.cch.search.SearchPath;

@@ -16,14 +16,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import wft.hahn.neo4j.cch.IndexerByImportanceWithSearchGraph;
+import wft.hahn.neo4j.cch.indexer.IndexerByImportanceWithSearchGraph;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskChDijkstra;
 import wft.hahn.neo4j.cch.search.SearchPath;
@@ -109,7 +108,7 @@ public class NewYorkGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
 
-    //@Test
+    @Test
     void sourceTargetTest() {
         Stream<Arguments> argumentsStream = randomSourceTarget();
         AtomicLong overAll = new AtomicLong(0);

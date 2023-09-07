@@ -9,6 +9,7 @@ import wft.hahn.neo4j.cch.search.DiskDijkstra.Query;
 import wft.hahn.neo4j.cch.storage.Buffer;
 import wft.hahn.neo4j.cch.storage.FifoBuffer;
 import wft.hahn.neo4j.cch.storage.Mode;
+import static wft.hahn.neo4j.cch.storage.Writer.DISK_BLOCK_SIZE;
 
 public class DiskChDijkstra implements AutoCloseable {
 
@@ -21,8 +22,8 @@ public class DiskChDijkstra implements AutoCloseable {
     }
 
     public DiskChDijkstra(Path basePath) {
-        outBuffer = new FifoBuffer(256, Mode.OUT, basePath);
-        inBuffer = new FifoBuffer(256, Mode.IN, basePath);
+        outBuffer = new FifoBuffer(DISK_BLOCK_SIZE, Mode.OUT, basePath);
+        inBuffer = new FifoBuffer(DISK_BLOCK_SIZE, Mode.IN, basePath);
     }
 
     public SearchPath find(int start, int goal) {
