@@ -42,7 +42,7 @@ public class StoreFunction implements AutoCloseable {
     }
 
     private Iterator<Vertex> neighbors(Vertex vertex) {
-        return (mode == IN ? vertex.outNeighbors() : vertex.inNeighbors()).sorted(
+        return (mode == IN ? vertex.outNeighbors() : vertex.inNeighbors()).stream().sorted(
                 (Comparator.comparingInt(o -> o.rank))).iterator();
     }
 

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import lombok.AllArgsConstructor;
@@ -31,6 +32,10 @@ public final class Vertex implements PathElement {
         contractedLevel = 0;
     }
 
+    public Arc getArcTo(Vertex other) {
+        return outArcs.get(other);
+    }
+
     public Vertex(Node node) {
         this(node.getElementId(), getProperty(node, "name"));
     }
@@ -43,12 +48,12 @@ public final class Vertex implements PathElement {
         return inArcs.values();
     }
 
-    public Stream<Vertex> outNeighbors() {
-        return outArcs.values().stream().map(arc -> arc.end);
+    public Set<Vertex> outNeighbors() {
+        return outArcs.keySet();
     }
 
-    public Stream<Vertex> inNeighbors() {
-        return inArcs.values().stream().map(arc -> arc.start);
+    public Set<Vertex> inNeighbors() {
+        return inArcs.keySet();
     }
 
     public Stream<Arc> arcs() {
