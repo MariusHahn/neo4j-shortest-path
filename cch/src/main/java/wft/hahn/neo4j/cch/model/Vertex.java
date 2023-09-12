@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import org.neo4j.graphdb.Node;
+import wft.hahn.neo4j.cch.storage.DiskArc;
 
 @ToString(of = {"name", "rank"}) @AllArgsConstructor
 public final class Vertex implements PathElement {
@@ -32,12 +33,20 @@ public final class Vertex implements PathElement {
         contractedLevel = 0;
     }
 
-    public Arc getArcTo(Vertex other) {
-        return outArcs.get(other);
-    }
-
     public Vertex(Node node) {
         this(node.getElementId(), getProperty(node, "name"));
+    }
+
+    public Vertex(int rank) {
+        this.name = null;
+        this.elementId = null;
+        this.rank = rank;
+        inArcs = new HashMap<>();
+        outArcs = new HashMap<>();
+    }
+
+    public Arc getArcTo(Vertex other) {
+        return outArcs.get(other);
     }
 
     public Collection<Arc> outArcs() {
