@@ -34,8 +34,8 @@ public class Updater {
             final double cost = getDoubleProperty(r, "cost");
             final double indexCost = getDoubleProperty(r, "last_cch_cost_while_indexing");
             if (cost != indexCost) {
-                final Vertex start = loader.getVertex((int) getLongProperty(r.getStartNode(), "rank"));
-                final Vertex end = loader.getVertex((int) getLongProperty(r.getEndNode(), "rank"));
+                final Vertex start = loader.getVertex((int) getLongProperty(r.getStartNode(), "ROAD_rank"));
+                final Vertex end = loader.getVertex((int) getLongProperty(r.getEndNode(), "ROAD_rank"));
                 arcUpdates.add(new ArcUpdate(start, end, cost, start.getArcTo(end).weight));
             }
         });
@@ -45,9 +45,9 @@ public class Updater {
     public Vertex update() {
         while (!arcs.isEmpty()) {
             final ArcUpdate arcUpdate = arcs.poll();
-            final TriangleBuilder triangleBuilder = new TriangleBuilder(arcUpdate.start(), arcUpdate.end());
+            final TriangleBuilder triangleBuilder = new TriangleBuilder(arcUpdate.start(), arcUpdate.end(), arcUpdate.upwards());
             final double newWeight = Math.min(inputGraphWeight(arcUpdate), getNewWeight(arcUpdate, triangleBuilder.lower()));
-            if (newWeight != arcUpdate.oldWeight()) continue;
+            if (newWeight == arcUpdate.oldWeight()) continue;
             arcUpdate.start().getArcTo(arcUpdate.end()).weight = (float) newWeight;
             updateTriangles(arcUpdate, newWeight, triangleBuilder.upper());
             updateTriangles(arcUpdate, newWeight, triangleBuilder.intermediate());
@@ -55,12 +55,12 @@ public class Updater {
         return highestVertex;
     }
 
-    private void updateTriangles(ArcUpdate arcUpdate, double newWeight, Collection<Triangle> upper) {
-        for (final Triangle upperTriangle : upper) {
-            if (upperTriangle.second().weight == upperTriangle.first().weight + arcUpdate.oldWeight()) {
-                final float oldWeight = upperTriangle.second().weight;
-                upperTriangle.second().weight = (float) (upperTriangle.first().weight + newWeight);
-                arcs.add(new ArcUpdate(upperTriangle.second(), oldWeight));
+    private void updateTriangles(ArcUpdate arcUpdate, double newWeight, Collection<Triangle> triangles) {
+        for (final Triangle triangle : triangles) {
+            if (triangle.second().weight == triangle.first().weight + arcUpdate.oldWeight()) {
+                final float oldWeight = triangle.second().weight;
+                triangle.second().weight = (float) (triangle.first().weight + newWeight);
+                arcs.add(new ArcUpdate(triangle.second(), oldWeight));
             }
         }
     }
@@ -72,23 +72,27 @@ public class Updater {
     }
 
     private double inputGraphWeight(ArcUpdate arc) {
-        final Node startNode = transaction.findNode(() -> "Location", "ROAD_rank", arc.start());
+        final Node startNode = transaction.findNode(() -> "Location", "ROAD_rank", arc.start().rank);
         return startNode.getRelationships(Direction.OUTGOING, () -> "ROAD").stream()
-                .filter(r -> getLongProperty(r, "ROAD_rank") == arc.end().rank)
+                .filter(r -> getLongProperty(r.getEndNode(), "ROAD_rank") == arc.end().rank)
                 .mapToDouble(r -> getDoubleProperty(r, "cost"))
                 .findFirst()
                 .orElse(Double.MAX_VALUE);
     }
 
     record ArcUpdate(Vertex start, Vertex end, double weight, double oldWeight) implements Comparable<ArcUpdate> {
-
         public ArcUpdate(Arc arc, double oldWeight) {
             this(arc.start, arc.end, arc.weight, oldWeight);
         }
 
+        boolean upwards() {
+            return start.rank < end.rank;
+        }
+
         @Override
         public int compareTo(ArcUpdate o) {
-            return Integer.compare(start.rank, o.start.rank);
+            int compare = Integer.compare(start.rank, o.start.rank);
+            return upwards() ? compare : compare * -1;
         }
     }
 }

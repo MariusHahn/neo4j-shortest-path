@@ -19,7 +19,7 @@ import wtf.hahn.neo4j.cch.storage.IndexStoreFunctionTest;
 
 public class DiskChDijkstraTest {
 
-    private static void setupPaperGraphTest(Vertex topNode, Path path) {
+    public static void setupPaperGraphTest(Vertex topNode, Path path) {
         try (val x = new StoreFunction(topNode, Mode.OUT, path);
              val y = new StoreFunction(topNode, Mode.IN, path)) {
             x.go();

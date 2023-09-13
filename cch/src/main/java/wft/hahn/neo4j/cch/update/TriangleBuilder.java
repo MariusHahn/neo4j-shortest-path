@@ -22,10 +22,10 @@ import wft.hahn.neo4j.cch.model.Vertex;
  * */
 
 
-public record TriangleBuilder(Vertex start, Vertex end) {
+public record TriangleBuilder(Vertex start, Vertex end,  boolean upwards) {
 
     public Collection<Triangle> lower() {
-        final Vertex x = start, y = end;
+        final Vertex x = upwards ? start : end, y = upwards ? end : start ;
         if (x.rank < y.rank) return Collections.emptyList();
         final Collection<Triangle> triangles = new LinkedList<>();
         final Set<Vertex> zs = intersect(x.inNeighbors(), y.inNeighbors());
@@ -36,7 +36,7 @@ public record TriangleBuilder(Vertex start, Vertex end) {
     }
 
     public Collection<Triangle> intermediate() {
-        final Vertex x = start, y = end;
+        final Vertex x = upwards ? start : end, y = upwards ? end : start ;
         if (x.rank < y.rank) return Collections.emptyList();
         final Collection<Triangle> triangles = new LinkedList<>();
         final Set<Vertex> zs = intersect(x.outNeighbors(), y.inNeighbors());
@@ -47,12 +47,14 @@ public record TriangleBuilder(Vertex start, Vertex end) {
     }
 
     public Collection<Triangle> upper() {
-        final Vertex x = start, y = end;
+        final Vertex x = upwards ? start : end, y = upwards ? end : start ;
         if (y.rank < x.rank) return Collections.emptyList();
         final Collection<Triangle> triangles = new LinkedList<>();
         final Set<Vertex> zs = intersect(x.outNeighbors(), y.outNeighbors());
         for (final Vertex z : zs) if (y.rank < z.rank) {
-            triangles.add(new Triangle(x.getArcTo(z), y.getArcTo(z)));
+            Arc first = upwards ? x.getArcTo(z) : z.getArcTo(x);
+            Arc second = upwards ? y.getArcTo(z) : z.getArcTo(y);
+            triangles.add(new Triangle(first, second));
         }
         return triangles;
     }

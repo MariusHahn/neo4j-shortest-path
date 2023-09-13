@@ -57,9 +57,13 @@ public class DiskChDijkstra implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        outBuffer.close();
-        inBuffer.close();
+    public void close() {
+        try {
+            outBuffer.close();
+            inBuffer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public int loadInvocations() {
