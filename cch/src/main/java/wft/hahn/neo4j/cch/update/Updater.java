@@ -20,10 +20,11 @@ public class Updater {
     private final Transaction transaction;
     private final Queue<ArcUpdate> arcs = new PriorityQueue<>();
     private final Vertex highestVertex;
+    private final IndexGraphLoader indexGraphLoader;
 
     public Updater(Transaction transaction, Path path) {
         this.transaction = transaction;
-        IndexGraphLoader indexGraphLoader = new IndexGraphLoader(path);
+        indexGraphLoader = new IndexGraphLoader(path);
         highestVertex = indexGraphLoader.load();
         this.arcs.addAll(scanNeo(transaction, indexGraphLoader));
     }
@@ -34,9 +35,10 @@ public class Updater {
             final double cost = getDoubleProperty(r, "cost");
             final double indexCost = getDoubleProperty(r, "last_cch_cost_while_indexing");
             if (cost != indexCost) {
-                final Vertex start = loader.getVertex((int) getLongProperty(r.getStartNode(), "ROAD_rank"));
-                final Vertex end = loader.getVertex((int) getLongProperty(r.getEndNode(), "ROAD_rank"));
-                arcUpdates.add(new ArcUpdate(start, end, cost, start.getArcTo(end).weight));
+                final int fromRank = (int) getLongProperty(r.getStartNode(), "ROAD_rank");
+                final int toRank = (int) getLongProperty(r.getEndNode(), "ROAD_rank");
+                Arc arc = loader.getArc(fromRank, toRank);
+                arcUpdates.add(new ArcUpdate(arc, cost, arc.weight));
             }
         });
         return arcUpdates;
@@ -45,11 +47,12 @@ public class Updater {
     public Vertex update() {
         while (!arcs.isEmpty()) {
             final ArcUpdate arcUpdate = arcs.poll();
-            final TriangleBuilder triangleBuilder = new TriangleBuilder(arcUpdate.start(), arcUpdate.end(), arcUpdate.upwards());
+            final TriangleBuilder triangleBuilder = new TriangleBuilder(arcUpdate.start(), arcUpdate.end());
             final double newWeight = Math.min(inputGraphWeight(arcUpdate), getNewWeight(arcUpdate, triangleBuilder.lower()));
             if (newWeight == arcUpdate.oldWeight()) continue;
-            arcUpdate.start().getArcTo(arcUpdate.end()).weight = (float) newWeight;
-            updateTriangles(arcUpdate, newWeight, triangleBuilder.upper());
+            arcUpdate.arc().weight = (float) newWeight;
+            Collection<Triangle> upper =  triangleBuilder.upper();
+            updateTriangles(arcUpdate, newWeight, upper);
             updateTriangles(arcUpdate, newWeight, triangleBuilder.intermediate());
         }
         return highestVertex;
@@ -80,18 +83,26 @@ public class Updater {
                 .orElse(Double.MAX_VALUE);
     }
 
-    record ArcUpdate(Vertex start, Vertex end, double weight, double oldWeight) implements Comparable<ArcUpdate> {
+    record ArcUpdate(Arc arc, double weight, double oldWeight) implements Comparable<ArcUpdate> {
         public ArcUpdate(Arc arc, double oldWeight) {
-            this(arc.start, arc.end, arc.weight, oldWeight);
+            this(arc , arc.weight, oldWeight);
+        }
+
+        public Vertex start() {
+            return arc.start;
+        }
+
+        public Vertex end() {
+            return arc.end;
         }
 
         boolean upwards() {
-            return start.rank < end.rank;
+            return start().rank < end().rank;
         }
 
         @Override
         public int compareTo(ArcUpdate o) {
-            int compare = Integer.compare(start.rank, o.start.rank);
+            int compare = Integer.compare(start().rank, o.start().rank);
             return upwards() ? compare : compare * -1;
         }
     }

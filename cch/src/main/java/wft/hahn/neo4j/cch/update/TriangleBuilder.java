@@ -1,7 +1,7 @@
 package wft.hahn.neo4j.cch.update;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -22,39 +22,41 @@ import wft.hahn.neo4j.cch.model.Vertex;
  * */
 
 
-public record TriangleBuilder(Vertex start, Vertex end,  boolean upwards) {
+public record TriangleBuilder(Vertex start, Vertex end, Comparator<Vertex> c, Set<Vertex> neighbors) {
+
+    public TriangleBuilder(Vertex start, Vertex end) {
+        this(
+                start
+                , end
+                , (start.rank < end.rank) ? Vertex::compareTo : ((Comparator<Vertex>) Vertex::compareTo).reversed()
+                , intersect(start.outNeighbors(), end.inNeighbors())
+        );
+    }
 
     public Collection<Triangle> lower() {
-        final Vertex x = upwards ? start : end, y = upwards ? end : start ;
-        if (x.rank < y.rank) return Collections.emptyList();
         final Collection<Triangle> triangles = new LinkedList<>();
-        final Set<Vertex> zs = intersect(x.inNeighbors(), y.inNeighbors());
-        for (final Vertex z : zs) if (z.rank < x.rank) {
-            triangles.add(new Triangle(x.getArcTo(z), z.getArcTo(y)));
-        }
+        for (final Vertex neighbor : neighbors) if (c.compare(neighbor, start) < 0) {
+                triangles.add(new Triangle(start.getArcTo(neighbor), neighbor.getArcTo(end)));
+            }
         return triangles;
     }
 
     public Collection<Triangle> intermediate() {
-        final Vertex x = upwards ? start : end, y = upwards ? end : start ;
-        if (x.rank < y.rank) return Collections.emptyList();
         final Collection<Triangle> triangles = new LinkedList<>();
-        final Set<Vertex> zs = intersect(x.outNeighbors(), y.inNeighbors());
-        for (final Vertex z : zs) if (x.rank < z.rank && z.rank < y.rank) {
-            triangles.add(new Triangle(x.getArcTo(z), z.getArcTo(y)));
-        }
+        for (final Vertex neighbor : neighbors) if (c.compare(start, neighbor) < 0 && c.compare(neighbor, end) < 0) {
+                triangles.add(new Triangle(start.getArcTo(neighbor), neighbor.getArcTo(end)));
+            }
         return triangles;
     }
 
     public Collection<Triangle> upper() {
-        final Vertex x = upwards ? start : end, y = upwards ? end : start ;
-        if (y.rank < x.rank) return Collections.emptyList();
         final Collection<Triangle> triangles = new LinkedList<>();
-        final Set<Vertex> zs = intersect(x.outNeighbors(), y.outNeighbors());
-        for (final Vertex z : zs) if (y.rank < z.rank) {
-            Arc first = upwards ? x.getArcTo(z) : z.getArcTo(x);
-            Arc second = upwards ? y.getArcTo(z) : z.getArcTo(y);
-            triangles.add(new Triangle(first, second));
+        for (final Vertex neighbor : neighbors) {
+            if (end.compareTo(neighbor) < 0) {
+                Arc first = start.compareTo(end) < 0 ? start.getArcTo(neighbor) : neighbor.getArcTo(end);
+                Arc second = start.compareTo(end) < 0 ? neighbor.getArcTo(end) : start.getArcTo(neighbor);
+                triangles.add(new Triangle(first, second));
+            }
         }
         return triangles;
     }

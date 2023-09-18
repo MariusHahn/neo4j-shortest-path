@@ -15,7 +15,7 @@ import org.neo4j.graphdb.Node;
 import wft.hahn.neo4j.cch.storage.DiskArc;
 
 @ToString(of = {"name", "rank"}) @AllArgsConstructor
-public final class Vertex implements PathElement {
+public final class Vertex implements PathElement, Comparable<Vertex> {
     public static final int UNSET = -1;
     public final String name;
     public int rank;
@@ -118,5 +118,11 @@ public final class Vertex implements PathElement {
         for (Arc arc : inArcs()) sum += arc.hopLength;
         for (Arc arc : outArcs()) sum += arc.hopLength;
         return sum;
+    }
+
+    @Override
+    public int compareTo(Vertex o) {
+        if (rank == UNSET) return 1;
+        return Integer.compare(rank, o.rank);
     }
 }

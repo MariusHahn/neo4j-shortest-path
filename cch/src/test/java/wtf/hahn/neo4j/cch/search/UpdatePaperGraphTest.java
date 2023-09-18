@@ -5,6 +5,7 @@ import static wtf.hahn.neo4j.cch.search.DiskChDijkstraTest.setupPaperGraphTest;
 import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -50,7 +51,7 @@ public class UpdatePaperGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
     private static Stream<Arguments> y() {
-        return Stream.of(Arguments.of(5, 9));
+        return Stream.of(Arguments.of(9, 5));
     }
 
     @ParameterizedTest
@@ -63,15 +64,15 @@ public class UpdatePaperGraphTest extends IntegrationTest {
                         .forEachRemaining(relationship -> relationship.setProperty("cost", 1));
                 Updater updater = new Updater(transaction, path);
                 setupPaperGraphTest(updater.update(), path);
-                        Node start = transaction.findNode(() -> "Location", "id", i);
-                        Node end = transaction.findNode(() -> "Location", "id", j);
-                        WeightedPath expectPath = dijkstra.find(start, end);
-                        int startRank = (int) getLongProperty(start, "ROAD_rank");
-                        int endRank = (int) getLongProperty(end, "ROAD_rank");
-                        SearchPath cchPath = diskChDijkstra.find(startRank, endRank);
-                        System.out.println(SearchVertexPaths.toString(cchPath));
-                        System.out.println(PathUtils.toRankString(expectPath));
-                        Assertions.assertEquals(expectPath.weight(), cchPath.weight(), i + " -> " + j);
+                Node start = transaction.findNode(() -> "Location", "id", i);
+                Node end = transaction.findNode(() -> "Location", "id", j);
+                WeightedPath expectPath = dijkstra.find(start, end);
+                int startRank = (int) getLongProperty(start, "ROAD_rank");
+                int endRank = (int) getLongProperty(end, "ROAD_rank");
+                SearchPath cchPath = diskChDijkstra.find(startRank, endRank);
+                System.out.println(SearchVertexPaths.toString(cchPath));
+                System.out.println(PathUtils.toRankString(expectPath));
+                Assertions.assertEquals(expectPath.weight(), cchPath.weight(), i + " -> " + j);
             }
         }
     }

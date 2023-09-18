@@ -50,12 +50,12 @@ public class ArcReadWriterTest {
         }
     }
 
-    //@Test
+    @Test
     void outEdgesToText() throws IOException {
         edgesToText("OUT.cch");
     }
 
-    //@Test
+    @Test
     void inEdgesToText() throws IOException {
         edgesToText("IN.cch");
     }

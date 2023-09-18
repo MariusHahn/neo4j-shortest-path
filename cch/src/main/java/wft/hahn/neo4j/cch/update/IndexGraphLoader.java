@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import wft.hahn.neo4j.cch.model.Arc;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.storage.ArcReader;
 import wft.hahn.neo4j.cch.storage.Mode;
@@ -40,4 +41,11 @@ public class IndexGraphLoader {
         if (!vertices.containsKey(rank)) throw new IllegalStateException();
         return vertices.get(rank);
     }
+
+    public Arc getArc(int fromRank, int toRank) {
+        if (!vertices.containsKey(fromRank)|| ! vertices.containsKey(toRank)) throw new IllegalStateException();
+        return vertices.get(fromRank).getArcTo(vertices.get(toRank));
+    }
+
+
 }
