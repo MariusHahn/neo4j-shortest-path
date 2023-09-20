@@ -1,15 +1,5 @@
 package wtf.hahn.neo4j.cch.search;
 
-import static java.util.List.of;
-import static wtf.hahn.neo4j.cch.search.DiskChDijkstraTest.setupPaperGraphTest;
-import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -29,6 +19,15 @@ import wtf.hahn.neo4j.cch.TestDataset;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.PathUtils;
+
+import java.nio.file.Path;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static java.util.List.of;
+import static wtf.hahn.neo4j.cch.search.DiskChDijkstraTest.setupPaperGraphTest;
+import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
 public class UpdatePaperGraphTest extends IntegrationTest {
 
@@ -55,13 +54,13 @@ public class UpdatePaperGraphTest extends IntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource({"y"})
+    @MethodSource({"x"})
     void updateIndexTest(Integer i, Integer j) {
         Dijkstra dijkstra = new Dijkstra(relationshipType(), costProperty());
         try (Transaction transaction = database().beginTx()) {
             try (DiskChDijkstra diskChDijkstra = new DiskChDijkstra(path)) {
                 transaction.findRelationships(() -> "ROAD", "x", "x")
-                        .forEachRemaining(relationship -> relationship.setProperty("cost", 5));
+                        .forEachRemaining(relationship -> relationship.setProperty("cost", 1));
                 Updater updater = new Updater(transaction, path);
                 setupPaperGraphTest(updater.update(), path);
                 Node start = transaction.findNode(() -> "Location", "id", i);

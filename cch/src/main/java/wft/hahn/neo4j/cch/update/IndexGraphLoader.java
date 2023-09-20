@@ -36,16 +36,8 @@ public class IndexGraphLoader {
         });
     }
 
-
-    public Vertex getVertex(int rank) {
-        if (!vertices.containsKey(rank)) throw new IllegalStateException();
-        return vertices.get(rank);
-    }
-
     public Arc getArc(int fromRank, int toRank) {
         if (!vertices.containsKey(fromRank)|| ! vertices.containsKey(toRank)) throw new IllegalStateException();
         return vertices.get(fromRank).getArcTo(vertices.get(toRank));
     }
-
-
 }
