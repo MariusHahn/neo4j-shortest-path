@@ -122,7 +122,11 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
 
     @Override
     public int compareTo(Vertex o) {
-        if (rank == UNSET) return 1;
+        if (rank == UNSET && o.rank != UNSET) return 1;
         return Integer.compare(rank, o.rank);
+    }
+
+    public boolean smallerThan(Vertex o) {
+        return compareTo(o) < 0;
     }
 }

@@ -51,17 +51,17 @@ public class UpdatePaperGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
     private static Stream<Arguments> y() {
-        return Stream.of(Arguments.of(9, 5));
+        return Stream.of(Arguments.of(6, 5), Arguments.of(5,6));
     }
 
     @ParameterizedTest
-    @MethodSource({"x"})
+    @MethodSource({"y"})
     void updateIndexTest(Integer i, Integer j) {
         Dijkstra dijkstra = new Dijkstra(relationshipType(), costProperty());
         try (Transaction transaction = database().beginTx()) {
             try (DiskChDijkstra diskChDijkstra = new DiskChDijkstra(path)) {
                 transaction.findRelationships(() -> "ROAD", "x", "x")
-                        .forEachRemaining(relationship -> relationship.setProperty("cost", 1));
+                        .forEachRemaining(relationship -> relationship.setProperty("cost", 5));
                 Updater updater = new Updater(transaction, path);
                 setupPaperGraphTest(updater.update(), path);
                 Node start = transaction.findNode(() -> "Location", "id", i);

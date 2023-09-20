@@ -1,64 +1,76 @@
 package wft.hahn.neo4j.cch.update;
 
+import wft.hahn.neo4j.cch.model.Arc;
+import wft.hahn.neo4j.cch.model.Vertex;
+
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import wft.hahn.neo4j.cch.model.Arc;
-import wft.hahn.neo4j.cch.model.Vertex;
 
-/**
- *       (z)
- *      ↗ ↑
- *    /   |
- * (y)   /
- *   ↖  /
- *    \/
- *    (x)
- * The triple {x, y, z} is a lower triangle of the arc (y, z), an intermediate triangle of
- * the arc (x, z), and an upper triangle of the arc (x, y).
- * */
+public class TriangleBuilder {
+    private final Arc arc;
+    private final Set<Vertex> neighbors;
 
-
-public record TriangleBuilder(Vertex start, Vertex end, Comparator<Vertex> c, Set<Vertex> neighbors) {
-
-    public TriangleBuilder(Vertex start, Vertex end) {
-        this(
-                start
-                , end
-                , (start.rank < end.rank) ? Vertex::compareTo : ((Comparator<Vertex>) Vertex::compareTo).reversed()
-                , intersect(start.outNeighbors(), end.inNeighbors())
-        );
+    public TriangleBuilder(Arc arc) {
+        this.arc = arc;
+        neighbors = intersect(arc.start.outNeighbors(), arc.end.inNeighbors());
     }
 
     public Collection<Triangle> lower() {
+        final Vertex x = upwards() ? arc.start : arc.end, y = upwards() ? arc.end : arc.start;
         final Collection<Triangle> triangles = new LinkedList<>();
-        for (final Vertex neighbor : neighbors) if (c.compare(neighbor, start) < 0) {
-                triangles.add(new Triangle(start.getArcTo(neighbor), neighbor.getArcTo(end)));
+        for (final Vertex z : neighbors) if (lower(x, y, z)) {
+            if (upwards()) {
+                triangles.add(new Triangle(arc, x.getArcTo(z), z.getArcTo(y)));
+            } else {
+                triangles.add(new Triangle(arc, z.getArcTo(x), y.getArcTo(z)));
             }
+        }
         return triangles;
     }
 
     public Collection<Triangle> intermediate() {
+        final Vertex x = upwards() ? arc.start : arc.end, y = upwards() ? arc.end : arc.start;
         final Collection<Triangle> triangles = new LinkedList<>();
-        for (final Vertex neighbor : neighbors) if (c.compare(start, neighbor) < 0 && c.compare(neighbor, end) < 0) {
-                triangles.add(new Triangle(start.getArcTo(neighbor), neighbor.getArcTo(end)));
+        for (final Vertex z : neighbors) if (intermediate(x, y, z)) {
+            if (upwards()) {
+                triangles.add(new Triangle(arc, z.getArcTo(x), y.getArcTo(z)));
+            } else {
+                triangles.add(new Triangle(arc, x.getArcTo(z) , z.getArcTo(y)));
             }
+        }
         return triangles;
     }
 
     public Collection<Triangle> upper() {
+        final Vertex x = upwards() ? arc.start : arc.end, y = upwards() ? arc.end : arc.start;
         final Collection<Triangle> triangles = new LinkedList<>();
-        for (final Vertex neighbor : neighbors) {
-            if (end.compareTo(neighbor) < 0) {
-                Arc first = start.compareTo(end) < 0 ? start.getArcTo(neighbor) : neighbor.getArcTo(end);
-                Arc second = start.compareTo(end) < 0 ? neighbor.getArcTo(end) : start.getArcTo(neighbor);
-                triangles.add(new Triangle(first, second));
+        for (final Vertex z : neighbors) if (upper(x, y, z)) {
+            if (upwards()) {
+                triangles.add(new Triangle(arc, x.getArcTo(z), y.getArcTo(z)));
+            } else {
+                triangles.add(new Triangle(arc, z.getArcTo(x), z.getArcTo(y)));
             }
         }
         return triangles;
+    }
+
+    private boolean upwards() {
+        return arc.start.smallerThan(arc.end);
+    }
+
+    private static boolean lower(Vertex x, Vertex y, Vertex z) {
+        return z.smallerThan(x) && z.smallerThan(y);
+    }
+
+    private static boolean intermediate(Vertex x, Vertex y, Vertex z) {
+        return x.smallerThan(z) && z.smallerThan(y);
+    }
+
+    private static boolean upper(Vertex x, Vertex y, Vertex z) {
+        return x.smallerThan(z) && y.smallerThan(z);
     }
 
     private static <T> Set<T> intersect(Set<T> one, Set<T> other) {

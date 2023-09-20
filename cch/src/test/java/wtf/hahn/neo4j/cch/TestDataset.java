@@ -12,6 +12,7 @@ public enum TestDataset implements IntegrationTest.DatasetEnum {
     NO_IMPORT_FILE(null, "cost", "ROAD"),
     PAPER_GRAPH_UPDATE("paper_graph_cch.cql", "cost", "ROAD"),
     UPPER_TRIANGLE("upperTriangle.cql", "cost", "ROAD"),
-    DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql", "cost", "ROAD");
+    DIJKSTRA_SOURCE_TARGET_SAMPLE("neo4j_dijkstra_source_target_sample.cql", "cost", "ROAD"),
+    INTERMEDIATE_TRIANGLE("intermediateTriangle.cql", "cost", "ROAD");
     private final String fileName, costProperty, relationshipTypeName;
 }

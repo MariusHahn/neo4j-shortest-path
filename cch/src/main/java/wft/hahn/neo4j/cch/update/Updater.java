@@ -13,97 +13,80 @@ import java.util.Set;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-import wft.hahn.neo4j.cch.model.Arc;
 import wft.hahn.neo4j.cch.model.Vertex;
 
 public class Updater {
     private final Transaction transaction;
-    private final Queue<ArcUpdate> arcs = new PriorityQueue<>();
+    private final Queue<Update> arcs = new PriorityQueue<>();
     private final Vertex highestVertex;
-    private final IndexGraphLoader indexGraphLoader;
+    private final IndexGraphLoader indexLoader;
 
     public Updater(Transaction transaction, Path path) {
         this.transaction = transaction;
-        indexGraphLoader = new IndexGraphLoader(path);
-        highestVertex = indexGraphLoader.load();
-        this.arcs.addAll(scanNeo(transaction, indexGraphLoader));
+        indexLoader = new IndexGraphLoader(path);
+        highestVertex = indexLoader.load();
+        this.arcs.addAll(scanNeo(transaction, indexLoader));
     }
 
-    private static Set<ArcUpdate> scanNeo(Transaction transaction, IndexGraphLoader loader) {
-        final Set<ArcUpdate> arcUpdates = new HashSet<>();
+    private static Set<Update> scanNeo(Transaction transaction, IndexGraphLoader loader) {
+        final Set<Update> updates = new HashSet<>();
         transaction.findRelationships(() -> "ROAD").forEachRemaining(r -> {
             final double cost = getDoubleProperty(r, "cost");
             final double indexCost = getDoubleProperty(r, "last_cch_cost_while_indexing");
             if (cost != indexCost) {
                 final int fromRank = (int) getLongProperty(r.getStartNode(), "ROAD_rank");
                 final int toRank = (int) getLongProperty(r.getEndNode(), "ROAD_rank");
-                Arc arc = loader.getArc(fromRank, toRank);
-                arcUpdates.add(new ArcUpdate(arc, cost, arc.weight));
+                updates.add(new Update(fromRank, toRank, cost, indexCost));
             }
         });
-        return arcUpdates;
+        return updates;
     }
 
     public Vertex update() {
         while (!arcs.isEmpty()) {
-            final ArcUpdate arcUpdate = arcs.poll();
-            final TriangleBuilder triangleBuilder = new TriangleBuilder(arcUpdate.start(), arcUpdate.end());
-            final double newWeight = Math.min(inputGraphWeight(arcUpdate), getNewWeight(arcUpdate, triangleBuilder.lower()));
-            if (newWeight == arcUpdate.oldWeight()) continue;
-            arcUpdate.arc().weight = (float) newWeight;
-            Collection<Triangle> upper =  triangleBuilder.upper();
-            updateTriangles(arcUpdate, newWeight, upper);
-            updateTriangles(arcUpdate, newWeight, triangleBuilder.intermediate());
+            final Update update = arcs.poll();
+            final TriangleBuilder triangleBuilder = new TriangleBuilder(indexLoader.getArc(update.fromRank, update.toRank));
+            final double newWeight = getNewWeight(update, triangleBuilder.lower());
+            if (newWeight == update.oldIndexWeight()) continue;
+            indexLoader.getArc(update.fromRank, update.toRank).weight = (float) newWeight;
+            updateTriangles(update, newWeight, triangleBuilder.upper());
+            updateTriangles(update, newWeight, triangleBuilder.intermediate());
         }
         return highestVertex;
     }
 
-    private void updateTriangles(ArcUpdate arcUpdate, double newWeight, Collection<Triangle> triangles) {
+    private void updateTriangles(Update update, double newWeight, Collection<Triangle> triangles) {
         for (final Triangle triangle : triangles) {
-            if (triangle.second().weight == triangle.first().weight + arcUpdate.oldWeight()) {
-                final float oldWeight = triangle.second().weight;
-                triangle.second().weight = (float) (triangle.first().weight + newWeight);
-                arcs.add(new ArcUpdate(triangle.second(), oldWeight));
+            if (triangle.c.weight == triangle.b.weight + update.oldIndexWeight()) {
+                final float oldIndexWeight = triangle.c.weight;
+                //triangle.c.weight = (float) (triangle.b.weight + newWeight);
+                arcs.add(new Update(triangle.c.start.rank, triangle.c.end.rank, triangle.b.weight + newWeight, oldIndexWeight));
             }
         }
     }
 
-    private static double getNewWeight(ArcUpdate arc, Collection<Triangle> lowerTriangles) {
-        double newWeight = arc.weight();
+    private  double getNewWeight(Update update, Collection<Triangle> lowerTriangles) {
+        double newWeight = Math.min(update.newWeightCandidate(), inputGraphWeight(update));
         for (Triangle lowerTriangle : lowerTriangles) newWeight = Math.min(newWeight, lowerTriangle.weight());
         return newWeight;
     }
 
-    private double inputGraphWeight(ArcUpdate arc) {
-        final Node startNode = transaction.findNode(() -> "Location", "ROAD_rank", arc.start().rank);
+    private double inputGraphWeight(Update update) {
+        final Node startNode = transaction.findNode(() -> "Location", "ROAD_rank", update.fromRank);
         return startNode.getRelationships(Direction.OUTGOING, () -> "ROAD").stream()
-                .filter(r -> getLongProperty(r.getEndNode(), "ROAD_rank") == arc.end().rank)
+                .filter(r -> getLongProperty(r.getEndNode(), "ROAD_rank") == update.toRank)
                 .mapToDouble(r -> getDoubleProperty(r, "cost"))
                 .findFirst()
                 .orElse(Double.MAX_VALUE);
     }
 
-    record ArcUpdate(Arc arc, double weight, double oldWeight) implements Comparable<ArcUpdate> {
-        public ArcUpdate(Arc arc, double oldWeight) {
-            this(arc , arc.weight, oldWeight);
-        }
-
-        public Vertex start() {
-            return arc.start;
-        }
-
-        public Vertex end() {
-            return arc.end;
-        }
-
-        boolean upwards() {
-            return start().rank < end().rank;
-        }
+    record Update(int fromRank, int toRank, double newWeightCandidate, double oldIndexWeight)
+            implements Comparable<Update> {
 
         @Override
-        public int compareTo(ArcUpdate o) {
-            int compare = Integer.compare(start().rank, o.start().rank);
-            return upwards() ? compare : compare * -1;
+        public int compareTo(Update o) {
+            int compare = Integer.compare(fromRank, toRank);
+            return (toRank < fromRank) ? compare : compare * -1;
         }
     }
 }
