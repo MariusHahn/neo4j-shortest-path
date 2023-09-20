@@ -36,9 +36,9 @@ public class TriangleBuilder {
         final Collection<Triangle> triangles = new LinkedList<>();
         for (final Vertex z : neighbors) if (intermediate(x, y, z)) {
             if (upwards()) {
-                triangles.add(new Triangle(arc, z.getArcTo(x), y.getArcTo(z)));
+                triangles.add(new Triangle(arc, x.getArcTo(z), z.getArcTo(y)));
             } else {
-                triangles.add(new Triangle(arc, x.getArcTo(z) , z.getArcTo(y)));
+                triangles.add(new Triangle(arc, z.getArcTo(x) , y.getArcTo(z)));
             }
         }
         return triangles;
