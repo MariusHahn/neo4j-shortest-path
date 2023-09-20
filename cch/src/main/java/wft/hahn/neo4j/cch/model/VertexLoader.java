@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import wft.hahn.neo4j.cch.indexer.Shortcut;
+import wft.hahn.neo4j.cch.update.Updater;
 import wtf.hahn.neo4j.util.iterable.JoinIterable;
 
 @RequiredArgsConstructor
@@ -47,7 +49,15 @@ public class VertexLoader {
         transaction.getNodeByElementId(vertex.elementId).setProperty(rankPropertyName, rank);
     }
 
-    public void commit(){
+    public void setIndexWeight(Vertex from, Vertex to, Shortcut shortcut) {
+        transaction.getNodeByElementId(from.elementId).getRelationships()
+                .stream()
+                .filter(relationship -> relationship.getEndNode().getElementId().equals(to.elementId))
+                .findFirst()
+                .ifPresent(r -> r.setProperty(Updater.LAST_CCH_COST_WHILE_INDEXING, shortcut.weight()));
+    }
+
+    public void commit() {
         transaction.commit();
     }
 }

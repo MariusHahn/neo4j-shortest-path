@@ -37,7 +37,7 @@ public final class IndexerByImportanceWithSearchGraph {
             vertexToContract.rank = rank;
             vertexLoader.setRankProperty(vertexToContract, rank++, type.name()+"_rank");
             for (Shortcut shortcut : poll.shortcuts) {
-                insertionCounter += createOrUpdateEdge(vertexToContract, shortcut);
+                insertionCounter += createOrUpdateEdge(vertexToContract, shortcut, vertexLoader);
             }
             updateNeighborsInQueue(queue, vertexToContract);
             maxDegree = max(maxDegree, vertexToContract.getDegree());
@@ -86,10 +86,13 @@ public final class IndexerByImportanceWithSearchGraph {
         return new Contraction(nodeToContract, edgeDifference, shortcuts);
     }
 
-    private static int createOrUpdateEdge(Vertex vertexToContract, Shortcut shortcut) {
+    private static int createOrUpdateEdge(Vertex vertexToContract, Shortcut shortcut, VertexLoader loader) {
         final Vertex from = shortcut.in().start;
         final Vertex to = shortcut.out().end;
-        if (from.addArc(to, vertexToContract, shortcut.weight(), shortcut.hopLength())) return 1;
+        if (from.addArc(to, vertexToContract, shortcut.weight(), shortcut.hopLength())) {
+            loader.setIndexWeight(from, to, shortcut);
+            return 1;
+        }
         return 0;
     }
 }
