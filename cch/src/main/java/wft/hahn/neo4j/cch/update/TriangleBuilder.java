@@ -22,11 +22,27 @@ public class TriangleBuilder {
     }
 
     public Collection<Triangle> lower() {
-        return triangles(TriangleBuilder::lower);
+        final Collection<Triangle> triangles = new LinkedList<>();
+        for (final Vertex z : neighbors) if (lower(x, y, z)) {
+            if (upwards()) {
+                triangles.add(new Triangle(arc, x.getArcTo(z), z.getArcTo(y)));
+            } else {
+                triangles.add(new Triangle(arc, z.getArcTo(x), y.getArcTo(z)));
+            }
+        }
+        return triangles;
     }
 
     public Collection<Triangle> intermediate() {
-        return triangles(TriangleBuilder::intermediate);
+        final Collection<Triangle> triangles = new LinkedList<>();
+        for (final Vertex z : neighbors) if (intermediate(x, y, z)) {
+            if (upwards()) {
+                triangles.add(new Triangle(arc, z.getArcTo(x), z.getArcTo(y)));
+            } else {
+                triangles.add(new Triangle(arc, x.getArcTo(z), y.getArcTo(z)));
+            }
+        }
+        return triangles;
     }
 
     public Collection<Triangle> upper() {
@@ -41,13 +57,12 @@ public class TriangleBuilder {
         final Collection<Triangle> triangles = new LinkedList<>();
         for (final Vertex z : neighbors) if (predicate.test(x, y, z)) {
             if (upwards()) {
-                triangles.add(new Triangle(arc, this.x.getArcTo(z), z.getArcTo(y)));
+                triangles.add(new Triangle(arc, z.getArcTo(x), z.getArcTo(y)));
             } else {
-                triangles.add(new Triangle(arc, z.getArcTo(this.x), y.getArcTo(z)));
+                triangles.add(new Triangle(arc, x.getArcTo(z), y.getArcTo(z)));
             }
         }
         return triangles;
-
     }
 
     private static boolean lower(Vertex x, Vertex y, Vertex z) {
