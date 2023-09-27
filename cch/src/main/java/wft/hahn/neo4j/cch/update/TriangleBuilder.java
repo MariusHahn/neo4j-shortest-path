@@ -46,16 +46,8 @@ public class TriangleBuilder {
     }
 
     public Collection<Triangle> upper() {
-        return triangles(TriangleBuilder::upper);
-    }
-
-    private boolean upwards() {
-        return arc.start.smallerThan(arc.end);
-    }
-
-    private Collection<Triangle> triangles(TrianglePredicate predicate) {
         final Collection<Triangle> triangles = new LinkedList<>();
-        for (final Vertex z : neighbors) if (predicate.test(x, y, z)) {
+        for (final Vertex z : neighbors) if (upper(x, y, z)) {
             if (upwards()) {
                 triangles.add(new Triangle(arc, z.getArcTo(x), z.getArcTo(y)));
             } else {
@@ -63,6 +55,10 @@ public class TriangleBuilder {
             }
         }
         return triangles;
+    }
+
+    private boolean upwards() {
+        return arc.start.smallerThan(arc.end);
     }
 
     private static boolean lower(Vertex x, Vertex y, Vertex z) {
@@ -82,6 +78,4 @@ public class TriangleBuilder {
         intersection.retainAll(other);
         return intersection;
     }
-
-    interface TrianglePredicate { boolean test(Vertex x, Vertex y, Vertex z);}
 }
