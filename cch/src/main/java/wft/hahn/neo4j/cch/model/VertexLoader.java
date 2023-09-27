@@ -1,5 +1,6 @@
 package wft.hahn.neo4j.cch.model;
 
+import static wft.hahn.neo4j.cch.update.Updater.*;
 import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
 
 import java.util.Arrays;
@@ -10,25 +11,30 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import lombok.RequiredArgsConstructor;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wft.hahn.neo4j.cch.indexer.Shortcut;
-import wft.hahn.neo4j.cch.update.Updater;
 import wtf.hahn.neo4j.util.iterable.JoinIterable;
 
-@RequiredArgsConstructor
 public class VertexLoader {
 
     private final Transaction transaction;
+    private final String costProperty;
+    private final RelationshipType[] types;
 
-    public Set<Vertex> loadAllVertices(String weightProperty, RelationshipType... type) {
+    public VertexLoader(Transaction transaction, String costProperty, RelationshipType... types) {
+        this.transaction = transaction;
+        this.costProperty = costProperty;
+        this.types = types;
+    }
+
+    public Set<Vertex> loadAllVertices() {
         final Map<Vertex, Vertex> nodes = new HashMap<>();
-        for (final Relationship relationship : getRelationships(type)) {
+        for (final Relationship relationship : getRelationships(types)) {
             final Vertex start = nodes.computeIfAbsent(new Vertex(relationship.getStartNode()), Function.identity());
             final Vertex end = nodes.computeIfAbsent(new Vertex(relationship.getEndNode()), Function.identity());
-            final double weight = getDoubleProperty(relationship, weightProperty);
+            final double weight = getDoubleProperty(relationship,  costProperty);
             start.addArc(end, (float) weight);
         }
         return Collections.unmodifiableSet(nodes.keySet());
@@ -49,15 +55,23 @@ public class VertexLoader {
         transaction.getNodeByElementId(vertex.elementId).setProperty(rankPropertyName, rank);
     }
 
-    public void setIndexWeight(Vertex from, Vertex to, Shortcut shortcut) {
-        transaction.getNodeByElementId(from.elementId).getRelationships()
+    public void setIndexWeight(Shortcut shortcut) {
+        transaction.getNodeByElementId(shortcut.in().start.elementId).getRelationships()
                 .stream()
-                .filter(relationship -> relationship.getEndNode().getElementId().equals(to.elementId))
+                .filter(relationship -> relationship.getEndNode().getElementId().equals(shortcut.out().end.elementId))
                 .findFirst()
-                .ifPresent(r -> r.setProperty(Updater.LAST_CCH_COST_WHILE_INDEXING, shortcut.weight()));
+                .ifPresent(r -> r.setProperty(LAST_CCH_COST_WHILE_INDEXING, shortcut.weight()));
+    }
+
+    public void setRemainingIndexWeight() {
+        for (Relationship relationship : getRelationships(types)) if (!relationship.hasProperty(LAST_CCH_COST_WHILE_INDEXING)) {
+            double cost = getDoubleProperty(relationship, costProperty);
+            relationship.setProperty(LAST_CCH_COST_WHILE_INDEXING, cost);
+        }
     }
 
     public void commit() {
+        setRemainingIndexWeight();
         transaction.commit();
     }
 }

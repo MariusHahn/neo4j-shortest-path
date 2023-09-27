@@ -25,8 +25,8 @@ public final class IndexerByImportanceWithSearchGraph {
 
     public IndexerByImportanceWithSearchGraph(String type, String costProperty, Transaction transaction) {
         this.type = RelationshipType.withName(type);
-        vertexLoader = new VertexLoader(transaction);
-        Set<Vertex> vertices = vertexLoader.loadAllVertices(costProperty, this.type);
+        vertexLoader = new VertexLoader(transaction, costProperty, this.type);
+        Set<Vertex> vertices = vertexLoader.loadAllVertices();
         queue = new LastInsertWinsPriorityQueue<>(vertices.stream().map(v -> new QueueVertex(shortcutsToInsert(v))));
     }
 
@@ -87,12 +87,14 @@ public final class IndexerByImportanceWithSearchGraph {
     }
 
     private static int createOrUpdateEdge(Vertex vertexToContract, Shortcut shortcut, VertexLoader loader) {
+        int edgeCreated = 0;
         final Vertex from = shortcut.in().start;
         final Vertex to = shortcut.out().end;
-        if (from.addArc(to, vertexToContract, shortcut.weight(), shortcut.hopLength())) {
-            loader.setIndexWeight(from, to, shortcut);
-            return 1;
+        Vertex.ArcUpdateStatus arcUpdateStatus = from.addArc(to, vertexToContract, shortcut.weight(), shortcut.hopLength());
+        switch (arcUpdateStatus) {
+            case CREATE -> edgeCreated++;
+            case UPDATED -> loader.setIndexWeight(shortcut);
         }
-        return 0;
+        return edgeCreated;
     }
 }

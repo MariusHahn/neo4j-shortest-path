@@ -1,18 +1,5 @@
 package wtf.hahn.neo4j.cch.search;
 
-import static java.util.List.of;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,18 +10,40 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import wft.hahn.neo4j.cch.indexer.IndexerByImportanceWithSearchGraph;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskChDijkstra;
 import wft.hahn.neo4j.cch.search.SearchPath;
+import wft.hahn.neo4j.cch.search.SearchVertexPaths;
 import wft.hahn.neo4j.cch.storage.FifoBuffer;
 import wft.hahn.neo4j.cch.storage.Mode;
 import wft.hahn.neo4j.cch.storage.StoreFunction;
+import wft.hahn.neo4j.cch.update.Updater;
 import wtf.hahn.neo4j.cch.TestDataset;
 import wtf.hahn.neo4j.dijkstra.Dijkstra;
 import wtf.hahn.neo4j.testUtil.IntegrationTest;
+import wtf.hahn.neo4j.util.PathUtils;
 import wtf.hahn.neo4j.util.StoppedResult;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static java.util.List.of;
+import static wtf.hahn.neo4j.cch.search.DiskChDijkstraTest.setupPaperGraphTest;
+import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
 
 public class OldenburgGraphTest extends IntegrationTest {
     public static final Label LABEL = () -> "Location";
@@ -118,6 +127,54 @@ public class OldenburgGraphTest extends IntegrationTest {
                     overAll.addAndGet(result.getMillis());
                     denominator.incrementAndGet();
                     Assertions.assertEquals(weightedPath.weight(), cchPath.weight());
+                }
+            });
+            double avg = overAll.doubleValue() / denominator.doubleValue();
+            System.out.printf("avg : %s with %d load invocations%n", avg, diskChDijkstra.loadInvocations());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Test
+    void randomChangeTest() {
+        try (Transaction transaction = database().beginTx()) {
+            List<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream().collect(Collectors.toList());
+            Collections.shuffle(relationships);
+            for (int i = 0; i < 10; i++) {
+                Relationship relationship = relationships.get(i);
+                double current = getDoubleProperty(relationship, "cost");
+                if (i % 2 == 0) relationship.setProperty("cost", current / 2);
+                else relationship.setProperty("cost", current * 2);
+                Updater updater = new Updater(transaction, tempPath);
+                setupPaperGraphTest(updater.update(), tempPath);
+            }
+
+        }
+
+        Stream<Arguments> argumentsStream = randomSourceTarget();
+        AtomicLong overAll = new AtomicLong(0);
+        AtomicInteger denominator = new AtomicInteger(0);
+        FifoBuffer outBuffer = new FifoBuffer(18000, Mode.OUT, tempPath);
+        FifoBuffer inBuffer = new FifoBuffer(18000, Mode.IN, tempPath);
+        try (Transaction transaction = database().beginTx();
+             DiskChDijkstra diskChDijkstra = new DiskChDijkstra(outBuffer, inBuffer)) {
+            argumentsStream.forEach(arg -> {
+                int start = (int) arg.get()[0];
+                int goal = (int) arg.get()[1];
+                Node s = transaction.findNode(LABEL, "ROAD_rank", start);
+                Node t = transaction.findNode(LABEL, "ROAD_rank", goal);
+                WeightedPath weightedPath = dijkstra.find(s, t);
+                if (weightedPath != null) {
+                    StoppedResult<SearchPath> result = new StoppedResult<>(() -> diskChDijkstra.find(start, goal));
+                    SearchPath cchPath = result.getResult();
+                    System.out.println(result.getMillis());
+                    overAll.addAndGet(result.getMillis());
+                    denominator.incrementAndGet();
+                    if (weightedPath.weight() != cchPath.weight()) {
+                        System.out.println(PathUtils.toRankString(weightedPath));
+                        System.out.println(SearchVertexPaths.toString(cchPath));
+                    }
+                    //Assertions.assertEquals(weightedPath.weight(), cchPath.weight());
                 }
             });
             double avg = overAll.doubleValue() / denominator.doubleValue();

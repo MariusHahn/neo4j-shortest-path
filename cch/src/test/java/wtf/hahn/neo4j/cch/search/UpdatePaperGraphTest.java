@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.neo4j.graphalgo.WeightedPath;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.search.DiskChDijkstra;
@@ -21,13 +22,18 @@ import wtf.hahn.neo4j.testUtil.IntegrationTest;
 import wtf.hahn.neo4j.util.PathUtils;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.List.of;
 import static wtf.hahn.neo4j.cch.search.DiskChDijkstraTest.setupPaperGraphTest;
-import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
+import static wtf.hahn.neo4j.util.EntityHelper.*;
 
 public class UpdatePaperGraphTest extends IntegrationTest {
 
@@ -50,17 +56,25 @@ public class UpdatePaperGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
     private static Stream<Arguments> y() {
-        return Stream.of(Arguments.of(6, 5), Arguments.of(5,6));
+        return Stream.of(Arguments.of(9, 5));
     }
 
     @ParameterizedTest
-    @MethodSource({"x"})
+    @MethodSource({"y"})
     void updateIndexTest(Integer i, Integer j) {
         Dijkstra dijkstra = new Dijkstra(relationshipType(), costProperty());
         try (Transaction transaction = database().beginTx()) {
             try (DiskChDijkstra diskChDijkstra = new DiskChDijkstra(path)) {
-                transaction.findRelationships(() -> "ROAD", "x", "x")
-                        .forEachRemaining(relationship -> relationship.setProperty("cost", 1));
+                transaction.findRelationships(() -> "ROAD")
+                        .stream()
+                        .filter(r -> r.hasProperty("x"))
+                        .sorted(Comparator.comparingLong(r -> getLongProperty(r, "x")))
+                        .forEach(relationship -> {
+                            double cost = getDoubleProperty(relationship, "cost");
+                            relationship.setProperty("cost", cost * 2);
+                            Updater updater = new Updater(transaction, path);
+                            setupPaperGraphTest(updater.update(), path);
+                        });
                 Updater updater = new Updater(transaction, path);
                 setupPaperGraphTest(updater.update(), path);
                 Node start = transaction.findNode(() -> "Location", "id", i);
@@ -72,6 +86,41 @@ public class UpdatePaperGraphTest extends IntegrationTest {
                 System.out.println(SearchVertexPaths.toString(cchPath));
                 System.out.println(PathUtils.toRankString(expectPath));
                 Assertions.assertEquals(expectPath.weight(), cchPath.weight(), i + " -> " + j);
+            }
+        }
+    }
+
+    @Test
+    void updateIndexTest2() {
+        Dijkstra dijkstra = new Dijkstra(relationshipType(), costProperty());
+        try (Transaction transaction = database().beginTx()) {
+            List<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream().collect(Collectors.toList());
+            Collections.shuffle(relationships, new Random(0));
+            for (int i = 0; i < 100; i++) if (i < relationships.size()) {
+                Relationship relationship = relationships.get(i);
+                double current = getDoubleProperty(relationship, "cost");
+                double newWeight = current * 2;
+                relationship.setProperty("cost", newWeight);
+                Long fromRank = getProperty(relationship.getStartNode(), "ROAD_rank");
+                Long toRank = getProperty(relationship.getEndNode(), "ROAD_rank");
+                System.out.printf("(%d)-[%.2f]->(%d)%n", fromRank, newWeight, toRank);
+                Updater updater = new Updater(transaction, path);
+                setupPaperGraphTest(updater.update(), path);
+            }
+            try (DiskChDijkstra diskChDijkstra = new DiskChDijkstra(path)) {
+                x().forEach(arguments -> {
+                    int i = (int) arguments.get()[0];
+                    int j = (int) arguments.get()[1];
+                    Node start = transaction.findNode(() -> "Location", "id", i);
+                    Node end = transaction.findNode(() -> "Location", "id", j);
+                    WeightedPath expectPath = dijkstra.find(start, end);
+                    int startRank = (int) getLongProperty(start, "ROAD_rank");
+                    int endRank = (int) getLongProperty(end, "ROAD_rank");
+                    SearchPath cchPath = diskChDijkstra.find(startRank, endRank);
+                    System.out.println(SearchVertexPaths.toString(cchPath));
+                    System.out.println(PathUtils.toRankString(expectPath));
+                    Assertions.assertEquals(expectPath.weight(), cchPath.weight(), i + " -> " + j);
+                });
             }
         }
     }

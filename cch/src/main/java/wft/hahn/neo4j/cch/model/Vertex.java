@@ -1,18 +1,13 @@
 package wft.hahn.neo4j.cch.model;
 
-import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import org.neo4j.graphdb.Node;
-import wft.hahn.neo4j.cch.storage.DiskArc;
+
+import java.util.*;
+import java.util.stream.Stream;
+
+import static wtf.hahn.neo4j.util.EntityHelper.getProperty;
 
 @ToString(of = {"name", "rank"}) @AllArgsConstructor
 public final class Vertex implements PathElement, Comparable<Vertex> {
@@ -70,24 +65,25 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
     }
 
 
-    public boolean addArc(Vertex other, float weight) {
+    public ArcUpdateStatus addArc(Vertex other, float weight) {
         return addArc(other, null, weight, 1);
     }
 
-    public boolean addArc(Vertex other, Vertex middle, float weight, int hopLength) {
+    public ArcUpdateStatus addArc(Vertex other, Vertex middle, float weight, int hopLength) {
         if (!outArcs.containsKey(other)) {
             Arc arc = new Arc(this, other, weight, middle, hopLength);
             this.outArcs.put(other, arc);
             other.inArcs.put(this, arc);
-            return true;
+            return ArcUpdateStatus.CREATE;
         }
         if (weight < outArcs.get(other).weight) {
             Arc arc = outArcs.get(other);
             arc.weight = weight;
             arc.middle = middle;
             arc.hopLength = hopLength;
+            return ArcUpdateStatus.UPDATED;
         }
-        return false;
+        return ArcUpdateStatus.REJECTED;
     }
 
     @Override
@@ -129,4 +125,5 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
     public boolean smallerThan(Vertex o) {
         return compareTo(o) < 0;
     }
+    public enum ArcUpdateStatus {CREATE, UPDATED, REJECTED}
 }

@@ -66,8 +66,11 @@ public class Updater {
     }
 
     private void checkTriangles(Update update, double newWeight, Collection<Triangle> triangles) {
-        for (final Triangle triangle : triangles) if (arcWeightCouldRelyOnTriangle(triangle, update)) {
-                updates.add(new Update(triangle, triangle.b().weight + newWeight));
+        for (final Triangle triangle : triangles) {
+            if (arcWeightCouldRelyOnTriangle(triangle, update)) {
+                double newWeightCandidate = triangle.b().weight + newWeight;
+                updates.offer(new Update(triangle, newWeightCandidate, triangle.c().weight));
+            }
         }
     }
 
