@@ -1,38 +1,52 @@
 \begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
 
-    \node[main] (x1) at (0, 0) {$1$};
-    \node[main] (x2) at (1, 0) {$2$};
-    \node[main] (x3) at (2, 0) {$3$};
-    \node[main] (x4) at (3, 0) {$4$};
-    \node[main] (x5) at (4, 0) {$5$};
-    \node[main] (x9) at (5, 0) {$9$};
-    
-    \node[main] (x7) at (6, 1) {$7$};
-    \node[main] (x8) at (6, -1) {$8$};
-    \node[main] (x6) at (6, 0) {$6$};
-    
-    
+    \node[main] (x1) at (0, 4) {$1$};
+    \node[main] (x2) at (1, 4) {$2$};
+    \node[main] (x3) at (2, 4) {$3$};
+    \node[main] (x4) at (3, 4) {$4$};
+    \node[main] (x5) at (4, 4) {$5$};
     \draw (x1) -- (x2);
     \draw (x2) -- (x3);
     \draw (x3) -- (x4);
     \draw (x4) -- (x5);
-    \draw (x5) -- (x9);
+
+    %--------------------------------------------
+
+    \node[main] (x11) at (0, 2) {$4$};
+    \node[main] (x21) at (1, 2) {$2$};
+    \node[main] (x31) at (2, 2) {$1$};
+    \node[main] (x41) at (3, 2) {$3$};
+    \node[main] (x51) at (4, 2) {$5$};
     
-    \draw (x6) -- (x9);
-    \draw (x9) -- (x7);
-    \draw (x9) -- (x8);
+    \draw (x11) -- (x21);
+    \draw (x21) -- (x31);
+    \draw (x31) -- (x41);
+    \draw (x41) -- (x51);
+    \draw[out=60, in=120] (x21) to (x41);
+    \draw[out=-60, in=-120] (x11) to (x41);
+    \draw[out=60, in=120] (x11) to (x51);
+
+    %--------------------------------------------
+
+    \node[main] (x11) at (0, 0) {$3$};
+    \node[main] (x21) at (1, 0) {$1$};
+    \node[main] (x31) at (2, 0) {$5$};
+    \node[main] (x41) at (3, 0) {$2$};
+    \node[main] (x51) at (4, 0) {$4$};
     
-    \draw [dashed] (x7) -- (8, 2);
-    \draw [dashed] (x7) -- (8, 1);
-    \draw [dashed] (x7) -- (8, 0);
+    \draw (x11) -- (x21);
+    \draw (x21) -- (x31);
+    \draw (x31) -- (x41);
+    \draw (x41) -- (x51);
+    \draw[out=60, in=120] (x11) to (x31);
+    \draw[out=60, in=120] (x31) to (x51);
+
     
-    \draw [dashed] (x8) -- (8, 0);
-    \draw [dashed] (x8) -- (8, -2);
-    \draw [dashed] (x8) -- (8, -1);
-    
-    \draw [dashed] (x6) -- (8, 1);
-    \draw [dashed] (x6) -- (8, 0);
-    \draw [dashed] (x6) -- (8, -1);
+\end{tikzpicture} \\
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+
+
+
     
 \end{tikzpicture} 
     
