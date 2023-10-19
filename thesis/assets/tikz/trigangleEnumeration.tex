@@ -1,0 +1,28 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+    \node[rotate=90] at (-0.25,0) {rank};
+    \draw [ -Stealth]  (0,-2) -- (0,2);
+    \node[main] (x1) at (1, 0) {$x$}; 
+    \node[main] (z1) [below right of=x1] {$z$};
+    \node[main] (y1) [right of=z1, above of=x1] {$y$}; 
+    \draw (x1) -- node[above left, sloped] {$a$} (y1) ;
+    \draw (x1) -- node[below left, sloped, pos=0.8] {$b$} (z1);
+    \draw (y1) -- node[below left, sloped] {$c$} (z1);
+    \node[] at (2,-2) {lower triangle $\{x,y\}$};
+    
+    \node[main] (z2) at (6, 0) {$z$}; 
+    \node[main] (x2) [below right of=z2] {$x$};
+    \node[main] (y2) [right of=z2, above of=z2] {$y$}; 
+    \draw (z2) -- node[above left, sloped] {$c$} (y2) ;
+    \draw (z2) -- node[below left, sloped, pos=0.8] {$b$} (x2);
+    \draw (y2) -- node[below left, sloped] {$a$} (x2);
+    \node[] at (7,-2) {intermediate triangle $\{x,y\}$};
+    
+    \node[main] (y3) at (12, 0) {$y$}; 
+    \node[main] (x3) [below right of=y3] {$x$};
+    \node[main] (z3) [right of=y3, above of=y3] {$z$}; 
+    \draw (y3) -- node[above left, sloped] {$c$} (z3);
+    \draw (y3) -- node[below left, sloped, pos=0.8] {$b$} (x3);
+    \draw (z3) -- node[below left, sloped] {$a$} (x3);
+    \node[] at (13,-2) {upper Triangle $\{x,y\}$};
+\end{tikzpicture}
+    

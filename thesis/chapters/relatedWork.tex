@@ -1,0 +1,36 @@
+\chapter{Related Work} 
+
+As this is manly a database paper, we want to divide this chapter in two main sections \nameref{sec:algorithmic_history} and \nameref{sec:related_work:database}. \nameref{sec:algorithmic_history} 
+will give some basic overview what has been published regarding index structures to speed up shortest path queries for graphs. \nameref{sec:related_work:database} will try 
+to give an overview of efforts that have been made to make \cite[Customizable Contraction Hierarchies]{CCH} it suitable for graph databases.
+
+\section[Algorithmic History]{Algorithmic History} \label{sec:algorithmic_history}
+
+\cite[Contraction Hierarchies]{Geisberger_2012} or CH is heavly influenced by the idea of the \cite[Transit-Node]{Bast_2007} approach and as transit node approach itself is a
+technique to speed up the \cite[Dijkstra Algorithm]{Dijkstra_1959} which is the most basic and robust algorithm to find shortest path in graphs. CH goes back to the diploma thesis of \cite[Geisberger]{Geisberger} in 2008. The \cite[Transit-Node]{Bast_2007} approach
+tries to find vertex inside the graph that are more important than others. Important in this case means, these are vertices that lie on many shortest paths. This speeds up 
+especially long distance queries, as one only needs to calculate the distance to the the next transit node of the source and target vertex because the shortest paths between 
+the transit or access nodes will be known. \\ 
+CH goes even further on the idea of having important vertices. It applies an importance to each vertex in the graph a so called rank. Furthermore it add edges to the graph
+, so called shortcut, that preserve the shortest path property of the graph in case a vertex that is contracted lies on a shortest path between other. When querying a shortest
+path CH uses a modified bidirectional-dijkstra that is restricted to only visit nodes that are of higher importance, or rank, than the its about to expand next.
+This method is able to retrieve shortest paths of vertices that have a high spacial distance, however, it is rather static. In case a new edge is added or an edge weight is updated, 
+it might be necessary to recontract the whole graph to preserve the shortest path property. \\
+In 2016 \cite[Customization Contraction Hierarchies]{CCH} or CCH was published. The approach is the same, but in CCH shortcuts are not only added if the contraction violtes the shortest,
+they are added if there had been a connection between its neighbors through the just contracted vertex and these neighbors do not own a direct connection through an already existing edge.
+The shortcut weights are later on calculated through the lowers triangle. Additionally the \cite[Customization Contraction Hierarchies]{CCH} provides an update approach that only updates,
+edges that are affected by a weight change.
+
+\section{Contraction Hierarchies Database History}\label{sec:related_work:database}
+
+There is one bachelor thesis by Nicolai D'Effremo \cite[Some text]{DEffremo2019} that has implemented a version on \cite[Contraction Hierarchies]{Geisberger_2012} for Neo4j, one 
+of the most used graph databases of today in 2023. This implementation shows that even in CH an index structure is also worth pursuing in a database context, as the speedup 
+of shortest path queries paired with a reasonable preprocessing time. \cite{Zickenberg2021} wrote a showed in his bachelor thesis that it is even possible to restricted these
+queries with label constraints. Although CH and CCH have little difference, sadly we could not use much of the code provided as it
+was deeply integrated into the Neo4j-Platform and since that there have been two major release updates with breaking changes which make it nearly impossible to reuse any of
+this code.\\
+
+Finally there is \cite[Mobile Route Planning]{Sanders} by Peter Sanders, Dominik Schultes, and Christian Vetter. In this paper it is described how one can efficiently store
+the a CH index structure on a hard drive. It states an interesting technique to how store edge that are likely to be read sequentially spatially close on the hard drive which 
+makes read operations that have to be done during query time fast. The motivation of \cite[Mobile Route Planning]{Sanders} through was slightly different. They came up with this
+idea because computation power on mobile devices is limited, so they could precalculate the CH index on a server and then later distribute it to a mobile device.

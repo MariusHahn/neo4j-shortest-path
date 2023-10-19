@@ -1,0 +1,22 @@
+\chapter{Preliminary}
+
+As the target platform for this work is the graph database neo4J, we will mostly consider \textit{directed} graphs. From the terminology we always refer \textit{arcs}, which is an directed edge.
+In some rare cases we might refer to \textit{edges}. There you can be sure that it doesn't matter weather it is directed or not.
+
+\section{Notation and Expressions}
+We denote a graph $G(V, A)$ in case me mean an \textit{directed} graph, where $v$ is a vertex contained in the vertices $v \epsilon  V$ and $e$ is an
+edge $a \epsilon A$. An arc is uniquely defined by to vertices $v_a$ and $v_b$ such that $v_a \neq v_b$, so there are no loops nor multi edges.
+An edge additionally has a weight function $w: E \rightarrow \mathbb{R}_{<0} $ it's weight which must be a positive.
+\\
+$G$ represents the input graph. The contraction graph $G'(V', A')$ is the graph that will be used at contraction for initially building the CCH index structure. A vertex $v$ in will 
+never be really deleted. Instead the rank property $r(v)$ is set to mark this as an already contracted. So $V \equiv V'$ but $A \subseteq A'$ there will be edges add while building
+the CCH index. $S = A' \setminus A$ is the shortcut set that is added throughout the contraction. 
+\\
+$G^*(V^*, A^*)$ is the is the search graph while doing one a shortest path query. Futhermore one query will have two search graphs. $G^*_\uparrow$ representing the upwards search graph
+and the $G^*_\downarrow$.
+\\
+Finally there will be the edge set of edges that are written to the disk. These will $\bigcirc E$ will be separated into to sets $\bigcirc E_\downarrow$ and $\bigcirc E_\uparrow $, too.
+
+
+\section{Customizable Contraction Hierarchies}\label{sec:Preliminary_CCH}
+

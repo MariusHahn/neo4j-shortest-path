@@ -1,0 +1,18 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+    \draw (0,7) -- (4,7);
+    \draw[dashed] (0,6) -- (4,6);
+    \draw[dashed] (0,5) -- (4,5);
+    \node at (4.5,5) {0};
+    \node at (4.5,1) {1};
+    \draw (0,3) -- (5,3); 
+    \draw[dashed] (0,2) -- (4,2);
+    \draw[dashed] (0,1) -- (4,1);
+    \draw[out=60, in=-120] (0,0) to (4, 0);
+    \draw (0,0) -- (0,7); 
+    \draw (4,0) -- (4,7); 
+    \node at (2, 6.5) {record};
+    \node at (2, 5.5) {record};
+    \node[rotate=90, font=\Large] at (2, 4) {. . . . .};
+    \node[rotate=90] at (-0.85, 5) {disk block};
+    \draw [decorate,decoration = {brace, amplitude=10pt}] (-0.2,3) --  (-0.2,7);
+\end{tikzpicture}
