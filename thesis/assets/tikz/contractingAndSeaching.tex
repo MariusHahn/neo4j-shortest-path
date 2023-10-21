@@ -1,0 +1,29 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+
+    \node[main] (x11) at (0, 0) {$3$};
+    \node[main] (x21) at (1, 0) {$1$};
+    \node[main] (x31) at (2, 0) {$5$};
+    \node[main] (x41) at (3, 0) {$2$};
+    \node[main] (x51) at (4, 0) {$4$};
+    
+    \draw (x11) -- (x21);
+    \draw (x21) -- (x31);
+    \draw (x31) -- (x41);
+    \draw (x41) -- (x51);
+    \draw[dashed, out=60, in=120] (x11) to (x31);
+    \draw[dashed, out=60, in=120] (x31) to (x51);
+
+    %------------------------------------------------
+
+    \draw[dashed]  (6,0) -- (6,1.5);
+
+
+    \node[main] (x3) at (8, 0) {$3$};
+    \node[main] (x4) at (10, 0) {$4$};
+    \node[main] (x5) at (9, 1) {$5$};
+
+    \draw[ -Stealth] (x3) -- (x5);
+    \draw[ -Stealth] (x5) -- (x4);
+    
+
+\end{tikzpicture}

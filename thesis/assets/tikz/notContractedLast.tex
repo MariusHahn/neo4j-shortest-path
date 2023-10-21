@@ -1,16 +1,30 @@
 \begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
-    \node[main] (x1) at (1, 2) {$1$}; 
-    \node[main] (x3) at (1, 0) {$3$};
+    \node[main] (x1) at (0, 2) {$1$}; 
+    \node[main] (x3) at (0, 0) {$3$};
     
-    \node[main] (x4) at (3, 1) {$4$}; 
+    \node[main] (x4) at (2, 1) {$4$}; 
     
-    \node[main] (x2) at (5, 2) {$2$}; 
-    \node[main] (x5) at (5, 0) {$5$}; 
+    \node[main] (x2) at (4, 2) {$2$}; 
+    \node[main] (x5) at (4, 0) {$5$}; 
     
     \draw (x1) -- (x4);
     \draw (x2) -- (x4);
     \draw (x3) -- (x4);
     \draw (x5) -- (x4);
-    
+
+    \draw[dashed]  (6,0) -- (6,2);
+
+
+    \node[main] (x1) at (8, 0) {$1$};
+    \node[main] (x3) at (10, 0) {$3$};
+    \node[main] (x4) at (9, 1) {$4$};
+    \node[main] (x5) at (9, 2.4) {$5$};
+
+    \draw[ -Stealth] (x1) -- (x4);
+    \draw[ -Stealth] (x4) -- (x3);
+
+    \draw[ -Stealth, out=120, in=-120] (x4) to (x5);
+    \draw[ -Stealth, out=-60, in=60] (x5) to (x4);
+
 \end{tikzpicture} 
     

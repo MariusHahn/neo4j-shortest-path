@@ -22,9 +22,9 @@
     \draw (x21) -- (x31);
     \draw (x31) -- (x41);
     \draw (x41) -- (x51);
-    \draw[out=60, in=120] (x21) to (x41);
-    \draw[out=-60, in=-120] (x11) to (x41);
-    \draw[out=60, in=120] (x11) to (x51);
+    \draw[dashed, out=60, in=120] (x21) to (x41);
+    \draw[dashed, out=-60, in=-120] (x11) to (x41);
+    \draw[dashed, out=60, in=120] (x11) to (x51);
 
     %--------------------------------------------
 
@@ -38,15 +38,9 @@
     \draw (x21) -- (x31);
     \draw (x31) -- (x41);
     \draw (x41) -- (x51);
-    \draw[out=60, in=120] (x11) to (x31);
-    \draw[out=60, in=120] (x31) to (x51);
+    \draw[dashed, out=60, in=120] (x11) to (x31);
+    \draw[dashed, out=60, in=120] (x31) to (x51);
 
     
-\end{tikzpicture} \\
-\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
-
-
-
-    
-\end{tikzpicture} 
+\end{tikzpicture}
     
