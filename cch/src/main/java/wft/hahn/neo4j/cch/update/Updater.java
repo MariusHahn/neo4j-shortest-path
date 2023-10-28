@@ -15,7 +15,9 @@ import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 public class Updater {
     public static final String LAST_CCH_COST_WHILE_INDEXING = "last_cch_cost_while_indexing";
     private final Transaction transaction;
-    private final Queue<Update> updates = new PriorityQueue<>();
+
+    private final Queue<Arc> updates = new PriorityQueue<>(Updater::arcComparator);
+
     private final Vertex highestVertex;
     private final IndexGraphLoader indexLoader;
 
@@ -23,40 +25,38 @@ public class Updater {
         this.transaction = transaction;
         indexLoader = new IndexGraphLoader(path);
         highestVertex = indexLoader.load();
-        this.updates.addAll(scanNeo(transaction));
+        this.updates.addAll(scanNeo(transaction, indexLoader));
     }
 
-    private static Set<Update> scanNeo(Transaction transaction) {
-        final Set<Update> updates = new HashSet<>();
-        transaction.findRelationships(() -> "ROAD").forEachRemaining(r -> {
-            final double cost = getDoubleProperty(r, "cost");
-            final double indexCost = getDoubleProperty(r, LAST_CCH_COST_WHILE_INDEXING);
-            if (cost != indexCost) {
-                final int fromRank = (int) getLongProperty(r.getStartNode(), "ROAD_rank");
-                final int toRank = (int) getLongProperty(r.getEndNode(), "ROAD_rank");
-                updates.add(new Update(fromRank, toRank, cost, indexCost));
-            }
-        });
+    private static Set<Arc> scanNeo(Transaction transaction, IndexGraphLoader indexLoader) {
+        final Set<Arc> updates = new HashSet<>();
+        Iterable<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream()::iterator;
+        for (Relationship relationship : relationships) if (relationship.hasProperty("changed")) {
+            relationship.removeProperty("changed");
+            final int fromRank = (int) getLongProperty(relationship.getStartNode(), "ROAD_rank");
+            final int toRank = (int) getLongProperty(relationship.getEndNode(), "ROAD_rank");
+            updates.add(indexLoader.getArc(fromRank, toRank));
+        }
         return updates;
     }
 
     public Vertex update() {
         while (!updates.isEmpty()) {
-            final Update update = updates.poll();
-            final Arc arc = indexLoader.getArc(update.fromRank(), update.toRank());
+            final Arc arc = updates.poll();
             final TriangleBuilder triangleBuilder = new TriangleBuilder(arc);
-            final double newWeight = getNewWeight(update, triangleBuilder.lower());
-            if (weightHasChanged(update, newWeight)) {
+            final double newWeight = getNewWeight(arc, triangleBuilder.lower());
+            if (weightHasChanged(arc, newWeight)) {
+                float oldWeight = arc.weight;
                 updateWeight(arc, newWeight);
-                checkTriangles(update, newWeight, triangleBuilder.upper());
-                checkTriangles(update, newWeight, triangleBuilder.intermediate());
+                checkTriangles(oldWeight, triangleBuilder.upper());
+                checkTriangles(oldWeight, triangleBuilder.intermediate());
             }
         }
         return highestVertex;
     }
 
-    private static boolean weightHasChanged(Update update, double newWeight) {
-        return newWeight != update.oldIndexWeight();
+    private static boolean weightHasChanged(Arc arc, double newWeight) {
+        return arc.weight != newWeight;
     }
 
     private void updateWeight(Arc arc, double newWeight) {
@@ -65,31 +65,30 @@ public class Updater {
                 .ifPresent(r -> r.setProperty(LAST_CCH_COST_WHILE_INDEXING, (float) newWeight));
     }
 
-    private void checkTriangles(Update update, double newWeight, Collection<Triangle> triangles) {
+    private void checkTriangles(double oldWeight, Collection<Triangle> triangles) {
         for (final Triangle triangle : triangles) {
-            if (arcWeightCouldRelyOnTriangle(triangle, update)) {
-                double newWeightCandidate = triangle.b().weight + newWeight;
-                updates.offer(new Update(triangle, newWeightCandidate, triangle.c().weight));
+            if (arcWeightCouldRelyOnTriangle(triangle, oldWeight)) {
+                updates.offer(indexLoader.getArc(triangle.c().start.rank, triangle.c().end.rank));
             }
         }
     }
 
-    private static boolean arcWeightCouldRelyOnTriangle(Triangle triangle, Update update) {
-        return triangle.c().weight == triangle.b().weight + update.oldIndexWeight();
+    private static boolean arcWeightCouldRelyOnTriangle(Triangle triangle, double oldWeight) {
+        return triangle.c().weight == triangle.b().weight + oldWeight;
     }
 
-    private double getNewWeight(Update update, Collection<Triangle> lowerTriangles) {
-        double newWeight = Math.min(update.newWeightCandidate(), inputGraphWeight(update));
+    private double getNewWeight(Arc arc, Collection<Triangle> lowerTriangles) {
+        double newWeight = inputGraphWeight(arc);
         for (Triangle lowerTriangle : lowerTriangles) newWeight = Math.min(newWeight, lowerTriangle.weight());
         return newWeight;
     }
 
-    private double inputGraphWeight(Update update) {
+    private double inputGraphWeight(Arc update) {
         return getRelationship(update).map(r -> getDoubleProperty(r, "cost")).orElse(Double.MAX_VALUE);
     }
 
-    private Optional<Relationship> getRelationship(Update update) {
-        return getRelationship(update.fromRank(), update.toRank());
+    private Optional<Relationship> getRelationship(Arc update) {
+        return getRelationship(update.start.rank, update.end.rank);
     }
 
     private Optional<Relationship> getRelationship(int fromRank, int toRank) {
@@ -98,5 +97,9 @@ public class Updater {
                 .getRelationships(Direction.OUTGOING, () -> "ROAD").stream()
                 .filter(r -> getLongProperty(r.getEndNode(), "ROAD_rank") == toRank)
                 .findFirst();
+    }
+
+    private static int arcComparator(Arc o1, Arc o2) {
+        return Integer.compare(Math.min(o1.start.rank, o2.start.rank), Math.min(o1.end.rank, o2.end.rank));
     }
 }

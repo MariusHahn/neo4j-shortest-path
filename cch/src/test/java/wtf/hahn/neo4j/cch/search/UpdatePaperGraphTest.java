@@ -101,12 +101,13 @@ public class UpdatePaperGraphTest extends IntegrationTest {
                 double current = getDoubleProperty(relationship, "cost");
                 double newWeight = current * 2;
                 relationship.setProperty("cost", newWeight);
+                relationship.setProperty("changed", true);
                 Long fromRank = getProperty(relationship.getStartNode(), "ROAD_rank");
                 Long toRank = getProperty(relationship.getEndNode(), "ROAD_rank");
                 System.out.printf("(%d)-[%.2f]->(%d)%n", fromRank, newWeight, toRank);
-                Updater updater = new Updater(transaction, path);
-                setupPaperGraphTest(updater.update(), path);
             }
+            Updater updater = new Updater(transaction, path);
+            setupPaperGraphTest(updater.update(), path);
             try (DiskChDijkstra diskChDijkstra = new DiskChDijkstra(path)) {
                 x().forEach(arguments -> {
                     int i = (int) arguments.get()[0];

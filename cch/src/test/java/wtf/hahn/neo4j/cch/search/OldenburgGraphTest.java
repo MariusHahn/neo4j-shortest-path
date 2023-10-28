@@ -137,28 +137,30 @@ public class OldenburgGraphTest extends IntegrationTest {
     }
     @Test
     void randomChangeTest() {
-        try (Transaction transaction = database().beginTx()) {
-            List<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream().collect(Collectors.toList());
-            Collections.shuffle(relationships);
-            for (int i = 0; i < 10; i++) {
-                Relationship relationship = relationships.get(i);
-                double current = getDoubleProperty(relationship, "cost");
-                if (i % 2 == 0) relationship.setProperty("cost", current / 2);
-                else relationship.setProperty("cost", current * 2);
-                Updater updater = new Updater(transaction, tempPath);
-                setupPaperGraphTest(updater.update(), tempPath);
-            }
+        Transaction transaction = database().beginTx();
 
+        // When
+        List<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream().collect(Collectors.toList());
+        Collections.shuffle(relationships);
+        for (int i = 0; i < 10; i++) {
+            Relationship relationship = relationships.get(i);
+            double current = getDoubleProperty(relationship, "cost");
+            if (i % 2 == 0) relationship.setProperty("cost", current / 2);
+            else relationship.setProperty("cost", current * 2);
+            relationship.setProperty("changed", true);
         }
 
-        Stream<Arguments> argumentsStream = randomSourceTarget();
+        //Then
+        Updater updater = new Updater(transaction, tempPath);
+        setupPaperGraphTest(updater.update(), tempPath);
+
+        //Assert That
         AtomicLong overAll = new AtomicLong(0);
         AtomicInteger denominator = new AtomicInteger(0);
         FifoBuffer outBuffer = new FifoBuffer(18000, Mode.OUT, tempPath);
         FifoBuffer inBuffer = new FifoBuffer(18000, Mode.IN, tempPath);
-        try (Transaction transaction = database().beginTx();
-             DiskChDijkstra diskChDijkstra = new DiskChDijkstra(outBuffer, inBuffer)) {
-            argumentsStream.forEach(arg -> {
+        try (DiskChDijkstra diskChDijkstra = new DiskChDijkstra(outBuffer, inBuffer)) {
+            randomSourceTarget().forEach(arg -> {
                 int start = (int) arg.get()[0];
                 int goal = (int) arg.get()[1];
                 Node s = transaction.findNode(LABEL, "ROAD_rank", start);
@@ -174,7 +176,7 @@ public class OldenburgGraphTest extends IntegrationTest {
                         System.out.println(PathUtils.toRankString(weightedPath));
                         System.out.println(SearchVertexPaths.toString(cchPath));
                     }
-                    //Assertions.assertEquals(weightedPath.weight(), cchPath.weight());
+                    Assertions.assertEquals(weightedPath.weight(), cchPath.weight());
                 }
             });
             double avg = overAll.doubleValue() / denominator.doubleValue();
