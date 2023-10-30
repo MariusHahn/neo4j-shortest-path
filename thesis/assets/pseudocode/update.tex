@@ -1,0 +1,29 @@
+\begin{algorithm}
+    \caption{Update}
+    \begin{algorithmic}[1]
+    
+    \Procedure{update()}{$G$}
+    \State $\text{Q} \gets$ $G'.updatedEdges(G)$; 
+    \While{$Q \neq \emptyset $}
+        \State $a \gets Q.poll()$; 
+        \State $oldWeight \gets w(a)$
+        \State $newWeight \gets determineNewWeight(a)$
+        \If{$oldWeight != newWeight$}
+            \State $w(a) \gets newWeight$
+            \State $checkTriangles(Q, oldWeight, upperTriangles(a))$
+            \State $checkTriangles(Q, oldWeight, intermediateTriangles(a))$
+        \EndIf
+    \EndWhile
+    \EndProcedure
+
+    \Procedure{checkTriangles}{$Q, oldWeight, triangles$}
+    \ForAll{$triangle$ in $triangles$}
+        \If{$triangles.c() == triangle.b() + oldWeight$}
+            \State{Q.push(triangle.c())}
+        \EndIf
+    \EndFor
+    \State \textbf{return} $\text{triangles}$
+    \EndProcedure
+        
+    \end{algorithmic}
+\end{algorithm}

@@ -2,49 +2,29 @@
     \caption{Compute Triangles}
     \begin{algorithmic}[1]
     
-    \Procedure{lowerTriangles}{$arc, neighbors$}
+    \Procedure{updateTriangles}{$arc, neighbors, predicate$}
     \State $\text{triangles} \gets$ \{\}; 
     $\text{x} \gets$ min(arc.start, arc.end);
     $\text{y} \gets$ max(arc.start, arc.end);
     \ForAll{$z$ in $neighbors$}
-        \If{$z < x < y$}
+        \If{$predicate$}
             \If{$\text{upwards}(arc)$}
-                 $\text{triangles.add}(\text{Triangle}(arc, x.\text{getArcTo}(z), z.\text{getArcTo}(y)))$
-            \Else  $\text{ triangles.add}(\text{Triangle}(arc, z.\text{getArcTo}(x), y.\text{getArcTo}(z)))$
+                 $\text{triangles.add}(\text{Triangle}(a(x,y), a(z, x), a(z,y)))$
+            \Else  $\text{ triangles.add}(\text{Triangle}(a(x,y), a(x,z), a(y,z)))$
             \EndIf
         \EndIf
     \EndFor
     \State \textbf{return} $\text{triangles}$
     \EndProcedure
     
-    \Procedure{intermediateTriangles}{$arc, neighbors$}
-    \State $\text{triangles} \gets$ \{\};
-    $\text{x} \gets$ min(arc.start, arc.end);
-    $\text{y} \gets$ max(arc.start, arc.end);
-    \ForAll{$z$ in $neighbors$}
-        \If{$x < z < y$}
-            \If{$\text{upwards}(arc)$}
-                 $\text{triangles.add}(\text{Triangle}(arc, z.\text{getArcTo}(x), z.\text{getArcTo}(y)))$
-            \Else  $\text{ triangles.add}(\text{Triangle}(arc, x.\text{getArcTo}(z), y.\text{getArcTo}(z)))$
-            \EndIf
-        \EndIf
-    \EndFor
-    \State \textbf{return} $\text{triangles}$
+    \Procedure{intermediateTriangles}{$arc$}
+    \State $\text{neighbors} \gets$ $N_\uparrow(arc.start) \cap N_\downarrow(arc.end)$
+    \State \textbf{return} $\text{updateTriangles(arc, neighbors, x < z < y )}$
     \EndProcedure
     
     \Procedure{upperTriangles}{$arc, neighbors$}
-    \State $\text{triangles} \gets$ \{\};
-    $\text{x} \gets$ min(arc.start, arc.end);
-    $\text{y} \gets$ max(arc.start, arc.end);
-    \ForAll{$z$ in $neighbors$}
-        \If{$x < y < z$}
-            \If{$\text{upwards}(arc)$}
-                 $\text{triangles.add}(\text{Triangle}(arc, z.\text{getArcTo}(x), z.\text{getArcTo}(y)))$
-            \Else  $\text{ triangles.add}(\text{Triangle}(arc, x.\text{getArcTo}(z), y.\text{getArcTo}(z)))$
-            \EndIf
-        \EndIf
-    \EndFor
-    \State \textbf{return} $\text{triangles}$
+    \State $\text{neighbors} \gets$ $N_\uparrow(arc.start) \cap N_\downarrow(arc.end)$
+    \State \textbf{return} $\text{updateTriangles(arc, neighbors, x < y < z )}$
     \EndProcedure
     
     \end{algorithmic}

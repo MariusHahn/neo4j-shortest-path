@@ -94,16 +94,60 @@ investigate any further in this direction.
 
 \section{Vertex importance}\label{sec:vertex_importance}
 
-As shown in section \ref{sec:not_contracted_last} and \ref{sec:linear_query} using only the $ED$ as a metric to determine which vertex to contract next is not sufficient to get a suitable
+As shown in section \ref{sec:not_contracted_last} and \ref{sec:linear_query} there are nodes that are more important that other nodes. Contracting these nodes late is key to get a efficient search later on. 
 
-\section{Perfect Customization}
+\subsection{Suitability of CCH}
 
-\begin{figure}
-    \centering
-    \input{assets/tikz/PerfectCustomization.tex}
-    \caption{Disk Block}
-    \label{fig:perfectCustomization}
-\end{figure}
+As it is important to contract important nodes last, the advantage one gets making a CCH search over a simple dijkstra run depends whether the base graph $G(V, E)$ has nodes that are more important. 
+A vertex $v \epsilon E$ is important if there a many shortest paths that contain this very node. Therefore if it is possible to calculate a small balanced separator on $G$, CCH will be able to show its 
+whole advantage. To dive deeper into this topic, have a look at \cite[Lower Bounds and Approximation Algorithms for Search Space Sizes in Contraction Hierarchies]{BlumStorandt}.
+
+\subsection{Metric dependent Importance}
+
+As we shown above using only the edge difference $ED$ doesn't gives necessary gives we decided to take the vertex importance calculation that is propose by \cite[Customization Contraction Hierarchies]{CCH}. To every 
+vertex we add the property $l(v)$, the the level of the vertex with is initially set to $0$. If a neighbor $N(w),  w \epsilon V$ is contracted level is set to $l(v) = max\{l(v)+1, l(w)\}$. For every arc $e \epsilon E'$
+we add a the hop length to the arc. The hop length is equals the number of arcs, that very arc represent when fully unpacked. Additionally, we denote $A(v)$ the set of inserted arcs after the contraction
+of $v$ and $D(v)$ the set of removed arcs. We calculate the importance $i(v)$ as follows:
+
+\begin{equation*}
+    i(v) = l(v) + \frac{|A(v)|}{|D(v)|} + \frac{\sum_{a \epsilon A(v)} h(a)}{\sum_{a \epsilon D(v)} h(a)} 
+\end{equation*}
+
+Our tests show that this importance calculation result in slightly increase in the amount of shortcuts added, but the maximum Vertex degree is smaller. Which speeds up the contraction process towards the end. Additionally
+the average search time decreases as the search space decreases too. 
+
+% \section{Perfect Customization}
+% 
+% \begin{figure}
+    % \centering
+    % \input{assets/tikz/PerfectCustomization.tex}
+    % \caption{Perfect Customization}
+    % \label{fig:perfectCustomization}
+% \end{figure}
 
 Here is an example why perfect customization is necessary to get the full
 benefit of CCH.
+
+\section{Update CCH}
+
+\input{assets/pseudocode/update.tex}
+
+
+The biggest advantage of CCH over CH is, that it is easy to update without the need of changing the topological structure of the index graph. This is the reason why CCH can be interesting for graph databases.
+If an arcs $w(a(x, y))$ weight increases or decreases this can result in a weight change on arcs that connect vertices of higher rank than $x, y$. We determine all arcs of the input graph $G$ that have been changed 
+and push them to a priority queue. The always pops the the arc $a(x,y)$ with the lowest rank of the start vertex $x$. If there are multiple it pops the one with the lowest rank of $y$ among these. Then we determine 
+the new weight of the arc a using the lower triangles. If there is a lower triangle that can be used a pass through such that the arc weight in $G'$ does not change we do nothing. If the weight of the arc has changed
+we assign the new weight to the arc. Then we check all upper triangles, as drawn in figure \ref{fig:updateTriangles}, of $a(x,y)$ if there is an upper arc that is influenced by this very change. If it is influenced by this
+change we push it to the priority queue. We do the same with all intermediate triangles. 
+\\
+
+
+\begin{figure}
+    \centering
+    \input{assets/tikz/updateTriangles.tex}
+    \caption{Update Triangles}
+    \label{fig:updateTriangles}
+\end{figure}
+
+
+\input{assets/pseudocode/computeTriangles.tex}

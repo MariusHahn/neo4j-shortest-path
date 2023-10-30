@@ -1,0 +1,46 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+
+    \node[rotate=90] at (-0.25,0) {rank};
+    \draw [ -Stealth]  (0,-2) -- (0,2);
+
+
+    \node[] at (3,3) {Intermediate Triangles};
+    
+    \node[main] (z2) at (1, 0) {$z$}; 
+    \node[main] (x2) [below right of=z2] {$x$};
+    \node[main] (y2) [right of=z2, above of=z2] {$y$}; 
+    \draw[ -Stealth] (z2) -- node[above left, sloped] {$c$} (y2);
+    \draw[ -Stealth] (z2) -- node[below left, sloped, pos=0.8] {$b$} (x2);
+    \draw[ -Stealth] (x2) -- node[below left, sloped] {$a$} (y2);
+    \node[] at (2,-2) {$c_\uparrow = a_\uparrow + b_\downarrow $};
+    
+    \node[main] (z21) at (4, 0) {$z$}; 
+    \node[main] (x21) [below right of=z21] {$x$};
+    \node[main] (y21) [right of=z21, above of=z21] {$y$}; 
+    \draw[ -Stealth] (y21) -- node[above , sloped] {$c$} (z21) ;
+    \draw[ -Stealth] (x21) -- node[below right, sloped, pos=0.8] {$b$} (z21);
+    \draw[ -Stealth] (y21) -- node[below left, sloped] {$a$} (x21);
+    \node[] at (5,-2) {$c_\downarrow = a_\downarrow + b_\uparrow $};
+
+
+
+
+    \node[] at (11,3) {Upper Triangles};
+    
+    \node[main] (y3) at (9, 0) {$y$}; 
+    \node[main] (x3) [below right of=y3] {$x$};
+    \node[main] (z3) [right of=y3, above of=y3] {$z$}; 
+    \draw[ -Stealth] (z3) -- node[above , sloped] {$c$} (y3);
+    \draw[ -Stealth] (x3) -- node[below right, sloped, pos=0.8] {$a$} (y3);
+    \draw[ -Stealth] (z3) -- node[below left, sloped] {$b$} (x3);
+    \node[] at (10,-2) {$c_\downarrow = a_\uparrow + b_\downarrow$};
+
+    \node[main] (y3) at (12, 0) {$y$}; 
+    \node[main] (x3) [below right of=y3] {$x$};
+    \node[main] (z3) [right of=y3, above of=y3] {$z$}; 
+    \draw[ -Stealth] (y3) -- node[above left, sloped] {$c$} (z3);
+    \draw[ -Stealth] (y3) -- node[below left, sloped, pos=0.8] {$a$} (x3);
+    \draw[ -Stealth] (x3) -- node[below left, sloped] {$b$} (z3);
+    \node[] at (13,-2) {$c_\uparrow = a_\downarrow + b_\uparrow$};
+
+\end{tikzpicture}
