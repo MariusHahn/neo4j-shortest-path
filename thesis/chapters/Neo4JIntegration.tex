@@ -8,6 +8,15 @@ The index graph data structure is neither a adjacency list nor adjacency matrix.
 A disadvantage of this model could be that some modern hardware optimization that exist for arrays do not match with this data structure. When using an array, the values this array are stored sequentially in main memory. When one value of an array is accessed by the CPU, modern hardware reads subsequent values into the CPU-cache because it is likely that they are accessed right after it. The model of the index graph is a linked data structure, a bit like a linked list. The elements of an linked list are contained somewhere in main memory. There is no guarantee that subsequent values have any spacial proximity. Therefore the just explained hardware optimization will not give any advantage. \\ % cite some paper to this topic
 However, this makes the makes the graph traversal easy. Additional it makes it very efficient to explore the neighborhood of a vertex. There is no array traversal to find a vertex and only one hash table lookup for finding an arc of a vertex. Additionally these hash tables only contain few elements. This makes this data structure efficient anyway. Test on small graphs [Oldenburg] show that cch queries can be answered in less than one millisecond, which is close to what we tested with the original cch application.
 
+\section{The mapping}
+
+\begin{figure}
+    \centering
+    \input{assets/tikz/neoToDiskMapping.tex}
+    \caption{mapping}
+    \label{fig:mapping}
+\end{figure}
+
 \section{The Contraction}
 
 \section{How to Store the Index Graph}
