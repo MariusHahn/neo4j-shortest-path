@@ -1,4 +1,30 @@
 \begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+    
+    \draw (-7,6) rectangle (-1,7);
+    \draw (-5.5,6) -- (-5.5,7);
+    \draw (-4,6) -- (-4,7);
+    \draw (-2.5,6) -- (-2.5,7);
+    \node at (-6.25, 6.5) {from};
+    \node at (-4.75, 6.5) {to};
+    \node at (-3.25, 6.5) {middle};
+    \node at (-1.75, 6.5) {weight};
+
+    \draw [decorate,decoration = {brace, amplitude=5pt}] (-7,7.1) --  (-5.5,7.1);
+    \draw [decorate,decoration = {brace, amplitude=5pt}] (-5.5,7.1) --  (-4,7.1);
+    \draw [decorate,decoration = {brace, amplitude=5pt}] (-4,7.1) --  (-2.5,7.1);
+    \draw [decorate,decoration = {brace, amplitude=5pt}] (-2.5,7.1) --  (-1,7.1);
+    \node at (-6.25, 7.5) {32b int};
+    \node at (-4.75, 7.5) {32b int};
+    \node at (-3.25, 7.5) {32b int};
+    \node at (-1.75, 7.5) {32b float};
+
+    \draw [decorate,decoration = {brace, amplitude=5pt}] (-1,5.9) --  (-7, 5.9);
+    \node at (-4, 5.5) {16 Byte Record};
+
+    \draw[dashed, -Stealth] (-1,7) -- (0, 6.7);
+    \draw[dashed, -Stealth] (-1,6) -- (0, 6.3);
+    
+    
     \draw (0,7) -- (4,7);
     \draw[dashed] (0,6) -- (4,6);
     \draw[dashed] (0,5) -- (4,5);
@@ -13,6 +39,7 @@
     \node at (2, 6.5) {record};
     \node at (2, 5.5) {record};
     \node[rotate=90, font=\Large] at (2, 4) {. . . . .};
-    \node[rotate=90] at (-0.85, 5) {disk block};
-    \draw [decorate,decoration = {brace, amplitude=10pt}] (-0.2,3) --  (-0.2,7);
+    
+    \node[rotate=-90] at (5.85, 5) {disk block};
+    \draw [decorate,decoration = {brace, amplitude=10pt}] (5.2,7) --  (5.2,3);
 \end{tikzpicture}
