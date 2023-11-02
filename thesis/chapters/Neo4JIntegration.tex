@@ -53,7 +53,7 @@ As the disk arc are later on is used for the CCH search, we want to sequentially
 and $\bigcirc A_\downarrow$ we do a simple depth first search on all ingoing arcs on the target rank to determine the order for $\bigcirc A_\uparrow$. We do the same for all outgoing arcs on the source rank to determine the order for $\bigcirc A_\downarrow$.
 There is one file for storing all upward arc and on file storing all downward arcs. Each of this files has a position file that belongs to it, as shown in figure \ref{fig:position_file}. After every vertex that is expanded, all its arcs are pushed to a buffer of size disk block. If the buffer is full or the number of arcs doesn't fit anymore,
 the buffer is flushed to the current position in the arc file and the file position is incremented by $1$. The store position is saved in the position file of the arc file, such that we can find the arcs back later on. If the buffer wasn't complete full all remaining arc slots are filled with dummy arcs that contain only $-1$ at every property.
-Therefore if one wants to get all upwards arcs of rank $i$ one need take  the upwards position file, retrieve the integer $j$ that is stored at index $i$, and then read the complete block $j$ in the upwards arc file.
+
 
 \begin{figure}
     \centering
@@ -64,7 +64,24 @@ Therefore if one wants to get all upwards arcs of rank $i$ one need take  the up
 
 \section{Reading Disk Arcs}
 
-When after reading 
+If one wants to get all upwards arcs of rank $i$ one need take  the upwards position file, retrieve the integer $j$ that is stored at index $i$, and then read the complete block $j$ in the upwards arc file. There
+There one will get an array, contain the requested arcs but also some other. These arcs are likely to be request next. Therefore we want to keep them in memory. We implemented two buffer a \textit{circular buffer} and a \textit{least recently used buffer} LRU
+
+\subsection{Circular Buffer}
+
+For the circular buffer we simply used an array of disk arcs. If we reach the end of the buffer we restart overwriting the values from the array start. To get the all arcs of a rank one request that rank number. There is a position hash table which tells the start position of that rank inside the buffer. If it is missing, the containing disk block is read to the buffer. It 
+continues to read sequentially until the request rank and the read arc doesn't belong together anymore. This buffer has the advantage that we can exactly determine the amount of arcs we buffering. Also as it is just a simple array, it will be easy for the operation system to cache it.
+The disadvantage is that it is possible that we request arc sets very often as it is possible they get evicted just before request again.
+
+\subsection{Least Recently Used Buffer}
+
+Cache is a \textit{java.util.LinkedHashMap}. This class provides the possibility to evicted the entry that has been requested longest time ago. In our case it maps ranks to sets of disk arcs. We can only determine how many 
+disk arc sets we have in memory and disk arc sets do not have always the same size. Higher rank vertex usually have bigger sets as they are of higher degree. The advantage is, it is very easy to implement and therefore very 
+resilient to programming errors.
+
+\section{The Search}
+
+The search brings all things explained in this chapter together. 
 
 %\begin{figure}
 %    \centering
