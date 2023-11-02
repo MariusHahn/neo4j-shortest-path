@@ -83,6 +83,14 @@ resilient to programming errors.
 
 The search brings all things explained in this chapter together. 
 
+At the beginning there are to index graphs initialized the upwards graph $G_\uparrow'(V_\uparrow, A_\uparrow)$ and the downwards graph $G_\downarrow'(V_\downarrow, A_\downarrow)$. We are looking for the shortest
+path from the source vertex $v(s)$ to the target vertex $v(t)$. The vertex set $V_\uparrow$ of the upwards graph $G_\uparrow'(V, A_\uparrow)$ only contains one vertex $v(s)$ and the $A_\uparrow$ only contains 
+the upward edges to $v(s)$. The vertex set $V_\downarrow$ of the downwards graph $G_\downarrow'(V_\downarrow, A_\downarrow)$ only contains the $v(t)$ and the edge set $A_\downarrow$ only contain the arcs to $v(t)$.
+\\
+Now both $G_\uparrow'$ and $G_\uparrow'$ are alternatingly expanded with CH-Dijkstra. When the CH-Dijkstra has decided which vertex to expand next, the buffer will be requested to load its neighborhood. This can be 
+compared to Command \& Conquer or a lot of other strategy  real-time strategy video games where you start at a map that is almost completely grey and the map is only load to the position you are plus some padding.
+The rest is just a plain CH-Search where we stop after we determined the correct shortest path.
+
 %\begin{figure}
 %    \centering
 %    \input{assets/tikz/CircularBuffer.tex}
