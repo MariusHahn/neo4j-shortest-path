@@ -1,8 +1,8 @@
 \begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
  
-    \node[main, align=center] (x3) at (0,4) {id:23  \\ props:\{\\rank:3,\\…\}};
-    \node[main, align=center] (x2) at (12,2) {id:22  \\ props:\{\\rank:2,\\…\}};
-    \node[main, align=center] (x1) at (6, 0) {id:21  \\ props:\{\\rank:1,\\…\}};
+    \node[main, align=center] (x3) at (0,4) {id:23, labels:\{\\Location,…\}, \\props:\{\\rank:3,…\}};
+    \node[main, align=center] (x2) at (12,2) {id:22, labels:\{\\Location,…\}, \\ props:\{\\rank:2,…\}};
+    \node[main, align=center] (x1) at (6, 0) {id:21, labels:\{\\Location,…\},  \\ props:\{\\rank:1,…\}};
     
     \draw[ -Stealth] (x2) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ weight:1.0}(x1);
     \draw[ -Stealth] (x1) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ weight:1.0} (x3);
@@ -20,9 +20,9 @@
     \draw (7.5,-2) -- (7.5,-4);
     \draw (10,-2) -- (10,-4);
 
-    \node[align=center] at (1.25, -2.25) {\textbf{from}};
-    \node[align=center] at (3.75, -2.25) {\textbf{to}};
-    \node[align=center] at (6.25, -2.25) {\textbf{middle}};
+    \node[align=center] at (1.25, -2.25) {\textbf{start rank}};
+    \node[align=center] at (3.75, -2.25) {\textbf{end rank}};
+    \node[align=center] at (6.25, -2.25) {\textbf{middle rank}};
     \node[align=center] at (8.75, -2.25) {\textbf{weight}};
 
     \node[align=center] at (1.25, -2.75) {2};

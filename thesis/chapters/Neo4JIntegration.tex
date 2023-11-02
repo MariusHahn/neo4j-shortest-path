@@ -2,13 +2,27 @@
 
 In this section it is described how "Customizable Contraction Hierarchies" CCH is integrated into Neo4j. CCH arguments the input graph, which means it inserts arcs, so called shortcuts, that do not belong to the original data. To keep the change to the input graphs as little as possible we decided to not insert any arc into the graph that is stored inside the neo4j database, but introduce another graph data structure, the index graph. This index graph has an mapping to the input graph that is held by the database, by inserting two properties into the node of the input graph. The \textit{rank} this vertex has in the index graph and the \textit{indexing weight} it had during the last customization process. This gives yet another two advantages. One is that we get full control about the graph representation which is helpful to efficiently store and read the index graph for the disk. Another is that the with this approach it makes it easier to later on port the idea to another graph database manufactures.
 
-\section{Index Graph Data Structure}
+\section{Index Graph Data Structure}\label{sec:index_graph}
 
 The index graph data structure is neither a adjacency list nor adjacency matrix. There is a vertex object that has two hash tables. One for incoming arc and one for outgoing arcs. The hash tables keys are of type vertex and the value is the arc. An arc has a reference to its start vertex and one to its end vertex. \\
 A disadvantage of this model could be that some modern hardware optimization that exist for arrays do not match with this data structure. When using an array, the values this array are stored sequentially in main memory. When one value of an array is accessed by the CPU, modern hardware reads subsequent values into the CPU-cache because it is likely that they are accessed right after it. The model of the index graph is a linked data structure, a bit like a linked list. The elements of an linked list are contained somewhere in main memory. There is no guarantee that subsequent values have any spacial proximity. Therefore the just explained hardware optimization will not give any advantage. \\ % cite some paper to this topic
 However, this makes the makes the graph traversal easy. Additional it makes it very efficient to explore the neighborhood of a vertex. There is no array traversal to find a vertex and only one hash table lookup for finding an arc of a vertex. Additionally these hash tables only contain few elements. This makes this data structure efficient anyway. Test on small graphs [Oldenburg] show that cch queries can be answered in less than one millisecond, which is close to what we tested with the original cch application.
 
-\section{The mapping}
+\section{The Mapping}\label{sec:mapping}
+
+The in memory data structure of neo4j is similar to the just explained index graph data structure in section \ref{sec:index_graph}. A \textit{node} has a collection of \textit{relationships} and a \textit{relationship} has a reference to its \textit{start node} and \textit{end node}.
+As neo4j is a full blown property graph nodes and relationship contain a lot of other information. A node has a collection of \textit{labels}, relationship has a \textit{type}. The class \textit{Node} and the class \textit{Relationship} 
+are both derived from the class \textit{Entity} which also has a collection of properties as well as and id that is managed by the database system. Note that, as of version Neo4j 5.X, this id can change over time and should not be used to make mappings to external systems. Additionally 
+worth to mentioning here is that the Neo4j system shifted its id concept as it moved from major release 4 to 5. Until major release 4 every entity had a unique integer identifier. Since major release 5 every entity has a string identifier which is a UUID and the old \textit{id} identifier
+isn't guaranteed to be unique anymore. It is deprecated and marked for removal.
+\\
+As just explained there are lot of information in this data structure. A lot of information we don't need. Looking at \ref{fig:mapping} we only want to keep track of the information that is needed for the CCH index. Additionally as disks are
+divided  into blocks and sectors we want to flatten the graph which is in memory more looks like a tree to a structure that looks like a table. Therefore we decided that the disk data structure only consists of edges $\bigcirc A$. A disk edge $a \epsilon \bigcirc A$ consists of four values, 
+the \textit{start rank}, the \textit{end rank}, the \textit{start rank} and the \textit{weight} . The middle node is set $-1$ in case that this arc, is an arc of the input graph. We will get two edge sets $\bigcirc A_\downarrow$ for the downwards graph and $\bigcirc A_\uparrow $ upwards graph.
+$\bigcirc A_\downarrow$ contains all downward edge that which are needed for the backward search and $\bigcirc A_\uparrow$ contains all upwards arcs that are needed for the forward search.
+\\
+During the the contraction every node gets a rank assigned. This rank is the only change that is made to the Neo4j data structure and its the mapping identifier between the input graph $G$ and the index graph $G'$. $G'$ will then be used to generate $\bigcirc A_\downarrow$ and $\bigcirc A_\uparrow$.
+
 
 \begin{figure}
     \centering
@@ -17,9 +31,14 @@ However, this makes the makes the graph traversal easy. Additional it makes it v
     \label{fig:mapping}
 \end{figure}
 
-\section{The Contraction}
-
 \section{How to Store the Index Graph}
+
+After generating the disk arc sets $\bigcirc A_\downarrow$ and $\bigcirc A_\uparrow$, we now want to store them as efficiently as possible to the disk. To refine the definition of a disk arc. It consist of four values \textit{start rank}, the \textit{end rank}, the \textit{start rank} and the \textit{weight}. The
+first three are 32 bit signed integer, which gives a maximum indexable amount of vertices for $2^{16}$. The last one, the arc \textit{weight} is a 32 bit floating point number. One could argue that 32 bit are not very precise, though our experiments we never had any imprecision problem. Furthermore, little imprecision
+would not cause a big problem, as the index graph is only needed to find the shortest path. The exact weight can later on be retrieved after the shortest path is resolved in $G$. 
+\\
+This 16 Byte disk collected to disk blocks, that have at least the size of one disk block on the systems hard drive, as usually the system will always read a complete disk block even if you request only 16 Byte of information. But it is possible to make blocks bigger than one disk block. This can be wanted if you have a big read cache,
+or even need it the highest outgoing or in ingoing arc degree exceed the $\frac{diskBlockSize}{16}$ as you will see in \ref{sec:persistanceOrder}.
 
 \begin{figure}
     \centering
@@ -28,9 +47,28 @@ However, this makes the makes the graph traversal easy. Additional it makes it v
     \label{fig:disk_block}
 \end{figure}
 
+\subsection{Persistance Order}\label{sec:persistanceOrder}
+
+As the disk arc are later on is used for the CCH search, we want to sequentially write them in a way that provides a high spatial proximity of vertices that are likely to get requested together. Here we will adopt the idea of \cite[Mobile Route Planning]{Sanders}. In the transformation form $G'$ to its disk arcs $\bigcirc A_\uparrow$ 
+and $\bigcirc A_\downarrow$ we do a simple depth first search on all ingoing arcs on the target rank to determine the order for $\bigcirc A_\uparrow$. We do the same for all outgoing arcs on the source rank to determine the order for $\bigcirc A_\downarrow$.
+There is one file for storing all upward arc and on file storing all downward arcs. Each of this files has a position file that belongs to it, as shown in figure \ref{fig:position_file}. After every vertex that is expanded, all its arcs are pushed to a buffer of size disk block. If the buffer is full or the number of arcs doesn't fit anymore,
+the buffer is flushed to the current position in the arc file and the file position is incremented by $1$. The store position is saved in the position file of the arc file, such that we can find the arcs back later on. If the buffer wasn't complete full all remaining arc slots are filled with dummy arcs that contain only $-1$ at every property.
+Therefore if one wants to get all upwards arcs of rank $i$ one need take  the upwards position file, retrieve the integer $j$ that is stored at index $i$, and then read the complete block $j$ in the upwards arc file.
+
 \begin{figure}
     \centering
-    \input{assets/tikz/CircularBuffer.tex}
-    \caption{Circular Buffer}
-    \label{fig:circular_buffer}
+    \input{assets/tikz/positionFile.tex}
+    \caption{Position File}
+    \label{fig:position_file}
 \end{figure}
+
+\section{Reading Disk Arcs}
+
+When after reading 
+
+%\begin{figure}
+%    \centering
+%    \input{assets/tikz/CircularBuffer.tex}
+%    \caption{Circular Buffer}
+%    \label{fig:circular_buffer}
+%\end{figure}
