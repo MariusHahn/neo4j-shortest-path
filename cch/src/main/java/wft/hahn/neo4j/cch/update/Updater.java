@@ -24,7 +24,6 @@ public class Updater {
         this.transaction = transaction;
         indexLoader = new IndexGraphLoader(path);
         highestVertex = indexLoader.load();
-        this.updates.addAll(scanNeo(transaction, indexLoader));
     }
 
     private static Set<Arc> scanNeo(Transaction transaction, IndexGraphLoader indexLoader) {
@@ -40,6 +39,7 @@ public class Updater {
     }
 
     public Vertex update() {
+        updates.addAll(scanNeo(transaction, indexLoader));
         while (!updates.isEmpty()) {
             final Arc arc = updates.poll();
             final TriangleBuilder triangleBuilder = new TriangleBuilder(arc);
@@ -62,7 +62,10 @@ public class Updater {
     }
 
     private static boolean arcWeightCouldRelyOnTriangle(Triangle triangle, double oldWeight) {
-        return triangle.c().weight == triangle.b().weight + oldWeight;
+        return triangle.c().weight == triangle.b().weight + oldWeight
+                || triangle.b().weight + triangle.a().weight < triangle.c().weight
+                //  triangle.c().weight <= triangle.b().weight + oldWeight
+                ;
     }
 
     private void updateArc(Arc arc, Collection<Triangle> lowerTriangles) {
