@@ -13,7 +13,6 @@ import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
 import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
 
 public class Updater {
-    public static final String LAST_CCH_COST_WHILE_INDEXING = "last_cch_cost_while_indexing";
     private final Transaction transaction;
 
     private final Queue<Arc> updates = new PriorityQueue<>(Updater::arcComparator);
@@ -44,25 +43,14 @@ public class Updater {
         while (!updates.isEmpty()) {
             final Arc arc = updates.poll();
             final TriangleBuilder triangleBuilder = new TriangleBuilder(arc);
-            final double newWeight = getNewWeight(arc, triangleBuilder.lower());
-            if (weightHasChanged(arc, newWeight)) {
-                float oldWeight = arc.weight;
-                updateWeight(arc, newWeight);
+            float oldWeight = arc.weight;
+            updateArc(arc, triangleBuilder.lower());
+            if (oldWeight != arc.weight) {
                 checkTriangles(oldWeight, triangleBuilder.upper());
                 checkTriangles(oldWeight, triangleBuilder.intermediate());
             }
         }
         return highestVertex;
-    }
-
-    private static boolean weightHasChanged(Arc arc, double newWeight) {
-        return arc.weight != newWeight;
-    }
-
-    private void updateWeight(Arc arc, double newWeight) {
-        arc.weight = (float) newWeight;
-        getRelationship(arc.start.rank, arc.end.rank)
-                .ifPresent(r -> r.setProperty(LAST_CCH_COST_WHILE_INDEXING, (float) newWeight));
     }
 
     private void checkTriangles(double oldWeight, Collection<Triangle> triangles) {
@@ -77,10 +65,18 @@ public class Updater {
         return triangle.c().weight == triangle.b().weight + oldWeight;
     }
 
-    private double getNewWeight(Arc arc, Collection<Triangle> lowerTriangles) {
-        double newWeight = inputGraphWeight(arc);
-        for (Triangle lowerTriangle : lowerTriangles) newWeight = Math.min(newWeight, lowerTriangle.weight());
-        return newWeight;
+    private void updateArc(Arc arc, Collection<Triangle> lowerTriangles) {
+        arc.weight = (float) inputGraphWeight(arc);
+        arc.middle = null;
+        arc.hopLength = 1;
+        for (Triangle lowerTriangle : lowerTriangles) {
+            final double lowerTriangleWeight = lowerTriangle.b().weight + lowerTriangle.c().weight;
+            if (lowerTriangleWeight < arc.weight) {
+                arc.weight = (float) lowerTriangleWeight;
+                arc.middle = lowerTriangle.middle();
+                arc.hopLength = lowerTriangle.b().hopLength + lowerTriangle.c().hopLength;
+            }
+        }
     }
 
     private double inputGraphWeight(Arc update) {

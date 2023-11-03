@@ -1,21 +1,14 @@
 package wft.hahn.neo4j.cch.model;
 
-import static wft.hahn.neo4j.cch.update.Updater.*;
-import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import wft.hahn.neo4j.cch.indexer.Shortcut;
 import wtf.hahn.neo4j.util.iterable.JoinIterable;
+
+import java.util.*;
+import java.util.function.Function;
+
+import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
 
 public class VertexLoader {
 
@@ -55,23 +48,7 @@ public class VertexLoader {
         transaction.getNodeByElementId(vertex.elementId).setProperty(rankPropertyName, rank);
     }
 
-    public void setIndexWeight(Shortcut shortcut) {
-        transaction.getNodeByElementId(shortcut.in().start.elementId).getRelationships()
-                .stream()
-                .filter(relationship -> relationship.getEndNode().getElementId().equals(shortcut.out().end.elementId))
-                .findFirst()
-                .ifPresent(r -> r.setProperty(LAST_CCH_COST_WHILE_INDEXING, shortcut.weight()));
-    }
-
-    public void setRemainingIndexWeight() {
-        for (Relationship relationship : getRelationships(types)) if (!relationship.hasProperty(LAST_CCH_COST_WHILE_INDEXING)) {
-            double cost = getDoubleProperty(relationship, costProperty);
-            relationship.setProperty(LAST_CCH_COST_WHILE_INDEXING, cost);
-        }
-    }
-
     public void commit() {
-        setRemainingIndexWeight();
         transaction.commit();
     }
 }

@@ -65,25 +65,24 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
     }
 
 
-    public ArcUpdateStatus addArc(Vertex other, float weight) {
+    public boolean addArc(Vertex other, float weight) {
         return addArc(other, null, weight, 1);
     }
 
-    public ArcUpdateStatus addArc(Vertex other, Vertex middle, float weight, int hopLength) {
+    public boolean addArc(Vertex other, Vertex middle, float weight, int hopLength) {
         if (!outArcs.containsKey(other)) {
             Arc arc = new Arc(this, other, weight, middle, hopLength);
             this.outArcs.put(other, arc);
             other.inArcs.put(this, arc);
-            return ArcUpdateStatus.CREATE;
+            return true;
         }
         if (weight < outArcs.get(other).weight) {
             Arc arc = outArcs.get(other);
             arc.weight = weight;
             arc.middle = middle;
             arc.hopLength = hopLength;
-            return ArcUpdateStatus.UPDATED;
         }
-        return ArcUpdateStatus.REJECTED;
+        return false;
     }
 
     @Override
@@ -125,5 +124,4 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
     public boolean smallerThan(Vertex o) {
         return compareTo(o) < 0;
     }
-    public enum ArcUpdateStatus {CREATE, UPDATED, REJECTED}
 }

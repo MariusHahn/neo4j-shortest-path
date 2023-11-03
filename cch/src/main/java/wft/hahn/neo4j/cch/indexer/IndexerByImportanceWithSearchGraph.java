@@ -1,18 +1,18 @@
 package wft.hahn.neo4j.cch.indexer;
 
-import static java.lang.Math.max;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedDeque;
-
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import wft.hahn.neo4j.cch.model.Arc;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.model.VertexLoader;
 import wtf.hahn.neo4j.util.LastInsertWinsPriorityQueue;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
+import static java.lang.Math.max;
 
 public final class IndexerByImportanceWithSearchGraph {
     private final RelationshipType type;
@@ -37,7 +37,7 @@ public final class IndexerByImportanceWithSearchGraph {
             vertexToContract.rank = rank;
             vertexLoader.setRankProperty(vertexToContract, rank++, type.name()+"_rank");
             for (Shortcut shortcut : poll.shortcuts) {
-                insertionCounter += createOrUpdateEdge(vertexToContract, shortcut, vertexLoader);
+                insertionCounter += createOrUpdateEdge(vertexToContract, shortcut);
             }
             updateNeighborsInQueue(queue, vertexToContract);
             maxDegree = max(maxDegree, vertexToContract.getDegree());
@@ -86,15 +86,10 @@ public final class IndexerByImportanceWithSearchGraph {
         return new Contraction(nodeToContract, edgeDifference, shortcuts);
     }
 
-    private static int createOrUpdateEdge(Vertex vertexToContract, Shortcut shortcut, VertexLoader loader) {
-        int edgeCreated = 0;
+    private static int createOrUpdateEdge(Vertex vertexToContract, Shortcut shortcut) {
         final Vertex from = shortcut.in().start;
         final Vertex to = shortcut.out().end;
-        Vertex.ArcUpdateStatus arcUpdateStatus = from.addArc(to, vertexToContract, shortcut.weight(), shortcut.hopLength());
-        switch (arcUpdateStatus) {
-            case CREATE -> edgeCreated++;
-            case UPDATED -> loader.setIndexWeight(shortcut);
-        }
-        return edgeCreated;
+        if (from.addArc(to, vertexToContract, shortcut.weight(), shortcut.hopLength())) return 1;
+        return 0;
     }
 }
