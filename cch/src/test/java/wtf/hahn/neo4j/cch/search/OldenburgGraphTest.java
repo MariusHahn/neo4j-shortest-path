@@ -142,7 +142,7 @@ public class OldenburgGraphTest extends IntegrationTest {
         // When
         List<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream().collect(Collectors.toList());
         Collections.shuffle(relationships);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < relationships.size(); i++) {
             Relationship relationship = relationships.get(i);
             double current = getDoubleProperty(relationship, "cost");
             if (i % 2 == 0) relationship.setProperty("cost", current / 2);

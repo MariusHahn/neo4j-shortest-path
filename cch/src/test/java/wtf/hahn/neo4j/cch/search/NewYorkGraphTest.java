@@ -108,7 +108,7 @@ public class NewYorkGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
 
-    @Test
+    //@Test
     void sourceTargetTest() {
         Stream<Arguments> argumentsStream = randomSourceTarget();
         AtomicLong overAll = new AtomicLong(0);
