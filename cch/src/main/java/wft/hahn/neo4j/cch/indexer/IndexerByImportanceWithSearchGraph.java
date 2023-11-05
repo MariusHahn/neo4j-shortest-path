@@ -18,6 +18,7 @@ public final class IndexerByImportanceWithSearchGraph {
     private final RelationshipType type;
     private final VertexLoader vertexLoader;
     private final LastInsertWinsPriorityQueue<QueueVertex> queue;
+    private final int size;
     private int insertionCounter = 0;
     private int rank = 0;
     private int maxDegree = 0;
@@ -27,11 +28,14 @@ public final class IndexerByImportanceWithSearchGraph {
         this.type = RelationshipType.withName(type);
         vertexLoader = new VertexLoader(transaction, costProperty, this.type);
         Set<Vertex> vertices = vertexLoader.loadAllVertices();
+        size = vertices.size();
         queue = new LastInsertWinsPriorityQueue<>(vertices.stream().map(v -> new QueueVertex(shortcutsToInsert(v))));
     }
 
     public Vertex insertShortcuts() {
+        long counter = 0;
         while (!queue.isEmpty()) {
+            if (counter++ % 1000 == 0) System.out.println(counter + " vertices contracted");
             final Contraction poll = shortcutsToInsert(queue.poll().vertex());
             vertexToContract = poll.vertexToContract;
             vertexToContract.rank = rank;

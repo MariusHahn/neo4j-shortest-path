@@ -15,6 +15,7 @@ import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.storage.DiskArc;
 import wft.hahn.neo4j.cch.storage.Mode;
 import wft.hahn.neo4j.cch.storage.StoreFunction;
+import wft.hahn.neo4j.cch.storage.Writer;
 
 public class IndexStoreFunctionTest {
 
@@ -71,7 +72,7 @@ public class IndexStoreFunctionTest {
         }
         List<DiskArc> edges = new LinkedList<>();
         try (RandomAccessFile outFile = new RandomAccessFile(tempPath.resolve("IN.cch").toFile(), "r")) {
-            ByteBuffer buffer = ByteBuffer.allocate(4096);
+            ByteBuffer buffer = ByteBuffer.allocate(Writer.DISK_BLOCK_SIZE);
             outFile.read(buffer.array());
             for (int i = 0; i < 4096; i=i+16) {
                 DiskArc edge = new DiskArc(buffer.getInt(i), buffer.getInt(i + 4), buffer.getInt(i + 8)

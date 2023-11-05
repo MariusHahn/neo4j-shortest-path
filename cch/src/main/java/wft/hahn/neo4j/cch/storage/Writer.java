@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 public abstract class Writer implements AutoCloseable {
-    public static final int DISK_BLOCK_SIZE = 4096 ;
+    public static final int DISK_BLOCK_SIZE = 40960;
     protected final Mode mode;
     protected final RandomAccessFile file;
     protected final ByteBuffer buffer;

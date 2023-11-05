@@ -24,11 +24,13 @@ public class VertexLoader {
 
     public Set<Vertex> loadAllVertices() {
         final Map<Vertex, Vertex> nodes = new HashMap<>();
+        int counter = 0;
         for (final Relationship relationship : getRelationships(types)) {
             final Vertex start = nodes.computeIfAbsent(new Vertex(relationship.getStartNode()), Function.identity());
             final Vertex end = nodes.computeIfAbsent(new Vertex(relationship.getEndNode()), Function.identity());
             final double weight = getDoubleProperty(relationship,  costProperty);
             start.addArc(end, (float) weight);
+            if (counter++ % 10000 == 0) System.out.println(counter + " arcs imported");
         }
         return Collections.unmodifiableSet(nodes.keySet());
     }

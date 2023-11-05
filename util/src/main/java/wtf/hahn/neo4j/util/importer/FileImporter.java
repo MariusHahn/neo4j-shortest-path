@@ -23,11 +23,13 @@ public class FileImporter {
     private final int periodicCommitEvery = 10000;
 
     public void importAllNodes() throws IOException {
+        int counter = 0;
         val relationshipIterator = fileLoader.loadFileRelationships().iterator();
         while (relationshipIterator.hasNext()) {
             try (Transaction transaction = db.beginTx()){
                 Map<Integer, Node> nodes = new HashMap<>();
                 for (int i = 0; i < periodicCommitEvery && relationshipIterator.hasNext(); i++) {
+                    if (counter++ % 10000 == 0) System.out.println(counter + " vertices imported");
                     importRelationship(nodes, relationshipIterator, transaction);
                 }
                 transaction.commit();

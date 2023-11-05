@@ -26,6 +26,7 @@ import wft.hahn.neo4j.cch.storage.PositionWriter;
 
 public class BufferManagerTest {
 
+    public static final int BUFFER_SIZE = 1024*10;
     @TempDir private static Path basePath;
 
     @Test
@@ -41,7 +42,7 @@ public class BufferManagerTest {
              PositionWriter positionWriter = new PositionWriter(Mode.OUT, basePath, sum)) {
             arcGroup.forEach((rank, arcs) -> positionWriter.write(rank, arcWriter.write(arcs)));
         }
-        try (FifoBuffer fifoBuffer = new FifoBuffer(1024, Mode.OUT, basePath)){
+        try (FifoBuffer fifoBuffer = new FifoBuffer(BUFFER_SIZE, Mode.OUT, basePath)){
             arcGroup.forEach((rank, arcs) -> {
                 System.out.println(rank);
                 List<DiskArc> loadArcs = new ArrayList<>(fifoBuffer.arcs(rank));
@@ -65,7 +66,7 @@ public class BufferManagerTest {
              PositionWriter positionWriter = new PositionWriter(out, basePath, sum)) {
             arcGroup.forEach((rank, arcs) -> positionWriter.write(rank, arcWriter.write(arcs)));
         }
-        try (FifoBuffer fifoBuffer = new FifoBuffer(1024, out, basePath)) {
+        try (FifoBuffer fifoBuffer = new FifoBuffer(BUFFER_SIZE, out, basePath)) {
             for (int i = 0; i < 1000; i++) {
                 final List<Integer> ranks = new ArrayList<>(arcGroup.keySet());
                 Collections.shuffle(ranks, new Random(i));
@@ -93,7 +94,7 @@ public class BufferManagerTest {
              PositionWriter positionWriter = new PositionWriter(mode, basePath, sum)) {
             arcGroup.forEach((rank, arcs) -> positionWriter.write(rank, arcWriter.write(arcs)));
         }
-        try (FifoBuffer fifoBuffer = new FifoBuffer(1024, mode, basePath)) {
+        try (FifoBuffer fifoBuffer = new FifoBuffer(BUFFER_SIZE, mode, basePath)) {
             for (int i = 0; i < 1000; i++) {
                 final List<Integer> ranks = new ArrayList<>(arcGroup.keySet());
                 Collections.shuffle(ranks, new Random(i));
