@@ -23,5 +23,5 @@ tasks.getByName<Test>("test") {
     systemProperty("junit.jupiter.execution.parallel.enabled", true)
     systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
     systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
-    jvmArgs = listOf("-Xms4096m", "-Xmx4096m")
+    jvmArgs = listOf("-Xms32768m", "-Xmx32768m")
 }
