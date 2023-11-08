@@ -1,20 +1,7 @@
 package wtf.hahn.neo4j.cch.search;
 
-import static java.util.List.of;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -36,6 +23,18 @@ import wtf.hahn.neo4j.util.PathUtils;
 import wtf.hahn.neo4j.util.StoppedResult;
 import wtf.hahn.neo4j.util.importer.FileImporter;
 import wtf.hahn.neo4j.util.importer.GrFileLoader;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static java.util.List.of;
 
 
 public class NewYorkGraphTest extends IntegrationTest {
@@ -82,9 +81,9 @@ public class NewYorkGraphTest extends IntegrationTest {
                 DiskChDijkstra diskChDijkstra = new DiskChDijkstra(tempPath);
                 StoppedResult<SearchPath> result = new StoppedResult<>(() -> diskChDijkstra.find(start, goal));
                 SearchPath cchPath = result.getResult();
-                System.out.println(result.getMillis());
+                System.out.println(result.getMicros());
                 System.out.println(SearchVertexPaths.toString(cchPath));
-                System.out.println(weightedPath.getMillis());
+                System.out.println(weightedPath.getMicros());
                 System.out.println(PathUtils.toRankString(weightedPath.getResult()));
                 Assertions.assertEquals(weightedPath.getResult().weight(), cchPath.weight());
             }
@@ -125,8 +124,8 @@ public class NewYorkGraphTest extends IntegrationTest {
                 if (weightedPath.getResult() != null) {
                     StoppedResult<SearchPath> result = new StoppedResult<>(() -> diskChDijkstra.find(start, goal));
                     SearchPath cchPath = result.getResult();
-                    System.out.println(result.getMillis() + " vs " + weightedPath.getMillis()+ " -> correct: " + (weightedPath.getResult().weight() == cchPath.weight()));
-                    overAll.addAndGet(result.getMillis());
+                    System.out.println(result.getMicros() + " vs " + weightedPath.getMicros()+ " -> correct: " + (weightedPath.getResult().weight() == cchPath.weight()));
+                    overAll.addAndGet(result.getMicros());
                     denominator.incrementAndGet();
                     Assertions.assertEquals(weightedPath.getResult().weight(), cchPath.weight());
                 }

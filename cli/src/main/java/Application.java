@@ -93,8 +93,8 @@ public class Application {
         ps.setInt(4, chWPath== null ? -1 : chWPath.length());
         ps.setDouble(5, dijkstraResult.getResult().weight());
         ps.setDouble(6, chWPath== null ? -1 : chWPath.weight());
-        ps.setLong(7, dijkstraResult.getMillis());
-        ps.setLong(8, chResult.getMillis());
+        ps.setLong(7, dijkstraResult.getMicros());
+        ps.setLong(8, chResult.getMicros());
         ps.executeUpdate();
     }
 
@@ -109,7 +109,7 @@ public class Application {
             PreparedStatement ps = sqlite.prepareStatement(sql);
             ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             ps.setString(2, parser.getContractionAlgorithmName());
-            ps.setLong(3, stoppedResult.getMillis());
+            ps.setLong(3, stoppedResult.getMicros());
             ps.setInt(4, stoppedResult.getResult());
             ps.executeUpdate();
             transaction.commit();

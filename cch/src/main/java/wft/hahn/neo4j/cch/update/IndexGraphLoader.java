@@ -8,6 +8,7 @@ import java.util.Map;
 import wft.hahn.neo4j.cch.model.Arc;
 import wft.hahn.neo4j.cch.model.Vertex;
 import wft.hahn.neo4j.cch.storage.ArcReader;
+import wft.hahn.neo4j.cch.storage.DiskArc;
 import wft.hahn.neo4j.cch.storage.Mode;
 
 public class IndexGraphLoader {
@@ -28,16 +29,16 @@ public class IndexGraphLoader {
     }
 
     private void loadArcs(ArcReader reader) {
-        reader.getAllArcs().forEach(diskArc -> {
+        for (DiskArc diskArc : reader.getAllArcs()) {
             final Vertex start = vertices.computeIfAbsent(diskArc.start(), Vertex::new);
             final Vertex end = vertices.computeIfAbsent(diskArc.end(), Vertex::new);
             final Vertex middle = diskArc.middle() == -1 ? null : vertices.computeIfAbsent(diskArc.middle(), Vertex::new);
             start.addArc(end,middle, diskArc.weight(), -1);
-        });
+        }
     }
 
     public Arc getArc(int fromRank, int toRank) {
-        if (!vertices.containsKey(fromRank)|| ! vertices.containsKey(toRank)) throw new IllegalStateException();
+        if (!vertices.containsKey(fromRank) || ! vertices.containsKey(toRank)) throw new IllegalStateException();
         return vertices.get(fromRank).getArcTo(vertices.get(toRank));
     }
 }

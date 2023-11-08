@@ -123,8 +123,8 @@ public class OldenburgGraphTest extends IntegrationTest {
                 if (weightedPath != null) {
                     StoppedResult<SearchPath> result = new StoppedResult<>(() -> diskChDijkstra.find(start, goal));
                     SearchPath cchPath = result.getResult();
-                    System.out.println(result.getMillis());
-                    overAll.addAndGet(result.getMillis());
+                    System.out.println(result.getMicros());
+                    overAll.addAndGet(result.getMicros());
                     denominator.incrementAndGet();
                     Assertions.assertEquals(weightedPath.weight(), cchPath.weight());
                 }
@@ -145,8 +145,8 @@ public class OldenburgGraphTest extends IntegrationTest {
         for (int i = 0; i < relationships.size(); i++) {
             Relationship relationship = relationships.get(i);
             double current = getDoubleProperty(relationship, "cost");
-            if (i % 2 == 0) relationship.setProperty("cost", current / 2);
-            else relationship.setProperty("cost", current * 2);
+            if (i % 2 == 0) relationship.setProperty("cost", 1);
+            else relationship.setProperty("cost", 2);
             relationship.setProperty("changed", true);
         }
 
@@ -169,8 +169,8 @@ public class OldenburgGraphTest extends IntegrationTest {
                 if (weightedPath != null) {
                     StoppedResult<SearchPath> result = new StoppedResult<>(() -> diskChDijkstra.find(start, goal));
                     SearchPath cchPath = result.getResult();
-                    System.out.println(result.getMillis());
-                    overAll.addAndGet(result.getMillis());
+                    System.out.println(result.getMicros());
+                    overAll.addAndGet(result.getMicros());
                     denominator.incrementAndGet();
                     if (weightedPath.weight() != cchPath.weight()) {
                         System.out.println(PathUtils.toRankString(weightedPath));

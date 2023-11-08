@@ -16,8 +16,8 @@ dependencies {
     implementation(project(":util"))
     implementation(project(":dijkstra"))
 
-    implementation("org.neo4j.test:neo4j-harness:${Versions.neo4j}")
-    implementation("org.neo4j.driver:neo4j-java-driver:${Versions.neo4j}")
+    // https://mvnrepository.com/artifact/org.neo4j/neo4j
+    implementation("org.neo4j:neo4j:${Versions.neo4j}")
 }
 
 application {
@@ -25,7 +25,7 @@ application {
 }
 
 tasks.withType<JavaExec> {
-    jvmArgs = listOf("-Xms12288m", "-Xmx12288m")
+    jvmArgs = listOf("-Xms4096m", "-Xmx4096m")
 }
 
 tasks.register<Jar>("uberJar") {

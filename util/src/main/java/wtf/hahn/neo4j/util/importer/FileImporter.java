@@ -20,6 +20,7 @@ public class FileImporter {
     private final FileLoader fileLoader;
     private final GraphDatabaseService db;
     private final Map<Integer, String> idMapping = new HashMap<>();
+    private final Map<LoadFileRelationship,LoadFileRelationship> seen = new HashMap<>();
     private final int periodicCommitEvery = 10000;
 
     public void importAllNodes() throws IOException {
@@ -45,8 +46,11 @@ public class FileImporter {
         idMapping.put(grLine.startId(), s.getElementId());
         Node t = nodes.computeIfAbsent(grLine.endId(), key -> getOrCreateNode(transaction, key));
         idMapping.put(grLine.endId(), t.getElementId());
-        Relationship road = s.createRelationshipTo(t, RelationshipType.withName("ROAD"));
-        road.setProperty("cost", grLine.distance());
+        if (!seen.containsKey(grLine)) {
+            Relationship road = s.createRelationshipTo(t, RelationshipType.withName("ROAD"));
+            road.setProperty("cost", grLine.distance());
+            seen.put(grLine, grLine);
+        }
     }
 
     private Node getOrCreateNode(Transaction transaction, Integer id) {

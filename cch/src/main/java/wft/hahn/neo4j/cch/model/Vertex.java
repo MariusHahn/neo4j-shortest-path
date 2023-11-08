@@ -94,14 +94,14 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
             return false;
         }
         Vertex other = (Vertex) o;
-        return  (rank == UNSET || other.rank == UNSET)
+        return  (elementId != null && other.elementId != null)
                 ? elementId.equals(other.elementId)
                 : rank == other.rank;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(elementId);
+        return (elementId != null) ? Objects.hashCode(elementId) : Objects.hash(rank);
     }
 
     public int getDegree() {

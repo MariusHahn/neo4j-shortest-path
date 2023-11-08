@@ -1,6 +1,5 @@
 package wft.hahn.neo4j.cch.update;
 
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import wft.hahn.neo4j.cch.model.Arc;
@@ -19,29 +18,37 @@ public class Updater {
 
     private final Vertex highestVertex;
     private final IndexGraphLoader indexLoader;
+    private final Map<Arc, Double> inputWeights;
 
     public Updater(Transaction transaction, Path path) {
         this.transaction = transaction;
         indexLoader = new IndexGraphLoader(path);
         highestVertex = indexLoader.load();
+        inputWeights = new HashMap<>();
     }
 
-    private static Set<Arc> scanNeo(Transaction transaction, IndexGraphLoader indexLoader) {
-        final Set<Arc> updates = new HashSet<>();
+    private List<Arc> scanNeo(Transaction transaction, IndexGraphLoader indexLoader) {
+        final List<Arc> updates = new LinkedList<>();
         Iterable<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream()::iterator;
-        for (Relationship relationship : relationships) if (relationship.hasProperty("changed")) {
-            relationship.removeProperty("changed");
+        for (Relationship relationship : relationships) {
             final int fromRank = (int) getLongProperty(relationship.getStartNode(), "ROAD_rank");
             final int toRank = (int) getLongProperty(relationship.getEndNode(), "ROAD_rank");
-            updates.add(indexLoader.getArc(fromRank, toRank));
+            Arc arc = indexLoader.getArc(fromRank, toRank);
+            inputWeights.put(arc, getDoubleProperty(relationship, "cost"));
+            if (relationship.hasProperty("changed")) {
+                relationship.removeProperty("changed");
+                updates.add(arc);
+            }
         }
         return updates;
     }
 
     public Vertex update() {
+        Set<Arc> seen = new HashSet<>();
         updates.addAll(scanNeo(transaction, indexLoader));
         while (!updates.isEmpty()) {
             final Arc arc = updates.poll();
+            if (!seen.add(arc)) continue;
             final TriangleBuilder triangleBuilder = new TriangleBuilder(arc);
             float oldWeight = arc.weight;
             updateArc(arc, triangleBuilder.lower());
@@ -63,7 +70,7 @@ public class Updater {
 
     private static boolean arcWeightCouldRelyOnTriangle(Triangle triangle, double oldWeight) {
         return triangle.c().weight == triangle.b().weight + oldWeight
-                || triangle.b().weight + triangle.a().weight < triangle.c().weight
+                //|| triangle.b().weight + triangle.a().weight < triangle.c().weight
                 //  triangle.c().weight <= triangle.b().weight + oldWeight
                 ;
     }
@@ -83,22 +90,12 @@ public class Updater {
     }
 
     private double inputGraphWeight(Arc update) {
-        return getRelationship(update).map(r -> getDoubleProperty(r, "cost")).orElse(Double.MAX_VALUE);
-    }
-
-    private Optional<Relationship> getRelationship(Arc update) {
-        return getRelationship(update.start.rank, update.end.rank);
-    }
-
-    private Optional<Relationship> getRelationship(int fromRank, int toRank) {
-        return transaction
-                .findNode(() -> "Location", "ROAD_rank", fromRank)
-                .getRelationships(Direction.OUTGOING, () -> "ROAD").stream()
-                .filter(r -> getLongProperty(r.getEndNode(), "ROAD_rank") == toRank)
-                .findFirst();
+        return inputWeights.getOrDefault(update, Double.MAX_VALUE);
     }
 
     private static int arcComparator(Arc o1, Arc o2) {
-        return Integer.compare(Math.min(o1.start.rank, o2.start.rank), Math.min(o1.end.rank, o2.end.rank));
+        int compare = Integer.compare(o1.start.rank, o2.start.rank);
+        if (compare == 0) return Integer.compare(o1.end.rank, o2.end.rank);
+        return compare;
     }
 }

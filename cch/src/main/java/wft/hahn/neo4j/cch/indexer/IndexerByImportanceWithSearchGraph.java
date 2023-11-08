@@ -18,37 +18,34 @@ public final class IndexerByImportanceWithSearchGraph {
     private final RelationshipType type;
     private final VertexLoader vertexLoader;
     private final LastInsertWinsPriorityQueue<QueueVertex> queue;
-    private final int size;
-    private int insertionCounter = 0;
+    public final ContractionInsights contractionInsights;
     private int rank = 0;
-    private int maxDegree = 0;
     private Vertex vertexToContract = null;
+
 
     public IndexerByImportanceWithSearchGraph(String type, String costProperty, Transaction transaction) {
         this.type = RelationshipType.withName(type);
         vertexLoader = new VertexLoader(transaction, costProperty, this.type);
         Set<Vertex> vertices = vertexLoader.loadAllVertices();
-        size = vertices.size();
         queue = new LastInsertWinsPriorityQueue<>(vertices.stream().map(v -> new QueueVertex(shortcutsToInsert(v))));
+        contractionInsights = new ContractionInsights();
     }
 
     public Vertex insertShortcuts() {
-        long counter = 0;
+        long start = System.currentTimeMillis();
         while (!queue.isEmpty()) {
-            if (counter++ % 1000 == 0) System.out.println(counter + " vertices contracted");
             final Contraction poll = shortcutsToInsert(queue.poll().vertex());
             vertexToContract = poll.vertexToContract;
             vertexToContract.rank = rank;
             vertexLoader.setRankProperty(vertexToContract, rank++, type.name()+"_rank");
             for (Shortcut shortcut : poll.shortcuts) {
-                insertionCounter += createOrUpdateEdge(vertexToContract, shortcut);
+                contractionInsights.addToInsertionCounter(createOrUpdateEdge(vertexToContract, shortcut));
             }
             updateNeighborsInQueue(queue, vertexToContract);
-            maxDegree = max(maxDegree, vertexToContract.getDegree());
+            contractionInsights.updateMaxDegree(vertexToContract);
         }
+        contractionInsights.contractionTime = System.currentTimeMillis() - start;
         vertexLoader.commit();
-        System.out.println("Max Degree: " + maxDegree);
-        System.out.println(insertionCounter + " shortcuts inserted!");
         return vertexToContract;
     }
 

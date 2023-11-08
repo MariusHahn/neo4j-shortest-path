@@ -1,18 +1,13 @@
 package wft.hahn.neo4j.cch.storage;
 
-import org.apache.commons.collections.functors.WhileClosure;
-import static wft.hahn.neo4j.cch.storage.Writer.DISK_BLOCK_SIZE;
-
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+
+import static wft.hahn.neo4j.cch.storage.Writer.DISK_BLOCK_SIZE;
 
 public class ArcReader extends Reader {
 
@@ -23,25 +18,20 @@ public class ArcReader extends Reader {
         positionReader = new PositionReader(mode, basePath);
     }
 
-    public Stream<DiskArc> getAllArcs() {
-        return IntStream.range(0, getLength()).map(i -> i / DISK_BLOCK_SIZE).mapToObj(i -> {
-            Stream.Builder<DiskArc> diskArcs = Stream.builder();
-            buffer.position(0);
+    public DiskArc[] getAllArcs() {
+        final int fileLength = getLength();
+        final DiskArc[] diskArcs = new DiskArc[fileLength / 16];
+        for (int i = 0; i < diskArcs.length; i++) {
+            ByteBuffer buffer = ByteBuffer.allocate(16);
             try {
-                file.seek((long) i * DISK_BLOCK_SIZE);
+                file.seek(i*16);
                 file.read(buffer.array());
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-            while (buffer.position() < buffer.capacity()) {
-                final DiskArc diskArc = new DiskArc(buffer);
-                if (diskArc.isArc()) {
-                    diskArcs.add(diskArc);
-                }
-            }
-            return diskArcs.build();
-        }).flatMap(Function.identity());
-
+            diskArcs[i] = new DiskArc(buffer);
+        }
+        return diskArcs;
     }
 
     private int getLength() {

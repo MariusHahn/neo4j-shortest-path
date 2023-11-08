@@ -17,6 +17,10 @@ public class EntityHelper {
         throw new IllegalStateException("Cannot cast %s to Long because of its type %s".formatted(propertyName, property.getClass().getName()));
     }
 
+    public static long getId(Entity entity) {
+        return getLongProperty(entity, "id");
+    }
+
     public static <T> T getProperty(Entity entity, String propertyName) {
         return (T) entity.getProperty(propertyName);
     }

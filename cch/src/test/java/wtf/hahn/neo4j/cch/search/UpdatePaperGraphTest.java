@@ -52,7 +52,7 @@ public class UpdatePaperGraphTest extends IntegrationTest {
             Random random = new Random(2); //2
             Updater updater = new Updater(transaction, path);
             Vertex top = null;
-            for (int i = 0; i < 1000; i++) { //17
+            for (int i = 0; i < 2550; i++) { //17
                 Relationship relationship = relationships.get(i% (relationships.size()));
                 double current = getDoubleProperty(relationship, "cost");
                 double newWeight;
