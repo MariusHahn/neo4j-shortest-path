@@ -60,12 +60,12 @@ public record BidirectionalSearchPath(SearchPath forward, SearchPath backward) i
     }
 
     @Override
-    public float weight() {
+    public int weight() {
         return forward.weight() + backward.weight();
     }
 
     @Override
     public int compareTo(BidirectionalSearchPath o) {
-        return Float.compare(weight(), o.weight());
+        return Integer.compare(weight(), o.weight());
     }
 }

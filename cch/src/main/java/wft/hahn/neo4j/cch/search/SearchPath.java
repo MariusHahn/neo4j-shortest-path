@@ -14,5 +14,5 @@ public interface SearchPath extends Iterable<SearchPathElement> {
     @Override
     String toString();
     Iterator<SearchPathElement> iterator();
-    float weight();
+    int weight();
 }

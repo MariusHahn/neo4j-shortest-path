@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
+import static wtf.hahn.neo4j.util.EntityHelper.getIntProperty;
 
 public class VertexLoader {
 
@@ -27,8 +28,8 @@ public class VertexLoader {
         for (final Relationship relationship : getRelationships(types)) {
             final Vertex start = nodes.computeIfAbsent(new Vertex(relationship.getStartNode()), Function.identity());
             final Vertex end = nodes.computeIfAbsent(new Vertex(relationship.getEndNode()), Function.identity());
-            final double weight = getDoubleProperty(relationship,  costProperty);
-            start.addArc(end, (float) weight);
+            final int weight = getIntProperty(relationship,  costProperty);
+            start.addArc(end, weight);
         }
         return Collections.unmodifiableSet(nodes.keySet());
     }

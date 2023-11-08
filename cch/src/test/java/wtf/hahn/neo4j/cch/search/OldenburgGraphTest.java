@@ -201,7 +201,7 @@ public class OldenburgGraphTest extends IntegrationTest {
                         DiskChDijkstra diskChDijkstra = new DiskChDijkstra(tempPath);
                         SearchPath chPath = diskChDijkstra.find(from, to);
                         if (chPath == null || chPath.weight() != dijkstraPath.weight()) {
-                            String chWeight = chPath == null ? "null" : Float.toString(chPath.weight());
+                            String chWeight = chPath == null ? "null" : Integer.toString(chPath.weight());
                             append(bufferedWriter, "%d,%d,%.2f,%s%n".formatted(from, to, dijkstraPath.weight(), chWeight));
                         }
                     }

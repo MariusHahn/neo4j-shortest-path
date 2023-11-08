@@ -63,7 +63,7 @@ public class VertexPaths {
         }
 
         @Override
-        public float weight() {
+        public int weight() {
             return 0;
         }
     }

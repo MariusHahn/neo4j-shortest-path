@@ -51,7 +51,7 @@ public class VertexDijkstra {
             state.settled = true;
             for (Arc arc : arcs) if (arc.end.rank == Vertex.UNSET) {
                 final Vertex neighbor = arc.otherVertex(state.getEndVertex());
-                final float cost = arc.weight;
+                final int cost = arc.weight;
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
                     final VertexPath newPath = ExtendedVertexPath.extend(state.getPath(), arc);
                     final VertexDijkstraState newState = new VertexDijkstraState(neighbor, newPath);
@@ -66,7 +66,7 @@ public class VertexDijkstra {
             return queue.isEmpty() || (goals.size() == shortestPaths.size() && goals.size() != 0);
         }
 
-        private boolean mustUpdateNeighborState(VertexDijkstraState state, Vertex neighbor, float cost) {
+        private boolean mustUpdateNeighborState(VertexDijkstraState state, Vertex neighbor, int cost) {
             return !seen.containsKey(neighbor) ||
                     !(seen.get(neighbor).settled || seen.get(neighbor).weight() < state.weight() + cost);
         }
@@ -79,7 +79,7 @@ public class VertexDijkstra {
             return latestExpand.getEndVertex();
         }
 
-        public float latestWeight() {
+        public int latestWeight() {
             return shortestPaths.get(latestExpand.getEndVertex()).weight();
         }
     }

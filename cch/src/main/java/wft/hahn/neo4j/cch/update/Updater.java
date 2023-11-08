@@ -8,8 +8,7 @@ import wft.hahn.neo4j.cch.model.Vertex;
 import java.nio.file.Path;
 import java.util.*;
 
-import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
-import static wtf.hahn.neo4j.util.EntityHelper.getLongProperty;
+import static wtf.hahn.neo4j.util.EntityHelper.*;
 
 public class Updater {
     private final Transaction transaction;
@@ -18,7 +17,7 @@ public class Updater {
 
     private final Vertex highestVertex;
     private final IndexGraphLoader indexLoader;
-    private final Map<Arc, Double> inputWeights;
+    private final Map<Arc, Integer> inputWeights;
 
     public Updater(Transaction transaction, Path path) {
         this.transaction = transaction;
@@ -34,7 +33,7 @@ public class Updater {
             final int fromRank = (int) getLongProperty(relationship.getStartNode(), "ROAD_rank");
             final int toRank = (int) getLongProperty(relationship.getEndNode(), "ROAD_rank");
             Arc arc = indexLoader.getArc(fromRank, toRank);
-            inputWeights.put(arc, getDoubleProperty(relationship, "cost"));
+            inputWeights.put(arc, getIntProperty(relationship, "cost"));
             if (relationship.hasProperty("changed")) {
                 relationship.removeProperty("changed");
                 updates.add(arc);
@@ -50,7 +49,7 @@ public class Updater {
             final Arc arc = updates.poll();
             if (!seen.add(arc)) continue;
             final TriangleBuilder triangleBuilder = new TriangleBuilder(arc);
-            float oldWeight = arc.weight;
+            int oldWeight = arc.weight;
             updateArc(arc, triangleBuilder.lower());
             if (oldWeight != arc.weight) {
                 checkTriangles(oldWeight, triangleBuilder.upper());
@@ -76,21 +75,21 @@ public class Updater {
     }
 
     private void updateArc(Arc arc, Collection<Triangle> lowerTriangles) {
-        arc.weight = (float) inputGraphWeight(arc);
+        arc.weight = inputGraphWeight(arc);
         arc.middle = null;
         arc.hopLength = 1;
         for (Triangle lowerTriangle : lowerTriangles) {
-            final double lowerTriangleWeight = lowerTriangle.b().weight + lowerTriangle.c().weight;
+            final int lowerTriangleWeight = lowerTriangle.b().weight + lowerTriangle.c().weight;
             if (lowerTriangleWeight < arc.weight) {
-                arc.weight = (float) lowerTriangleWeight;
+                arc.weight = lowerTriangleWeight;
                 arc.middle = lowerTriangle.middle();
                 arc.hopLength = lowerTriangle.b().hopLength + lowerTriangle.c().hopLength;
             }
         }
     }
 
-    private double inputGraphWeight(Arc update) {
-        return inputWeights.getOrDefault(update, Double.MAX_VALUE);
+    private int inputGraphWeight(Arc update) {
+        return inputWeights.getOrDefault(update, Integer.MAX_VALUE);
     }
 
     private static int arcComparator(Arc o1, Arc o2) {

@@ -139,7 +139,7 @@ public class ExtendedSearchPath implements SearchPath {
     }
 
     @Override
-    public float weight() {
+    public int weight() {
         return start.weight() + lastArc.weight;
     }
 

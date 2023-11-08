@@ -1,6 +1,5 @@
 package wtf.hahn.neo4j.cch.storage;
 
-import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class ArcReadWriterTest {
         Map<Integer, List<DiskArc>> arcGroup = Files.lines(Paths.get("src", "test", "resources", "rome99.csv"))
                 .map(line -> Arrays.stream(line.split(",")))
                 .map(stream -> stream.map(String::trim).toArray(String[]::new))
-                .map(line -> new DiskArc(parseInt(line[0]), parseInt(line[1]), -1, parseFloat(line[2])))
+                .map(line -> new DiskArc(parseInt(line[0]), parseInt(line[1]), -1, parseInt(line[2])))
                 .filter(diskArc -> diskArc.start() < diskArc.end())
                 .collect(Collectors.groupingBy(DiskArc::start));
         int sum = arcGroup.values().stream().mapToInt(Collection::size).sum();
@@ -63,7 +62,7 @@ public class ArcReadWriterTest {
     private void edgesToText(String fileName) throws IOException {
         final ByteBuffer buffer = ByteBuffer.wrap(Files.readAllBytes(Path.of(fileName)));
         for (int i = 0; buffer.position() < buffer.capacity(); i++) {
-            DiskArc edge = new DiskArc(buffer.getInt(), buffer.getInt(), buffer.getInt(), buffer.getFloat());
+            DiskArc edge = new DiskArc(buffer.getInt(), buffer.getInt(), buffer.getInt(), buffer.getInt());
             System.out.printf("%d: %s%n", i / 256, edge);
         }
     }

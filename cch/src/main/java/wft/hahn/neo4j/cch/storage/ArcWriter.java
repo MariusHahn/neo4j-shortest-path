@@ -15,7 +15,7 @@ import wft.hahn.neo4j.cch.model.Vertex;
 public class ArcWriter extends Writer implements AutoCloseable {
 
     public static final byte[] INVALID_ARC =
-            ByteBuffer.allocate(16).putInt(-1).putInt(-1).putInt(-1).putFloat(-1.0f).array();
+            ByteBuffer.allocate(16).putInt(-1).putInt(-1).putInt(-1).putInt(-1).array();
     int blockPosition = 0;
 
     public ArcWriter(Mode mode, Path basePath) {

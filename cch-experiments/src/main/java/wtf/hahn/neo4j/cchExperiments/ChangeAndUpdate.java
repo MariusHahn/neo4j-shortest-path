@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static wtf.hahn.neo4j.util.EntityHelper.getDoubleProperty;
+import static wtf.hahn.neo4j.util.EntityHelper.getIntProperty;
 
 public class ChangeAndUpdate {
     private final Path path;
@@ -34,9 +34,9 @@ public class ChangeAndUpdate {
             System.out.println("Start neo update");
             for (int i = 0; i < relationships.size(); i++) {
                 Relationship relationship = relationships.get(i);
-                double current = getDoubleProperty(relationship, "cost");
-                if (i % 2 == 0) relationship.setProperty("cost", 8);
-                else relationship.setProperty("cost", 4);
+                int current = getIntProperty(relationship, "cost");
+                if (i % 2 == 0) relationship.setProperty("cost", current * 2);
+                else relationship.setProperty("cost", ((int) current / 2));
                 relationship.setProperty("changed", true);
             }
             System.out.println("End neo update");

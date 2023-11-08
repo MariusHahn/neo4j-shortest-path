@@ -7,11 +7,11 @@ import lombok.ToString;
 public final class Arc implements PathElement {
     public final Vertex start;
     public final Vertex end;
-    public float weight;
+    public int weight;
     public Vertex middle;
     public int hopLength;
 
-    public Arc(Vertex start, Vertex end, float weight) {
+    public Arc(Vertex start, Vertex end, int weight) {
         this.start = start;
         this.end = end;
         this.weight = weight;
@@ -19,7 +19,7 @@ public final class Arc implements PathElement {
         hopLength = 1;
     }
 
-    public Arc(Vertex start, Vertex end, float weight, Vertex middle, int hopLength) {
+    public Arc(Vertex start, Vertex end, int weight, Vertex middle, int hopLength) {
         this.start = start;
         this.end = end;
         this.weight = weight;

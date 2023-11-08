@@ -64,7 +64,7 @@ public class SearchVertexPaths {
         }
 
         @Override
-        public float weight() {
+        public int weight() {
             return 0;
         }
 
@@ -75,8 +75,8 @@ public class SearchVertexPaths {
     }
 
     public static String toString(SearchPath path) {
-        StringBuilder builder = new StringBuilder("len(%3.2f): (%d)".formatted(path.weight(), path.start().rank));
-        for (SearchArc arc : path.arcs()) builder.append("-[%.2f]->(%d)".formatted(arc.weight, arc.end.rank));
+        StringBuilder builder = new StringBuilder("len(%3d): (%d)".formatted(path.weight(), path.start().rank));
+        for (SearchArc arc : path.arcs()) builder.append("-[%3d]->(%d)".formatted(arc.weight, arc.end.rank));
         return builder.toString();
     }
 }

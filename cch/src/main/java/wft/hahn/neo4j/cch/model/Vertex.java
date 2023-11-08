@@ -65,11 +65,11 @@ public final class Vertex implements PathElement, Comparable<Vertex> {
     }
 
 
-    public boolean addArc(Vertex other, float weight) {
+    public boolean addArc(Vertex other, int weight) {
         return addArc(other, null, weight, 1);
     }
 
-    public boolean addArc(Vertex other, Vertex middle, float weight, int hopLength) {
+    public boolean addArc(Vertex other, Vertex middle, int weight, int hopLength) {
         if (!outArcs.containsKey(other)) {
             Arc arc = new Arc(this, other, weight, middle, hopLength);
             this.outArcs.put(other, arc);

@@ -61,7 +61,7 @@ public class DiskDijkstra {
             state.settle();
             for (SearchArc arc : arcs) {
                 final SearchVertex neighbor = arc.otherVertex(state.getEndVertex());
-                final float cost = arc.weight;
+                final int cost = arc.weight;
                 if (mustUpdateNeighborState(state, neighbor, cost)) {
                     final SearchPath newPath = ExtendedSearchPath.extend(state.getPath(), arc);
                     final DiskDijkstraState newState = new DiskDijkstraState(neighbor, newPath, vertexManager);
@@ -76,7 +76,7 @@ public class DiskDijkstra {
             return queue.isEmpty() || (goals.size() == shortestPaths.size() && goals.size() != 0);
         }
 
-        private boolean mustUpdateNeighborState(DiskDijkstraState state, SearchVertex neighbor, float cost) {
+        private boolean mustUpdateNeighborState(DiskDijkstraState state, SearchVertex neighbor, int cost) {
             return !seen.containsKey(neighbor.rank) ||
                     !(seen.get(neighbor.rank).settled || seen.get(neighbor.rank).weight() < state.weight() + cost);
         }
@@ -89,7 +89,7 @@ public class DiskDijkstra {
             return latestExpand.getEndVertex();
         }
 
-        public float latestWeight() {
+        public int latestWeight() {
             return shortestPaths.get(latestExpand.getEndVertex().rank).weight();
         }
     }

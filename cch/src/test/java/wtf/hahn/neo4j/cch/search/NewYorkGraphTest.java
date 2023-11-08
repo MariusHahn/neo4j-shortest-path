@@ -2,6 +2,7 @@ package wtf.hahn.neo4j.cch.search;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -107,7 +108,7 @@ public class NewYorkGraphTest extends IntegrationTest {
                 .flatMap(Function.identity());
     }
 
-    //@Test
+    @Test
     void sourceTargetTest() {
         Stream<Arguments> argumentsStream = randomSourceTarget();
         AtomicLong overAll = new AtomicLong(0);

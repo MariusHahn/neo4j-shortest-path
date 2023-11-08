@@ -11,6 +11,10 @@ public class EntityHelper {
         throw new IllegalStateException("Cannot cast %s to Long because of its type %s".formatted(propertyName, property.getClass().getName()));
     }
 
+    public static int getIntProperty(Entity entity, String propertyNme) {
+        return (int) getLongProperty(entity, propertyNme);
+    }
+
     public static double getDoubleProperty(Entity entity, String propertyName) {
         Object property = entity.getProperty(propertyName);
         if (property instanceof Number n) return n.doubleValue();

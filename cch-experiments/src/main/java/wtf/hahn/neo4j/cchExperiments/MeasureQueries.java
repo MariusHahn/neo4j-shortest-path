@@ -66,7 +66,7 @@ public class MeasureQueries {
                     val chPath = new StoppedResult<>(() -> diskChDijkstra.find(x, y));
                     if (dijkstraPath != null) {
                         if (chPath.getResult().weight() != dijkstraPath.weight()) System.out.println(chPath.getResult().weight() + "vs: " + dijkstraPath.weight());
-                        String measure = String.format("%9d,%9d,%9d,%12.2f,%4d,%4d%n",
+                        String measure = String.format("%9d,%9d,%9d,%9d,%4d,%4d%n",
                                 getId(from), getId(to), chPath.getMicros(), chPath.getResult().weight()
                                 , chPath.getResult().length()
                                 , dijkstraPath.length()

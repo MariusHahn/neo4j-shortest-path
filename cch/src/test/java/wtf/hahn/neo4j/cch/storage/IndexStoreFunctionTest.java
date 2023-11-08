@@ -42,25 +42,25 @@ public class IndexStoreFunctionTest {
         }
 
         Assertions.assertEquals(19, edges.size());
-        Assertions.assertEquals(new DiskArc(0, 7, -1, 2.0f), edges.get(0));
-        Assertions.assertEquals(new DiskArc(0, 4, -1, 2.0f), edges.get(1));
-        Assertions.assertEquals(new DiskArc(0, 5, -1, 2.0f), edges.get(2));
-        Assertions.assertEquals(new DiskArc(0, 10, -1, 2.f), edges.get(3));
-        Assertions.assertEquals(new DiskArc(9, 10, -1, 1.f), edges.get(4));
-        Assertions.assertEquals(new DiskArc(1, 9, -1, 4.0f), edges.get(5));
-        Assertions.assertEquals(new DiskArc(1, 2, -1, 4.0f), edges.get(6));
-        Assertions.assertEquals(new DiskArc(1, 8, -1, 2.0f), edges.get(7));
-        Assertions.assertEquals(new DiskArc(1, 6, -1, 1.0f), edges.get(8));
-        Assertions.assertEquals(new DiskArc(7, 9, -1, 1.0f), edges.get(9));
-        Assertions.assertEquals(new DiskArc(5, 7, -1, 1.0f), edges.get(10));
-        Assertions.assertEquals(new DiskArc(2, 4, -1, 2.0f), edges.get(11));
-        Assertions.assertEquals(new DiskArc(2, 5, -1, 3.0f), edges.get(12));
-        Assertions.assertEquals(new DiskArc(2, 3, -1, 2.0f), edges.get(13));
-        Assertions.assertEquals(new DiskArc(4, 5, -1, 1.0f), edges.get(14));
-        Assertions.assertEquals(new DiskArc(3, 4,  2, 4.0f), edges.get(15));
-        Assertions.assertEquals(new DiskArc(3, 6, -1, 2.0f), edges.get(16));
-        Assertions.assertEquals(new DiskArc(8, 9, -1, 2.0f), edges.get(17));
-        Assertions.assertEquals(new DiskArc(6, 8, -1, 1.0f), edges.get(18));
+        Assertions.assertEquals(new DiskArc(0, 7, -1, 2), edges.get(0));
+        Assertions.assertEquals(new DiskArc(0, 4, -1, 2), edges.get(1));
+        Assertions.assertEquals(new DiskArc(0, 5, -1, 2), edges.get(2));
+        Assertions.assertEquals(new DiskArc(0, 10, -1, 2), edges.get(3));
+        Assertions.assertEquals(new DiskArc(9, 10, -1, 1), edges.get(4));
+        Assertions.assertEquals(new DiskArc(1, 9, -1, 4), edges.get(5));
+        Assertions.assertEquals(new DiskArc(1, 2, -1, 4), edges.get(6));
+        Assertions.assertEquals(new DiskArc(1, 8, -1, 2), edges.get(7));
+        Assertions.assertEquals(new DiskArc(1, 6, -1, 1), edges.get(8));
+        Assertions.assertEquals(new DiskArc(7, 9, -1, 1), edges.get(9));
+        Assertions.assertEquals(new DiskArc(5, 7, -1, 1), edges.get(10));
+        Assertions.assertEquals(new DiskArc(2, 4, -1, 2), edges.get(11));
+        Assertions.assertEquals(new DiskArc(2, 5, -1, 3), edges.get(12));
+        Assertions.assertEquals(new DiskArc(2, 3, -1, 2), edges.get(13));
+        Assertions.assertEquals(new DiskArc(4, 5, -1, 1), edges.get(14));
+        Assertions.assertEquals(new DiskArc(3, 4,  2, 4), edges.get(15));
+        Assertions.assertEquals(new DiskArc(3, 6, -1, 2), edges.get(16));
+        Assertions.assertEquals(new DiskArc(8, 9, -1, 2), edges.get(17));
+        Assertions.assertEquals(new DiskArc(6, 8, -1, 1), edges.get(18));
     }
 
     @Test
@@ -76,32 +76,32 @@ public class IndexStoreFunctionTest {
             outFile.read(buffer.array());
             for (int i = 0; i < 4096; i=i+16) {
                 DiskArc edge = new DiskArc(buffer.getInt(i), buffer.getInt(i + 4), buffer.getInt(i + 8)
-                        , buffer.getFloat(i + 12));
+                        , buffer.getInt(i + 12));
                 if (edge.start() == -1) break;
                 System.out.println(edge);
                 edges.add(edge);
             }
         }
         Assertions.assertEquals(19, edges.size());
-        Assertions.assertEquals(new DiskArc(7, 0, -1, 2.0f), edges.get(0));
-        Assertions.assertEquals(new DiskArc(4, 0, -1, 2.0f), edges.get(1));
-        Assertions.assertEquals(new DiskArc(5, 0, -1, 2.0f), edges.get(2));
-        Assertions.assertEquals(new DiskArc(10, 0, -1, 2.f), edges.get(3));
-        Assertions.assertEquals(new DiskArc(10, 9, -1, 1.f), edges.get(4));
-        Assertions.assertEquals(new DiskArc(9, 1, -1, 4.0f), edges.get(5));
-        Assertions.assertEquals(new DiskArc(2, 1, -1, 4.0f), edges.get(6));
-        Assertions.assertEquals(new DiskArc(8, 1, -1, 2.0f), edges.get(7));
-        Assertions.assertEquals(new DiskArc(6, 1, -1, 1.0f), edges.get(8));
-        Assertions.assertEquals(new DiskArc(9, 7, -1, 1.0f), edges.get(9));
-        Assertions.assertEquals(new DiskArc(7, 5, -1, 1.0f), edges.get(10));
-        Assertions.assertEquals(new DiskArc(4, 2, -1, 2.0f), edges.get(11));
-        Assertions.assertEquals(new DiskArc(5, 2, -1, 3.0f), edges.get(12));
-        Assertions.assertEquals(new DiskArc(3, 2, -1, 2.0f), edges.get(13));
-        Assertions.assertEquals(new DiskArc(5, 4, -1, 1.0f), edges.get(14));
-        Assertions.assertEquals(new DiskArc(4, 3,  2, 4.0f), edges.get(15));
-        Assertions.assertEquals(new DiskArc(6, 3, -1, 2.0f), edges.get(16));
-        Assertions.assertEquals(new DiskArc(9, 8, -1, 2.0f), edges.get(17));
-        Assertions.assertEquals(new DiskArc(8, 6, -1, 1.0f), edges.get(18));
+        Assertions.assertEquals(new DiskArc(7, 0, -1, 2), edges.get(0));
+        Assertions.assertEquals(new DiskArc(4, 0, -1, 2), edges.get(1));
+        Assertions.assertEquals(new DiskArc(5, 0, -1, 2), edges.get(2));
+        Assertions.assertEquals(new DiskArc(10, 0, -1, 2), edges.get(3));
+        Assertions.assertEquals(new DiskArc(10, 9, -1, 1), edges.get(4));
+        Assertions.assertEquals(new DiskArc(9, 1, -1, 4), edges.get(5));
+        Assertions.assertEquals(new DiskArc(2, 1, -1, 4), edges.get(6));
+        Assertions.assertEquals(new DiskArc(8, 1, -1, 2), edges.get(7));
+        Assertions.assertEquals(new DiskArc(6, 1, -1, 1), edges.get(8));
+        Assertions.assertEquals(new DiskArc(9, 7, -1, 1), edges.get(9));
+        Assertions.assertEquals(new DiskArc(7, 5, -1, 1), edges.get(10));
+        Assertions.assertEquals(new DiskArc(4, 2, -1, 2), edges.get(11));
+        Assertions.assertEquals(new DiskArc(5, 2, -1, 3), edges.get(12));
+        Assertions.assertEquals(new DiskArc(3, 2, -1, 2), edges.get(13));
+        Assertions.assertEquals(new DiskArc(5, 4, -1, 1), edges.get(14));
+        Assertions.assertEquals(new DiskArc(4, 3,  2, 4), edges.get(15));
+        Assertions.assertEquals(new DiskArc(6, 3, -1, 2), edges.get(16));
+        Assertions.assertEquals(new DiskArc(9, 8, -1, 2), edges.get(17));
+        Assertions.assertEquals(new DiskArc(8, 6, -1, 1), edges.get(18));
     }
 
     public static void fillDownwards(Vertex[] vertices) {

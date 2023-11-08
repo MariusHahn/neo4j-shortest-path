@@ -135,7 +135,7 @@ public class ExtendedVertexPath implements VertexPath {
     }
 
     @Override
-    public float weight() {
+    public int weight() {
         return start.weight() + lastArc.weight;
     }
 

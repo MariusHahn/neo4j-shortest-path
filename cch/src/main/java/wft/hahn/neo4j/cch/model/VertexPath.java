@@ -14,5 +14,5 @@ public interface VertexPath {
     @Override
     String toString();
     Iterator<PathElement> iterator();
-    float weight();
+    int weight();
 }

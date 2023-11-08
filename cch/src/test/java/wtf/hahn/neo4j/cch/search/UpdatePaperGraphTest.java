@@ -54,15 +54,15 @@ public class UpdatePaperGraphTest extends IntegrationTest {
             Vertex top = null;
             for (int i = 0; i < 2550; i++) { //17
                 Relationship relationship = relationships.get(i% (relationships.size()));
-                double current = getDoubleProperty(relationship, "cost");
-                double newWeight;
+                int current = getIntProperty(relationship, "cost");
+                int newWeight;
                 if (Math.round(random.nextDouble()) == 0) newWeight = current * 2;
                 else newWeight = current / 2;
-                relationship.setProperty("cost", newWeight);
+                relationship.setProperty("cost", newWeight+1);
                 relationship.setProperty("changed", true);
                 Long fromRank = getProperty(relationship.getStartNode(), "ROAD_rank");
                 Long toRank = getProperty(relationship.getEndNode(), "ROAD_rank");
-                System.out.printf("(%d)-[%.2f]->(%d)%n", fromRank, newWeight, toRank);
+                System.out.printf("(%d)-[%3d]->(%d)%n", fromRank, newWeight, toRank);
                 top = updater.update();
             }
             setupPaperGraphTest(top, path);

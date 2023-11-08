@@ -2,9 +2,9 @@ package wft.hahn.neo4j.cch.search;
 
 public class SearchArc implements SearchPathElement {
     public final SearchVertex start, end, middle;
-    public final float weight;
+    public final int weight;
 
-    public SearchArc(SearchVertex start, SearchVertex end, SearchVertex middle, float weight) {
+    public SearchArc(SearchVertex start, SearchVertex end, SearchVertex middle, int weight) {
         assert start != null;
         assert end != null;
         assert start.rank != end.rank;
@@ -22,6 +22,6 @@ public class SearchArc implements SearchPathElement {
 
     @Override
     public String toString() {
-        return "(%d)-[%.2f]->(%d)".formatted(start.rank, weight, end.rank);
+        return "(%d)-[%3d]->(%d)".formatted(start.rank, weight, end.rank);
     }
 }
