@@ -25,7 +25,7 @@ application {
 }
 
 tasks.withType<JavaExec> {
-    jvmArgs = listOf("-Xms4096m", "-Xmx4096m")
+    jvmArgs = listOf("-Xms12288m", "-Xmx12288m")
 }
 
 tasks.register<Jar>("uberJar") {
