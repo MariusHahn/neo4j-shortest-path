@@ -18,17 +18,18 @@ public class Application {
         final String fileName = PROPERTIES.getProperty("inputFile");
         try (Database database = new Database(fileName)) {
             final String action = PROPERTIES.getProperty("action");
+            final int bufferSize = Integer.parseInt(PROPERTIES.getProperty("bufferSize"));
             switch (action) {
                 case "CREATE" -> {
                     ImportAndIndex importAndIndex = new ImportAndIndex(PROPERTIES.getProperty("inputFile"), database.getDb());
                     importAndIndex.go();
-                    MeasureQueries measureQueries = new MeasureQueries(fileName, 4096000, "m1.csv", database.getDb());
+                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, "m1.csv", database.getDb());
                     measureQueries.go();
                 }
                 case "UPDATE" -> {
                     ChangeAndUpdate changeAndUpdate = new ChangeAndUpdate(Paths.get(dbDirName(fileName)), database.getDb());
                     changeAndUpdate.go();
-                    MeasureQueries measureQueries = new MeasureQueries(fileName, 4096000, "m6.csv", database.getDb());
+                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, "m6.csv", database.getDb());
                     measureQueries.go();
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + action);
