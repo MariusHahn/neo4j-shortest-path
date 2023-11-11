@@ -132,7 +132,7 @@ public class NewYorkGraphTest extends IntegrationTest {
                 }
             });
             double avg = overAll.doubleValue() / denominator.doubleValue();
-            System.out.printf("avg : %s with %d load invocations%n", avg, diskChDijkstra.loadInvocations());
+            System.out.printf("avg : %s with %d load invocations%n", avg, diskChDijkstra.totalLoadInvocations());
         } catch (Exception e) {
             e.printStackTrace();
         }

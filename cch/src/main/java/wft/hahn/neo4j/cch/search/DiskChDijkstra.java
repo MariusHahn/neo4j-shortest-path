@@ -15,10 +15,17 @@ public class DiskChDijkstra implements AutoCloseable {
 
     private final Buffer outBuffer;
     private final Buffer inBuffer;
+    public int expandedNodes;
+
+    private int loadInvocationsLatestQuery;
 
     public DiskChDijkstra(Buffer outBuffer, Buffer inBuffer) {
         this.outBuffer = outBuffer;
         this.inBuffer = inBuffer;
+    }
+
+    public int getLoadInvocationsLatestQuery() {
+        return loadInvocationsLatestQuery;
     }
 
     public DiskChDijkstra(Path basePath) {
@@ -27,6 +34,8 @@ public class DiskChDijkstra implements AutoCloseable {
     }
 
     public SearchPath find(int start, int goal) {
+        final int startLoadInvocations = totalLoadInvocations();
+        expandedNodes = 0;
         boolean pickForward = true;
         final PriorityQueue<SearchPath> candidates = new PriorityQueue<>();
         final Query forwardQuery = new Query(start, Set.of(), outBuffer);
@@ -36,6 +45,7 @@ public class DiskChDijkstra implements AutoCloseable {
             final Query other = pickForward ? backwardQuery : forwardQuery;
             pickForward = !pickForward;
             if (!query.isComplete()) query.expandNext(); else continue;
+            expandedNodes++;
             final SearchVertex latest = query.latestExpand();
             if (other.resultMap().containsKey(latest.rank)) {
                 final SearchPath forwardPath = forwardQuery.resultMap().get(latest.rank);
@@ -43,6 +53,7 @@ public class DiskChDijkstra implements AutoCloseable {
                 candidates.offer(new BidirectionalSearchPath(forwardPath, backwardPath));
             }
         }
+        loadInvocationsLatestQuery = totalLoadInvocations() - startLoadInvocations;
         return candidates.poll();
     }
 
@@ -66,7 +77,7 @@ public class DiskChDijkstra implements AutoCloseable {
         }
     }
 
-    public int loadInvocations() {
+    public int totalLoadInvocations() {
         return inBuffer.getLoadInvocations() + outBuffer.getLoadInvocations();
     }
 }

@@ -25,6 +25,7 @@ import wtf.hahn.neo4j.model.WeightedPathImpl;
 public class Dijkstra {
     private final PathExpander<Double> baseExpander;
     private final CostEvaluator<Double> weightFunction;
+    public Query latestQuery;
 
     public Dijkstra(RelationshipType relationshipType, CostEvaluator<Double> weightFunction) {
         baseExpander = PathExpanderBuilder.empty().add(relationshipType, Direction.OUTGOING).build();
@@ -36,18 +37,22 @@ public class Dijkstra {
     }
 
     public WeightedPath find(Node start, Node goal, PathExpander<Double> expander) {
-        return new Query(start, Set.of(goal), expander, weightFunction).getResult().get(goal);
+        latestQuery = new Query(start, Set.of(goal), expander, weightFunction);
+        return latestQuery.getResult().get(goal);
     }
 
     public WeightedPath find(Node start, Node goal) {
-        return new Query(start, Set.of(goal), baseExpander, weightFunction).getResult().get(goal);
+        latestQuery = new Query(start, Set.of(goal), baseExpander, weightFunction);
+        return this.latestQuery.getResult().get(goal);
     }
     public Map<Node, WeightedPath> find(Node start, Collection<Node> goals) {
-        return new Query(start, new HashSet<>(goals), baseExpander, weightFunction).getResult();
+        latestQuery = new Query(start, new HashSet<>(goals), baseExpander, weightFunction);
+        return this.latestQuery.getResult();
     }
 
     public Map<Node, WeightedPath> find(Node start, Collection<Node> goals, PathExpander<Double> expander) {
-        return new Query(start, new HashSet<>(goals), expander, weightFunction).getResult();
+        latestQuery = new Query(start, new HashSet<>(goals), expander, weightFunction);
+        return this.latestQuery.getResult();
     }
 
     public static class Query {
@@ -58,6 +63,9 @@ public class Dijkstra {
         private final Map<Node, WeightedPath> shortestPaths;
         private final CostEvaluator<Double> weightFunction;
         private DijkstraState latestExpand;
+        private  int expandedNodes;
+        private long startTime;
+        private Map<Node, DijkstraInfo> infos = new HashMap<>();
 
         public Query(Node start, Set<Node> goals, PathExpander<Double> expander,
                      CostEvaluator<Double> weightFunction) {
@@ -68,17 +76,20 @@ public class Dijkstra {
             queue.offer(init);
             seen.put(start, init);
             shortestPaths = new HashMap<>(goals.size() * 4 / 3 );
+            expandedNodes = 0;
         }
 
         private Map<Node, WeightedPath> getResult() {
+            startTime = System.nanoTime();
             while (!isComplete()) {expandNext();}
             return shortestPaths;
         }
 
         public void expandNext() {
-            final DijkstraState state = queue.poll();
+            final DijkstraState state = queue.poll(); expandedNodes++;
             latestExpand = state;
             if (goals.contains(state.getEndNode()) || goals.isEmpty()) {
+                infos.put(state.getEndNode(), new DijkstraInfo((System.nanoTime()-startTime) /1000, expandedNodes));
                 shortestPaths.put(state.getEndNode(), state.getPath());
             }
             final Iterable<Relationship> relationships = expander.expand(state.getPath(), BranchState.NO_STATE);
@@ -116,6 +127,10 @@ public class Dijkstra {
 
         public double latestWeight() {
             return shortestPaths.get(latestExpand.getEndNode()).weight();
+        }
+
+        public Map<Node, DijkstraInfo> getExpansionInfo() {
+            return infos;
         }
     }
 }

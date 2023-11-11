@@ -1,2 +1,82 @@
 \chapter{Experiments}
-some experiments
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Query Time over Distance},
+        xlabel={Distance},
+        ylabel={time in micro seconds},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+        
+        \addplot table [x=weight, y=dijkstraTime, col sep=comma, only marks] {assets/plots/data.csv};
+        \legend{dijkstra, CCH}
+        \addplot table [x=weight, y=cchTime, col sep=comma, only marks] {assets/plots/data.csv};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Query Time over Path length},
+        xlabel={dijkstra path length},
+        ylabel={time in micro seconds},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+        
+        \addplot table [x=dijkstraHops, y=dijkstraTime, col sep=comma, only marks] {assets/plots/data.csv};
+        \legend{dijkstra, CCH}
+        \addplot table [x=dijkstraHops, y=cchTime, col sep=comma, only marks] {assets/plots/data.csv};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Disk access over Expand Nodes in CCH},
+        xlabel={Expanded Verticies},
+        ylabel={Load Invocations},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+    \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/data.csv};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Disk access over Expand Nodes in CCH},
+        xlabel={Time},
+        ylabel={Load Invocations},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+    \addplot table [x=cchTime, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/data.csv};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Disk access over Expand Nodes in CCH},
+        xlabel={Dijkstra path length},
+        ylabel={CCH path length},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+    \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
+    \end{axis}
+\end{tikzpicture}

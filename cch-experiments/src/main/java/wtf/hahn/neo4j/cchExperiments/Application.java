@@ -23,13 +23,20 @@ public class Application {
                 case "CREATE" -> {
                     ImportAndIndex importAndIndex = new ImportAndIndex(PROPERTIES.getProperty("inputFile"), database.getDb());
                     importAndIndex.go();
-                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, "m1.csv", database.getDb());
+                    String measureFileName = "m1-%d.csv".formatted(System.currentTimeMillis());
+                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
                     measureQueries.go();
                 }
                 case "UPDATE" -> {
                     ChangeAndUpdate changeAndUpdate = new ChangeAndUpdate(Paths.get(dbDirName(fileName)), database.getDb());
                     changeAndUpdate.go();
-                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, "m6.csv", database.getDb());
+                    String measureFileName = "m6%d.csv".formatted(System.currentTimeMillis());
+                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
+                    measureQueries.go();
+                }
+                   case "MEASURE" -> {
+                    String measureFileName = "m%d.csv".formatted(System.currentTimeMillis());
+                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
                     measureQueries.go();
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + action);
