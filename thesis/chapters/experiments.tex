@@ -80,3 +80,41 @@
     \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
     \end{axis}
 \end{tikzpicture}
+
+\newpage
+
+\begin{table}
+    \centering
+    \begin{tabular}{ p{5cm} || R{2cm} | R{2cm} | R{2cm} | R{2cm} }
+    \toprule
+     & \multicolumn{1}{l}{\textbf{New York}} & \multicolumn{1}{l}{\textbf{Colorado}} & \multicolumn{1}{l}{\textbf{Florida}} & \multicolumn{1}{L{2cm}}{\textbf{California + Nevada}} \\ 
+    \midrule
+    Verticies & 264,346 & 435,666 & 1,070,376 & 1,890,815 \\
+    Edges & 733,846 & 1,057,066 & 2,712,798 & 4,657,742 \\
+    Shortcuts & 2,153,002 & 1,680,290 & 4,397,804 & 8,598,552 \\
+    Shortcuts added Relative & 2.93 & 1.59 & 1.62 & 1.85 \\
+    Contraction Time & 545 s & 233 s & 579 s & 4,384 s \\
+    Max In Degree & 1,150 & 629 & 785 & 1,252 \\
+    Out Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
+    Out Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
+    In Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
+    In Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
+    Block filling & 0.99 & 0.95 & -122.0 & -122.0 \\ 
+    AVG Dijkstra Search Time & -122.0 & -122.0 & -122.0 & -122.0 \\ 
+    AVG Search Time 40960 & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Search Time 25\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Search Time 50\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Search Time 75\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Search Time 100\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Disk Access 40960 & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Disk Access 25\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Disk Access 50\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Disk Access 75\% & -122.0 & -122.0 & -122.0 & -122.0 \\
+    Update Time & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Search Time 40960 after multi update & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Disk Access 40960 after multi update & -122.0 & -122.0 & -122.0 & -122.0 \\
+    \bottomrule
+    \end{tabular}
+    \caption{thisTable.}
+    \label{tab:thisTable}
+\end{table}

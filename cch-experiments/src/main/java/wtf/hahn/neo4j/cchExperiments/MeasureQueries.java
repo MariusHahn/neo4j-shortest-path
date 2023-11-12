@@ -48,6 +48,7 @@ public class MeasureQueries {
              final FifoBuffer inBuffer = new FifoBuffer(bufferSize, Mode.IN, workDirPath);
              final BufferedWriter bufferedWriter = getBufferedWriter();
              final DiskChDijkstra diskChDijkstra = new DiskChDijkstra(outBuffer, inBuffer)) {
+            System.out.println(transaction.getAllRelationships().stream().count() + " arcs in the graph");
             int max = (int) transaction.getAllNodes().stream().mapToLong(n -> getLongProperty(n, ROAD_RANK_PROPERTY)).max().orElseThrow();
             Random fromRandom = new Random(37);
             Dijkstra dijkstra = new Dijkstra(() -> ImportAndIndex.RELATIONSHIP_NAME, ImportAndIndex.WEIGH_PROPERTY);
