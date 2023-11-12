@@ -51,7 +51,7 @@ public class MeasureQueries {
             int max = (int) transaction.getAllNodes().stream().mapToLong(n -> getLongProperty(n, ROAD_RANK_PROPERTY)).max().orElseThrow();
             Random fromRandom = new Random(37);
             Dijkstra dijkstra = new Dijkstra(() -> ImportAndIndex.RELATIONSHIP_NAME, ImportAndIndex.WEIGH_PROPERTY);
-            bufferedWriter.append("from,to,cchTime,weight,cchHops,cchExpanded,cchLoadInvocations,dijkstraHops,dijkstraTime,DijkstraExpandedNodes,bufferSize="+bufferSize+"\n");
+            bufferedWriter.append("from,to,cchTime,weight,cchHops,cchExpanded,cchLoadInvocations,dijkstraHops,dijkstraTime,DijkstraExpandedNodes"+"\n");
             for (int i = 0; i < 100; i++) {
                 final int x = fromRandom.nextInt(max);
                 final Node from = transaction.findNode(LABEL, ROAD_RANK_PROPERTY, x);
@@ -97,7 +97,6 @@ public class MeasureQueries {
         xMap.put(10, new HashMap<>());
         xMap.put(100, new HashMap<>());
         xMap.put(1000, new HashMap<>());
-        xMap.put(1000, new HashMap<>());
         xMap.put(10000, new HashMap<>());
         xMap.put(100000, new HashMap<>());
         dijkstraPaths.forEach((node, path) -> {
@@ -114,7 +113,6 @@ public class MeasureQueries {
         Map<Integer, Map<Node, WeightedPath>> xMap = new HashMap<>();
         xMap.put(10, new HashMap<>());
         xMap.put(100, new HashMap<>());
-        xMap.put(1000, new HashMap<>());
         xMap.put(1000, new HashMap<>());
         xMap.put(10000, new HashMap<>());
         xMap.put(100000, new HashMap<>());

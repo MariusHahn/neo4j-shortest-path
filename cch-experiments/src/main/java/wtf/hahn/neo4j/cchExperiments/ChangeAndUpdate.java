@@ -27,7 +27,7 @@ public class ChangeAndUpdate {
         this.db = db;
     }
 
-    void go() {
+    long go() {
         try (Transaction transaction = db.beginTx()) {
             List<Relationship> relationships = transaction.findRelationships(() -> "ROAD").stream().collect(Collectors.toList());
             Collections.shuffle(relationships);
@@ -57,12 +57,14 @@ public class ChangeAndUpdate {
                 return Void.class;
             });
             transaction.commit();
+            long time = System.currentTimeMillis();
             try {
-                Files.writeString(path.resolve("update_%d.info".formatted(System.currentTimeMillis())),
+                Files.writeString(path.resolve("update_%d.info".formatted(time)),
                         "update took: %d micro seconds".formatted(updateMeasure.getMicros()));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+            return time;
         }
     }
 }

@@ -23,19 +23,19 @@ public class Application {
                 case "CREATE" -> {
                     ImportAndIndex importAndIndex = new ImportAndIndex(PROPERTIES.getProperty("inputFile"), database.getDb());
                     importAndIndex.go();
-                    String measureFileName = "m1-%d.csv".formatted(System.currentTimeMillis());
+                    String measureFileName = "init-%d-%d.csv".formatted(System.currentTimeMillis(), bufferSize);
                     MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
                     measureQueries.go();
                 }
                 case "UPDATE" -> {
                     ChangeAndUpdate changeAndUpdate = new ChangeAndUpdate(Paths.get(dbDirName(fileName)), database.getDb());
-                    changeAndUpdate.go();
-                    String measureFileName = "m6%d.csv".formatted(System.currentTimeMillis());
+                    long time = changeAndUpdate.go();
+                    String measureFileName = "update-%d-%d.csv".formatted(time, bufferSize);
                     MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
                     measureQueries.go();
                 }
-                   case "MEASURE" -> {
-                    String measureFileName = "m%d.csv".formatted(System.currentTimeMillis());
+                case "MEASURE" -> {
+                    String measureFileName = "measure-%d-%d.csv".formatted(System.currentTimeMillis(), bufferSize);
                     MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
                     measureQueries.go();
                 }
