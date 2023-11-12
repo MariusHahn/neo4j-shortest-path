@@ -75,9 +75,63 @@
         xmajorgrids=true,
         ymajorgrids=true,
         grid style=dashed,
+        width = 1\linewidth,
+        %x filter/.code={\pgfmathparse{#1^0.5}}
+        %xmode = log,
+        %log basis x=2
+        ]
+    \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Disk access over Expand Nodes in CCH},
+        xlabel={Path Length},
+        ylabel={Distance},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
         width = 1\linewidth
     ]
-    \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
+    \addplot table [x=weight, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
+    \addplot table [x=weight, y=dijkstraHops, col sep=comma, only marks] {assets/plots/data.csv};
+    \legend{dijkstra, CCH}
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Expanded Verticies over Path Length},
+        xlabel={Distance},
+        ylabel={Expanded Verticies},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+    \addplot table [x=weight, y=DijkstraExpandedNodes, col sep=comma, only marks] {assets/plots/data.csv};
+    \addplot table [x=weight, y=cchExpanded, col sep=comma, only marks] {assets/plots/data.csv};
+    \legend{dijkstra, CCH}
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Expanded Verticies over Distance},
+        xlabel={Path Length},
+        ylabel={Expanded Verticies},
+        legend pos=north west,
+        xmajorgrids=true,
+        ymajorgrids=true,
+        grid style=dashed,
+        width = 1\linewidth
+    ]
+    \addplot table [x=dijkstraHops, y=DijkstraExpandedNodes, col sep=comma, only marks] {assets/plots/data.csv};
+    \addplot table [x=dijkstraHops, y=cchExpanded, col sep=comma, only marks] {assets/plots/data.csv};
+    \legend{dijkstra, CCH}
     \end{axis}
 \end{tikzpicture}
 
@@ -100,19 +154,12 @@
     In Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
     In Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
     Block filling & 0.99 & 0.95 & -122.0 & -122.0 \\ 
-    AVG Dijkstra Search Time & -122.0 & -122.0 & -122.0 & -122.0 \\ 
-    AVG Search Time 40960 & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Search Time 25\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Search Time 50\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Search Time 75\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Search Time 100\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Disk Access 40960 & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Disk Access 25\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Disk Access 50\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Disk Access 75\% & -122.0 & -122.0 & -122.0 & -122.0 \\
-    Update Time & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Search Time 40960 after multi update & -122.0 & -122.0 & -122.0 & -122.0 \\
-    AVG Disk Access 40960 after multi update & -122.0 & -122.0 & -122.0 & -122.0 \\
+    AVG Dijkstra Search Time & 0.816 s & 0.549 s & 2.630 s & 4.858 s \\ 
+    AVG Search Time (40kB) & 0.140 s & 0.122 s & 0.147 s & 0.289 s\\
+    AVG Disk Access (40kB) & 574 & 437 & 500 & 899 \\
+    Update Time & 90 s & 51 s & 142 s & 444 s \\
+    AVG Search Time 40960 after multi update & 0.147 s & 0.129 s & 0.150 s & 0.302 \\
+    AVG Disk Access 40960 after multi update & 569 & 457 & 516 & 924 \\
     \bottomrule
     \end{tabular}
     \caption{thisTable.}
