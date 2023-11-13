@@ -1,40 +1,169 @@
 \chapter{Experiments}
 
+In this chapter we will experimentally check if our idea and implementation of a persisted version of CCH works out.
+
+\section{The Test Environment}
+
+We implemented this CCH in \textit{Java 17} and fo \textit{Neo4j 5.1.0}. The only addition Java library we use is \textit{lombok version 1.18.24}, for static code generation, like getter and setters.
+\\
+The code runs on a virtual machine that is running \textit{Linux Mint 20.3 Una}. This VM has two  AMD EPYC 7351 16-Core Processors with L1d cache=1 MiB L1i cache=2 MB, L2 cache=16 MB and L3 cache=128 MB. 
+It has 512 GB of RAM and the system hard drive is a \textit{Intel SSDPEKNW020T8} SSD with 2 TB.
+
+
+\section{The Test Data}
+
+The test graphs we evaluate the implementation are provided by the \cite[9th DIMACS Implementation Challenge - Shortest Paths]{DIMACS}. There we focus on the road networks of New York, Colorado, Florida and California+Nevada.
+We use the distance graphs, only in case of New York we tried the distance and the time travel graph. As the results were similar and the contraction strategy is not depending on the arc weight we omitted the further test wit the time travel graphs.
+
+\section{The Contraction}
+
+In table \ref{tab:overview_table} you can see the basic results of the networks we tested. One would think that the contraction time goes along with the size of the network, though it doesn't. The New York graph has has about the same contraction time 
+as Florida which is about three times as big. Additionally the amount of shortcuts inserted Relative to the already existing arcs is almost twice as big. This is probably happens because the New York graph is a lot denser than the other graphs under test like Florida.
+In New York, regardless if you take the state or only the city itself, there are four natural separators: \textit{Manhattan and Brooklyn}, \textit{Manhattan and Queens}, \textit{Manhattan and Bronx}, \textit{Bronx and Queens}, \textit{Staten Island and Brooklyn} as well as \textit{Staten Island and Manhattan to the mainland}.  
+\\ 
+Where as the population of Florida is more sparse and located on a line at the cost of both side, as well as their streets. Therefore as shown in figure \ref{fig:linear_contraction} the contraction can easily find vertices as separators. 
+
+\subsection{Limits}
+
+We decided to set the time limit a contraction should not exceed to one day. If, within this time the contraction did finish, we decided to abort the process. This happend for the graphs \textit{Western USA, …}. If one would want to go this size or bigger we suggest,
+to achieve the vertex ordering by recursive finding balanced separators as described in \cite[Customization Contraction Hierarchies]{CCH}. 
+\\
+Contraction methods that rely on measures like edge difference suffer from very bad performance, if the graph gets dense. At the same time, the remaining graph will get denser towards the end of the contraction process. It is possible  that the last few nodes form a complete graph. The algorithm
+as proposed in this paper always will update the importance  of it's neighbors  after each contracted vertex and re-push it to the queue $Q$ of remaining vertices. Update the neighbor importance means to simulate the contraction of this neighbor. So we check for all pairs of incoming and outgoing neighbors $N_\downarrow(v) \times N_\uparrow(v) \setminus N_\downarrow(v) = N_\uparrow(v)$ whether we have to insert a shortcut. 
+This you have to $|Q|$ times. In case of a complete graph the in- and the outgoing neighbor set will have size $|Q|$. Which lead to the this many neighbor checks $(|Q| * |Q| - |Q|)*|Q|$ which is almost $(|Q|)^3$ checks whether to insert a shortcut or not. In case your graph already get's complete or close to it on the last 
+100 this is a doable exercise. In case there are 3000 remaining, it will starve. 
+
+
+\begin{table}
+    \centering
+    \begin{tabular}{ p{5cm} || R{2cm} | R{2cm} | R{2cm} | R{2cm} }
+    \toprule
+     & \multicolumn{1}{l}{\textbf{New York}} & \multicolumn{1}{l}{\textbf{Colorado}} & \multicolumn{1}{l}{\textbf{Florida}} & \multicolumn{1}{L{2cm}}{\textbf{California + Nevada}} \\ 
+    \midrule
+    Verticies & 264,346 & 435,666 & 1,070,376 & 1,890,815 \\
+    Edges & 733,846 & 1,057,066 & 2,712,798 & 4,657,742 \\
+    Shortcuts & 2,153,002 & 1,680,290 & 4,397,804 & 8,598,552 \\
+    Shortcuts added Relative & 2.93 & 1.59 & 1.62 & 1.85 \\
+    Contraction Time & 545 s & 233 s & 579 s & 4,384 s \\
+    Max In Degree & 1,150 & 629 & 785 & 1,252 \\
+    Out Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
+    Out Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
+    In Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
+    In Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
+    Block filling & 0.99 & 0.95 & -122.0 & -122.0 \\ 
+    AVG Dijkstra Search Time & 0.816 s & 0.549 s & 2.630 s & 4.858 s \\ 
+    AVG Search Time (40kB) & 0.140 s & 0.122 s & 0.147 s & 0.289 s\\
+    AVG Disk Access (40kB) & 574 & 437 & 500 & 899 \\
+    Update Time & 90 s & 51 s & 142 s & 444 s \\
+    AVG Search Time (40kB) after multi update & 0.147 s & 0.129 s & 0.150 s & 0.302 \\
+    AVG Disk Access (40kB) after multi update & 569 & 457 & 516 & 924 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Network overview table}
+    \label{tab:overview_table}
+\end{table}
+
+
+\section{Query Performance}
+
+In this section we will have a look at the query performance. The query performance will depends mainly in quality of the contraction and the buffer size. 
+As the circular buffer we implemented performs better we will focus on it and bring only a small comparison at the end to the LRU buffer.
+
+
+\subsection{Comparison with Dijkstra}
+
+Regarding Figure \ref{fig:dijkstra_vs_cch_query_speed} shows speed difference of Dijkstra and CCH-shortest path query. As you can see, the greater distance, the greater the advantage of CCH over dijkstra. Small queries where the shortest path involve only a few hundred vertices have a very little speed up,
+whereas long distance queries are a lot faster. Figure \ref{fig:dijkstra_vs_cch_query_speed} is a random sample of queries in California and Nevada. As you can
+see in the left chart, there are some long distance queries for which dijkstra performs very good, though you cannot see them in the right chart, that has the path 
+length on the x-axis. We assume the good performing long distance queries to be in Nevada as its road network is sparser and than those of California. Therefore we added the right chart.
+It shows the advantage of CCH over dijkstra depends on the path length of the shortest path.
+
+
+\begin{figure}   
 \begin{tikzpicture}
     \begin{axis}[
         title={Query Time over Distance},
-        xlabel={Distance},
+        xlabel={distance},
         ylabel={time in micro seconds},
         legend pos=north west,
         xmajorgrids=true,
         ymajorgrids=true,
         grid style=dashed,
-        width = 1\linewidth
+        width = 0.54\linewidth,
     ]
         
-        \addplot table [x=weight, y=dijkstraTime, col sep=comma, only marks] {assets/plots/data.csv};
+        \addplot table [x=weight, y=dijkstraTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
         \legend{dijkstra, CCH}
-        \addplot table [x=weight, y=cchTime, col sep=comma, only marks] {assets/plots/data.csv};
+        \addplot table [x=weight, y=cchTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
     \end{axis}
 \end{tikzpicture}
-
 \begin{tikzpicture}
     \begin{axis}[
         title={Query Time over Path length},
         xlabel={dijkstra path length},
-        ylabel={time in micro seconds},
+        %ylabel={time in micro seconds},
         legend pos=north west,
         xmajorgrids=true,
         ymajorgrids=true,
         grid style=dashed,
-        width = 1\linewidth
+        width = 0.54\linewidth
     ]
         
-        \addplot table [x=dijkstraHops, y=dijkstraTime, col sep=comma, only marks] {assets/plots/data.csv};
+        \addplot table [x=dijkstraHops, y=dijkstraTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
         \legend{dijkstra, CCH}
-        \addplot table [x=dijkstraHops, y=cchTime, col sep=comma, only marks] {assets/plots/data.csv};
+        \addplot table [x=dijkstraHops, y=cchTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
     \end{axis}
 \end{tikzpicture}
+\caption{Comparison of CCH query performance on the California+Nevada graph, before updating. Buffer size 40kB. Random sample of 1000 vertex to vertex queries}
+\label{fig:dijkstra_vs_cch_query_speed}
+\end{figure}
+
+Having a look a figure \ref{fig:dijkstra_vs_cch_expanded_vertices} we compare the amount of vertices the search query has to expand to find the shortest path. As expected dijkstra expands roughly quadratic many vertices to find the shortest path between vertices for shortest paths that involve up to 1000 vertices.
+After that the search touches the network borders and starts to expand the last leaves which happens almost linear.\\
+The CCH search only expands vertices of higher rank. As you can see in Figure \ref{fig:dijkstra_vs_cch_expanded_vertices} the CCH expands at most around 1600 vertices. Therefore, we assume, CCH needs at most expand 800 vertices per search side the find the node with the highest rank. So no matter which source or target one chooses, the query will be bound to these 1600 vertex expansions.
+This is the reason CHH performs so good especially for long distance queries.
+\\
+So far we only had a look long distance queries, let's have a look at the short ones, but queries where source and target are more that 300 vertices away already perform as good or better than dijkstra. The search sides of these queries are even shorter than 800 expanded vertices. They can figure out the shortest path within a few hundred node expansions.
+
+\begin{figure}   
+    \begin{tikzpicture}
+        \begin{axis}[
+            title={Query Time over Distance},
+            xlabel={distance},
+            ylabel={Expanded Nodes},
+            legend pos=north west,
+            xmajorgrids=true,
+            ymajorgrids=true,
+            grid style=dashed,
+            width = 0.54\linewidth,
+        ]
+            
+            \addplot table [x=dijkstraHops, y=DijkstraExpandedNodes, col sep=comma, only marks] {assets/plots/data.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \begin{tikzpicture}
+        \begin{axis}[
+            title={Query Time over Path length},
+            xlabel={dijkstra path length},
+            %ylabel={time in micro seconds},
+            legend pos=north west,
+            xmajorgrids=true,
+            ymajorgrids=true,
+            grid style=dashed,
+            width = 0.54\linewidth
+        ]
+            
+        \addplot table [x=dijkstraHops, y=cchExpanded, col sep=comma, only marks] {assets/plots/data.csv};
+         \end{axis}
+    \end{tikzpicture}
+    \caption{Comparison of CCH query performance on the California+Nevada graph, before updating. Buffer size 40kB. Random sample of 1000 vertex to vertex queries}
+    \label{fig:dijkstra_vs_cch_expanded_vertices}
+\end{figure}
+
+\subsection{Disk Access at Query Time}
+
+some text
+
 
 \begin{tikzpicture}
     \begin{axis}[
@@ -137,31 +266,3 @@
 
 \newpage
 
-\begin{table}
-    \centering
-    \begin{tabular}{ p{5cm} || R{2cm} | R{2cm} | R{2cm} | R{2cm} }
-    \toprule
-     & \multicolumn{1}{l}{\textbf{New York}} & \multicolumn{1}{l}{\textbf{Colorado}} & \multicolumn{1}{l}{\textbf{Florida}} & \multicolumn{1}{L{2cm}}{\textbf{California + Nevada}} \\ 
-    \midrule
-    Verticies & 264,346 & 435,666 & 1,070,376 & 1,890,815 \\
-    Edges & 733,846 & 1,057,066 & 2,712,798 & 4,657,742 \\
-    Shortcuts & 2,153,002 & 1,680,290 & 4,397,804 & 8,598,552 \\
-    Shortcuts added Relative & 2.93 & 1.59 & 1.62 & 1.85 \\
-    Contraction Time & 545 s & 233 s & 579 s & 4,384 s \\
-    Max In Degree & 1,150 & 629 & 785 & 1,252 \\
-    Out Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
-    Out Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
-    In Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
-    In Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
-    Block filling & 0.99 & 0.95 & -122.0 & -122.0 \\ 
-    AVG Dijkstra Search Time & 0.816 s & 0.549 s & 2.630 s & 4.858 s \\ 
-    AVG Search Time (40kB) & 0.140 s & 0.122 s & 0.147 s & 0.289 s\\
-    AVG Disk Access (40kB) & 574 & 437 & 500 & 899 \\
-    Update Time & 90 s & 51 s & 142 s & 444 s \\
-    AVG Search Time 40960 after multi update & 0.147 s & 0.129 s & 0.150 s & 0.302 \\
-    AVG Disk Access 40960 after multi update & 569 & 457 & 516 & 924 \\
-    \bottomrule
-    \end{tabular}
-    \caption{thisTable.}
-    \label{tab:thisTable}
-\end{table}
