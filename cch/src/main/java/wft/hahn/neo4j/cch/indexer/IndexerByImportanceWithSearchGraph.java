@@ -19,6 +19,7 @@ public final class IndexerByImportanceWithSearchGraph {
     private final VertexLoader vertexLoader;
     private final LastInsertWinsPriorityQueue<QueueVertex> queue;
     public final ContractionInsights contractionInsights;
+    private final int toContract;
     private int rank = 0;
     private Vertex vertexToContract = null;
 
@@ -27,6 +28,7 @@ public final class IndexerByImportanceWithSearchGraph {
         this.type = RelationshipType.withName(type);
         vertexLoader = new VertexLoader(transaction, costProperty, this.type);
         Set<Vertex> vertices = vertexLoader.loadAllVertices();
+        toContract = vertices.size();
         queue = new LastInsertWinsPriorityQueue<>(vertices.stream().map(v -> new QueueVertex(shortcutsToInsert(v))));
         contractionInsights = new ContractionInsights();
     }
@@ -34,6 +36,7 @@ public final class IndexerByImportanceWithSearchGraph {
     public Vertex insertShortcuts() {
         long start = System.currentTimeMillis();
         while (!queue.isEmpty()) {
+            long l = System.currentTimeMillis();
             final Contraction poll = shortcutsToInsert(queue.poll().vertex());
             vertexToContract = poll.vertexToContract;
             vertexToContract.rank = rank;
@@ -41,15 +44,17 @@ public final class IndexerByImportanceWithSearchGraph {
             for (Shortcut shortcut : poll.shortcuts) {
                 contractionInsights.addToInsertionCounter(createOrUpdateEdge(vertexToContract, shortcut));
             }
-            updateNeighborsInQueue(queue, vertexToContract);
+            int neighborsUpdated = updateNeighborsInQueue(queue, vertexToContract);
             contractionInsights.updateMaxDegree(vertexToContract);
+            long cTime = System.currentTimeMillis() - l;
+            if (cTime > 500) System.out.printf("last contraction took: %d ms -> %d to go! degree %d %n", cTime,  toContract - rank, neighborsUpdated);
         }
         contractionInsights.contractionTime = System.currentTimeMillis() - start;
         vertexLoader.commit();
         return vertexToContract;
     }
 
-    private static void updateNeighborsInQueue(LastInsertWinsPriorityQueue<QueueVertex> queue, Vertex nodeToContract) {
+    private int updateNeighborsInQueue(LastInsertWinsPriorityQueue<QueueVertex> queue, Vertex nodeToContract) {
         final Set<Vertex> seen = new HashSet<>();
         for (final Arc inArc : nodeToContract.inArcs()) {
             final Vertex neighbor = inArc.start;
@@ -68,6 +73,7 @@ public final class IndexerByImportanceWithSearchGraph {
                 queue.offer(new QueueVertex(shortcutsToInsert(neighbor)));
             }
         }
+        return seen.size();
     }
 
     private static Contraction shortcutsToInsert(final Vertex nodeToContract) {
