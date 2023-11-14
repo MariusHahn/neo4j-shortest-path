@@ -5,7 +5,6 @@ It is far form being complete, but there will be some easy examples to show the 
 
 \section{Contracting}
 
-
 \input{assets/pseudocode/contraction.tex}
 
 \begin{figure}
@@ -15,7 +14,9 @@ It is far form being complete, but there will be some easy examples to show the 
     \label{fig:contrating_and_searching}
 \end{figure}
 
-Algorithm \ref{alg:contraction} provides our contraction algorithm. 
+Algorithm \ref{alg:contraction} provides our contraction algorithm. We do what is called a \textit{metric dependent} contraction in \cite[Customization Contraction Hierarchies]{CCH}. 
+This is a greedy algorithm which always takes the next best vertex to contract. Some use the simple edge difference as \cite[Contraction Hierarchies]{Geisberger_2012}, but we will use
+a more advanced metric as desired in 
 
 \subsection{Example}
 
@@ -68,7 +69,7 @@ To update the CH graph we have to insert an edge between vertex $v(2)$ and $v(3)
     \label{fig:DifferenceCHAndCCH}
 \end{figure}
 
-\section{Metric Dependent Vertex Order}
+\section{Metric Dependent Vertex Order}\label{sec:metric_dependent_vertex_order}
 There are two ways to get a suitable vertex order. A so called \textit{metric independent} and a so called \textit{metric dependent} one. The metric independent recursively uses balanced separator to determine a vertex ordering\cite{CCH}. Although this is the superior method, it is not used in this paper writing an algorithm that calculates balanced separators isn't trivial, and we are not aiming for optimizing the contraction process. 
 The metric dependent order mainly uses the edge difference $ED$ to determine which vertex is to be contracted next. The $ED$ is determined as the $|edges To Insert| - |edges To Remove|$. The fewer edges are inserted during contraction the fewer edges will be contained by the final graph, therefore fewer edges to expand in a search. However using only the edge differences doesn't lead to desired result. This is because during contraction there will be areas that get less dense than others. 
 There are two problems that can arise. One is that important vertices are not contracted last. The other is the search space of the query gets linear although it could be logarithmic.

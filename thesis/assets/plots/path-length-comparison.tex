@@ -8,29 +8,30 @@
         xmajorgrids=true,
         ymajorgrids=true,
         grid style=dashed,
-        width = 0.54\linewidth,
+        width = \linewidth,
+        height = 0.54\linewidth
         %xmode = log,
         %log basis x=2
         ]
     \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/ny-data.csv};
     \end{axis}
 \end{tikzpicture}
-    \begin{tikzpicture}
-    \begin{axis}[
-        title={Disk access over Expand Nodes in CCH},
-        xlabel={$\sqrt[2]{\text{Dijkstra path length}}$},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 0.54\linewidth,
-        x filter/.code={\pgfmathparse{#1^0.5}}
-        %xmode = log,
-        %log basis x=2
-        ]
-    \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/ny-data.csv};
-    \end{axis}
-\end{tikzpicture}
+%    \begin{tikzpicture}
+%    \begin{axis}[
+%        title={Disk access over Expand Nodes in CCH},
+%        xlabel={$\sqrt[2]{\text{Dijkstra path length}}$},
+%        legend pos=north west,
+%        xmajorgrids=true,
+%        ymajorgrids=true,
+%        grid style=dashed,
+%        width = 0.54\linewidth,
+%        x filter/.code={\pgfmathparse{#1^0.5}}
+%        %xmode = log,
+%        %log basis x=2
+%        ]
+%    \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/ny-data.csv};
+%    \end{axis}
+%\end{tikzpicture}
 \caption{Some Caption}
 \label{fig:path_length_comparison}
 \end{figure}
