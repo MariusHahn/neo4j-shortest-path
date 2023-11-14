@@ -3,7 +3,10 @@
 In this section we will present the basic idea of \cite[Customization Contraction Hierarchies]{CCH} and also work out the main difference between CCH and \cite[Contraction Hierarchies]{Geisberger_2012}.
 It is far form being complete, but there will be some easy examples to show the concept. 
 
-\section{Contracting and Searching}
+\section{Contracting}
+
+
+\input{assets/pseudocode/contraction.tex}
 
 \begin{figure}
     \centering
@@ -11,6 +14,10 @@ It is far form being complete, but there will be some easy examples to show the 
     \caption{The numbers inside the vertices represent their contraction order}
     \label{fig:contrating_and_searching}
 \end{figure}
+
+Algorithm \ref{alg:contraction} provides our contraction algorithm. 
+
+\subsection{Example}
 
 In Figure \ref{fig:contrating_and_searching} you can see a contracted graph $G'(V,E')$ on the left. The solid lines represent the original edges $E$ of a graph $G$. The dashed lines between vertices are shortcuts $S$ that 
 have been added while creating the CCH index graph G'(V, E'). The numbers inside the vertices reflect the contraction order.
@@ -20,7 +27,15 @@ and there is no edge $e \epsilon E'$ between these vertices a shortcut has to be
 Let's reconstruct the contraction of Figure \ref{fig:contrating_and_searching}. At first vertex $v(1)$ is removed. As $v(1)$ resides on a simple path to between $v(3)$ and $v(5)$ and there is no edge $e(v(3), v(5)) \notin E'$,
 there must be a shortcut added to keep the via path.
 The same applies after contracting $v(2)$ for the vertices $v(4)$ and $v(5)$. For all the other vertices we do not need to insert shortcuts.
-\\
+
+\section{Searching}
+
+\input{assets/pseudocode/cchSearch.tex}
+
+some text
+
+\subsection{Example}
+
 As we preserved all via paths during the contraction the shortest path can be retrieved by a bidirectional Dijkstra that is restricted such that it only expands vertices of higher rank. 
 Therefore if one wants to retrieve the shortest path between $v(3)$ and $v(4)$ there will be a forward search from $v(3)$ and a backward search from $v(4)$. As we restrict theses searches to expand only vertices
 of higher rank, the only vertices to expand are the start and target vertex. Both will find only one vertex $v(5)$, the highest vertex and the meeting point, too. Finding at least one meeting point in the forward an backward search means there exist a path between them.
@@ -31,6 +46,7 @@ all possible meeting points and take the path among the merged ones which has th
 \\ 
 The stopping condition for such a CH-Search is either, both forward and backward search, have reached the top vertex so there is no further vertex to expand, which happens in the example of figure \ref{fig:contrating_and_searching} or, backward and forward search exceed 
 the length that has already been found among the merged paths.
+
 
 \section{Difference between CH and CCH}
 
@@ -66,8 +82,7 @@ There are two problems that can arise. One is that important vertices are not co
     \label{fig:not_contracted_last}
 \end{figure}
 
-Looking at figure \ref{fig:not_contracted_last}, this is a possible contraction order, if only the $ED$ is used to contract vertices. At the beginning the vertices with rank 1, 2, 3, 5 have the same edge difference, which is $ED = -1$. Vertex after vertex is removed  and  no shortcut is inserted. This happens until there are only $v(4)$ and $v(5)$ left. Now $v(4)$ has an $ED=-1$, too, same as vertex 5. Therefore the algorithm contracts $v(4)$ before $v(5)$. \\
-However this is not the desired result. There are six ${e(v(1),v(2)), e(v(1),v(3)), e(v(1),v(5)), e(v(2),v(3)), e(v(2),v(5)), e(v(3),v(5))}$ shortest paths that involve  $v(4)$, all the other vertices do not encode any shortest path, so $v(4)$ should be contracted last. The search graph on the right of Figure \ref{fig:not_contracted_last} shows why. Imagine we we do a shortest path query between $v(1)$ and $v(3)$. After expanding both, the forward and the backward search to $v(4)$, there is yet another vertex we'll have to expand $v(5)$. Although 
+Looking at figure \ref{fig:not_contracted_last}, this is a possible contraction order, if only the $ED$ is used to contract vertices. At the beginning the vertices with rank 1, 2, 3, 5 have the same edge difference, which is $ED = -1$. Vertex after vertex is removed  and  no shortcut is inserted. This happens until there are only $v(4)$ and $v(5)$ left. Now $v(4)$ has an $ED=-1$, too, same as vertex 5. Therefore the algorithm contracts $v(4)$ before $v(5)$. However this is not the desired result. There are six \\$e(v(1),v(2)), e(v(1),v(3)), e(v(1),v(5)), e(v(2),v(3)), e(v(2),v(5)), e(v(3),v(5))$  shortest paths that involve  $v(4)$, all the other vertices do not encode any shortest path, so $v(4)$ should be contracted last. The search graph on the right of Figure \ref{fig:not_contracted_last} shows why. Imagine we we do a shortest path query between $v(1)$ and $v(3)$. After expanding both, the forward and the backward search to $v(4)$, there is yet another vertex we'll have to expand $v(5)$. Although 
 as you can see in the original graph on the right, its not possible that $v(5)$ is on the shortest path. Therefore a better contraction order would be a in Figure \ref{fig:contrating_and_searching}.  This can be overcome by the method that is explained in section \ref{sec:vertex_importance}.
 
 \subsection{Linear Query Search Space}\label{sec:linear_query}
@@ -142,6 +157,3 @@ change we push it to the priority queue. We do the same with all intermediate tr
     \caption{Update Triangles}
     \label{fig:updateTriangles}
 \end{figure}
-
-
-%\input{assets/pseudocode/computeTriangles.tex}

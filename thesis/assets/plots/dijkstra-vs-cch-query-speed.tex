@@ -1,0 +1,38 @@
+\begin{figure}   
+    \begin{tikzpicture}
+        \begin{axis}[
+            title={Query Time over Distance},
+            xlabel={distance},
+            ylabel={time in micro seconds},
+            legend pos=north west,
+            xmajorgrids=true,
+            ymajorgrids=true,
+            grid style=dashed,
+            width = 0.54\linewidth,
+        ]
+            
+            \addplot table [x=weight, y=dijkstraTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
+            \legend{dijkstra, CCH}
+            \addplot table [x=weight, y=cchTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \begin{tikzpicture}
+        \begin{axis}[
+            title={Query Time over Path length},
+            xlabel={dijkstra path length},
+            %ylabel={time in micro seconds},
+            legend pos=north west,
+            xmajorgrids=true,
+            ymajorgrids=true,
+            grid style=dashed,
+            width = 0.54\linewidth
+        ]
+            
+            \addplot table [x=dijkstraHops, y=dijkstraTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
+            \legend{dijkstra, CCH}
+            \addplot table [x=dijkstraHops, y=cchTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Comparison of CCH query performance on the California+Nevada graph, before updating. Buffer size 40kB. Random sample of 1000 vertex to vertex queries}
+    \label{fig:dijkstra_vs_cch_query_speed}
+\end{figure}

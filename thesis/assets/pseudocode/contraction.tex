@@ -1,0 +1,42 @@
+\begin{algorithm}
+    \caption{Insert Shortcuts Algorithm}
+    \label{alg:contraction}
+    \begin{algorithmic}[1]
+    \Function{contractGraph}{V}
+    \For{$v \in V$} 
+        \State queue.offer(getContraction(v))
+    \EndFor
+    \While{queue is not empty}
+    \State $\text{contraction} \gets \text{getContraction(queue.poll())}$
+    \State $\text{v} \gets \text{contraction.v}$
+    \State $\text{v.rank} \gets \text{rank}$
+    \State updateNodeInNeo4J(vertex, rank++)
+    \For{$shortcut \in contraction.shortcuts$}
+        \State $\text{createOrUpdateEdge}(vertexToContract, shortcut)$
+    \EndFor
+    \For{$\text{neighbor} \in N_\downarrow(v) \cap N_\uparrow(v)$}
+        \State $queue.update(getContraction(neighbor))$
+    \EndFor
+    \State \Return $v$
+    \EndWhile
+    \EndFunction
+
+    \Function{getContraction}{v}
+    \State$\text{shortcuts} \gets \text{[]}; \text{outerCount, innerCountTimesOuter} \gets 0$
+    \For{$\text{inArc} \in \text{v.inArcs}$}
+        \If{$\text{inArc.start.rank} = \text{Vertex.UNSET}$}
+            \State $\text{outerCount++}; \text{inNode} \gets \text{inArc.start}$
+            \For{$\text{outArc} \in \text{v.outArcs}$}
+                \If{$\text{outArc.end}.rank = \text{Vertex.UNSET}$}
+                    \State $\text{innerCountTimesOuter++; } \text{outNode} \gets \text{outArc.end}$
+                    \If{$\text{inNode} \neq \text{outNode}$} $\text{shortcuts.add(Shortcut(inArc, outArc))} $ 
+                    \EndIf
+                \EndIf
+            \EndFor
+        \EndIf
+    \EndFor
+    \State $\text{ED} \gets |shortcuts| - outerCount -  (outerCount \text{ = 0 ? 0 : } \frac{innerCountTimesOuter}{outerCount})$
+    \State \Return Contraction(v, ED, shortcuts)
+    \EndFunction
+    \end{algorithmic}
+\end{algorithm}

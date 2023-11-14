@@ -34,35 +34,7 @@ This you have to $|Q|$ times. In case of a complete graph the in- and the outgoi
 100 this is a doable exercise. In case there are 3000 remaining, it will starve. 
 
 
-\begin{table}
-    \centering
-    \begin{tabular}{ p{5cm} || R{2cm} | R{2cm} | R{2cm} | R{2cm} }
-    \toprule
-     & \multicolumn{1}{l}{\textbf{New York}} & \multicolumn{1}{l}{\textbf{Colorado}} & \multicolumn{1}{l}{\textbf{Florida}} & \multicolumn{1}{L{2cm}}{\textbf{California + Nevada}} \\ 
-    \midrule
-    Verticies & 264,346 & 435,666 & 1,070,376 & 1,890,815 \\
-    Edges & 733,846 & 1,057,066 & 2,712,798 & 4,657,742 \\
-    Shortcuts & 2,153,002 & 1,680,290 & 4,397,804 & 8,598,552 \\
-    Shortcuts added Relative & 2.93 & 1.59 & 1.62 & 1.85 \\
-    Contraction Time & 545 s & 233 s & 579 s & 4,384 s \\
-    Max In Degree & 1,150 & 629 & 785 & 1,252 \\
-    Out Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
-    Out Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
-    In Arcs Disk Size & 23.1 MB & 21.9 MB & 56.9 MB & 106.5 MB \\ 
-    In Position File Size & 1.1 MB & 1.8MB & 1.3MB & 7.6 MB \\ 
-    Block filling & 0.99 & 0.95 & -122.0 & -122.0 \\ 
-    AVG Dijkstra Search Time & 0.816 s & 0.549 s & 2.630 s & 4.858 s \\ 
-    AVG Search Time (40kB) & 0.140 s & 0.122 s & 0.147 s & 0.289 s\\
-    AVG Disk Access (40kB) & 574 & 437 & 500 & 899 \\
-    Update Time & 90 s & 51 s & 142 s & 444 s \\
-    AVG Search Time (40kB) after multi update & 0.147 s & 0.129 s & 0.150 s & 0.302 \\
-    AVG Disk Access (40kB) after multi update & 569 & 457 & 516 & 924 \\
-    \bottomrule
-    \end{tabular}
-    \caption{Network overview table}
-    \label{tab:overview_table}
-\end{table}
-
+\input{assets/tables/experimentKeyTable.tex}
 
 \section{Query Performance}
 
@@ -78,45 +50,7 @@ see in the left chart, there are some long distance queries for which dijkstra p
 length on the x-axis. We assume the good performing long distance queries to be in Nevada as its road network is sparser and than those of California. Therefore we added the right chart.
 It shows the advantage of CCH over dijkstra depends on the path length of the shortest path.
 
-
-\begin{figure}   
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Query Time over Distance},
-        xlabel={distance},
-        ylabel={time in micro seconds},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 0.54\linewidth,
-    ]
-        
-        \addplot table [x=weight, y=dijkstraTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
-        \legend{dijkstra, CCH}
-        \addplot table [x=weight, y=cchTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
-    \end{axis}
-\end{tikzpicture}
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Query Time over Path length},
-        xlabel={dijkstra path length},
-        %ylabel={time in micro seconds},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 0.54\linewidth
-    ]
-        
-        \addplot table [x=dijkstraHops, y=dijkstraTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
-        \legend{dijkstra, CCH}
-        \addplot table [x=dijkstraHops, y=cchTime, col sep=comma, only marks] {assets/plots/cal-data.csv};
-    \end{axis}
-\end{tikzpicture}
-\caption{Comparison of CCH query performance on the California+Nevada graph, before updating. Buffer size 40kB. Random sample of 1000 vertex to vertex queries}
-\label{fig:dijkstra_vs_cch_query_speed}
-\end{figure}
+\input{assets/plots/dijkstra-vs-cch-query-speed.tex}
 
 Having a look a figure \ref{fig:dijkstra_vs_cch_expanded_vertices} we compare the amount of vertices the search query has to expand to find the shortest path. As expected dijkstra expands roughly quadratic many vertices to find the shortest path between vertices for shortest paths that involve up to 1000 vertices.
 After that the search touches the network borders and starts to expand the last leaves which happens almost linear.\\
@@ -125,144 +59,16 @@ This is the reason CHH performs so good especially for long distance queries.
 \\
 So far we only had a look long distance queries, let's have a look at the short ones, but queries where source and target are more that 300 vertices away already perform as good or better than dijkstra. The search sides of these queries are even shorter than 800 expanded vertices. They can figure out the shortest path within a few hundred node expansions.
 
-\begin{figure}   
-    \begin{tikzpicture}
-        \begin{axis}[
-            title={Query Time over Distance},
-            xlabel={distance},
-            ylabel={Expanded Nodes},
-            legend pos=north west,
-            xmajorgrids=true,
-            ymajorgrids=true,
-            grid style=dashed,
-            width = 0.54\linewidth,
-        ]
-            
-            \addplot table [x=dijkstraHops, y=DijkstraExpandedNodes, col sep=comma, only marks] {assets/plots/data.csv};
-        \end{axis}
-    \end{tikzpicture}
-    \begin{tikzpicture}
-        \begin{axis}[
-            title={Query Time over Path length},
-            xlabel={dijkstra path length},
-            %ylabel={time in micro seconds},
-            legend pos=north west,
-            xmajorgrids=true,
-            ymajorgrids=true,
-            grid style=dashed,
-            width = 0.54\linewidth
-        ]
-            
-        \addplot table [x=dijkstraHops, y=cchExpanded, col sep=comma, only marks] {assets/plots/data.csv};
-         \end{axis}
-    \end{tikzpicture}
-    \caption{Comparison of CCH query performance on the California+Nevada graph, before updating. Buffer size 40kB. Random sample of 1000 vertex to vertex queries}
-    \label{fig:dijkstra_vs_cch_expanded_vertices}
-\end{figure}
+\input{assets/plots/dijkstra-vs-cch-expanded-vertices.tex}
 
 \subsection{Disk Access at Query Time}
 
 some text
 
 
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Disk access over Expand Nodes in CCH},
-        xlabel={Expanded Verticies},
-        ylabel={Load Invocations},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 1\linewidth
-    ]
-    \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/data.csv};
-    \end{axis}
-\end{tikzpicture}
+\input{assets/plots/io-comparison}
 
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Disk access over Time in CCH},
-        xlabel={Time},
-        ylabel={Load Invocations},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 1\linewidth
-    ]
-    \addplot table [x=cchTime, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/data.csv};
-    \end{axis}
-\end{tikzpicture}
 
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Disk access over Expand Nodes in CCH},
-        xlabel={Dijkstra path length},
-        ylabel={CCH path length},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 1\linewidth,
-        %x filter/.code={\pgfmathparse{#1^0.5}}
-        %xmode = log,
-        %log basis x=2
-        ]
-    \addplot table [x=dijkstraHops, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
-    \end{axis}
-\end{tikzpicture}
+\input{assets/plots/path-length-comparison.tex}
 
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Disk access over Expand Nodes in CCH},
-        xlabel={Path Length},
-        ylabel={Distance},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 1\linewidth
-    ]
-    \addplot table [x=weight, y=cchHops, col sep=comma, only marks] {assets/plots/data.csv};
-    \addplot table [x=weight, y=dijkstraHops, col sep=comma, only marks] {assets/plots/data.csv};
-    \legend{dijkstra, CCH}
-    \end{axis}
-\end{tikzpicture}
-
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Expanded Verticies over Path Length},
-        xlabel={Distance},
-        ylabel={Expanded Verticies},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 1\linewidth
-    ]
-    \addplot table [x=weight, y=DijkstraExpandedNodes, col sep=comma, only marks] {assets/plots/data.csv};
-    \addplot table [x=weight, y=cchExpanded, col sep=comma, only marks] {assets/plots/data.csv};
-    \legend{dijkstra, CCH}
-    \end{axis}
-\end{tikzpicture}
-
-\begin{tikzpicture}
-    \begin{axis}[
-        title={Expanded Verticies over Distance},
-        xlabel={Path Length},
-        ylabel={Expanded Verticies},
-        legend pos=north west,
-        xmajorgrids=true,
-        ymajorgrids=true,
-        grid style=dashed,
-        width = 1\linewidth
-    ]
-    \addplot table [x=dijkstraHops, y=DijkstraExpandedNodes, col sep=comma, only marks] {assets/plots/data.csv};
-    \addplot table [x=dijkstraHops, y=cchExpanded, col sep=comma, only marks] {assets/plots/data.csv};
-    \legend{dijkstra, CCH}
-    \end{axis}
-\end{tikzpicture}
-
-\newpage
 

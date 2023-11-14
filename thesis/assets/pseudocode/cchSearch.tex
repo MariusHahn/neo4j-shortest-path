@@ -1,0 +1,45 @@
+\begin{algorithm}
+    \caption{Find Search Path}
+    \label{alg:cchSearch}
+    \begin{algorithmic}[1]
+    \Function{find}{$\text{start}, \text{goal}$}
+        \State $\text{pickForward} \gets \text{true};$ $\text{forwardQuery} \gets \text{Query}(\text{start});$$\text{backwardQuery} \gets \text{Query}(\text{goal});$
+        \While{not \Call{isComplete}{$\text{forwardQuery, backwardQuery, candidates.peek()}$}}
+            \State $\text{query} \gets \text{pickForward} ? \text{forwardQuery} : \text{backwardQuery}$
+            \State $\text{other} \gets \text{pickForward} ? \text{backwardQuery} : \text{forwardQuery}$
+            \State $\text{pickForward} \gets \neg \text{pickForward}$
+            \If{\Call{isNotComplete}{$\text{query}$}}
+                 $\text{query.expandNext()}$
+            \Else
+                 \textbf{ continue}
+            \EndIf            
+            \State $\text{latest} \gets \text{query.latestExpand()}$
+            \If{$\text{other.resultMap().containsKey}(\text{latest.rank})$}
+                \State $\text{forwardPath} \gets \text{forwardQuery.getPath}(\text{latest.rank})$
+                \State $\text{backwardPath} \gets \text{backwardQuery.getPath}(\text{latest.rank})$
+                \State $\text{candidates.offer}(\text{forwardPath} + \text{backwardPath})$
+            \EndIf
+        \EndWhile
+        \State \Return $\text{candidates.poll()}$
+    \EndFunction
+
+    \Procedure{expandNext()}{}
+    \State $\text{state} \gets \text{queue.poll()}$
+    \State $\text{latestExpand} \gets \text{state}$
+    
+    \If{$\text{goals.contains}(\text{state.getEndVertex().rank}) $}
+        \State $\text{shortestPaths.put}(\text{state.getEndVertex().rank}, \text{state.getPath()})$
+    \EndIf
+    \State $\text{state.settle()}$
+    \For{ $\text{arc} \ \text{in} \ \text{state.getEndVertex().arcs}$}
+        \State $\text{neighbor} \gets \text{arc.otherVertex}(\text{state.getEndVertex()})$
+        \If{\Call{mustUpdateNeighborState}{$\text{state, neighbor, arc.weight}$}}
+        \State $\text{newState} \gets \text{state.getPath()} + \text{arc}$
+        \State $\text{queue.update}(\text{State}(\text{neighbor, newState}))$
+        \State $\text{seen.put}(neighbor.rank, newState)$
+            
+        \EndIf
+    \EndFor
+    \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
