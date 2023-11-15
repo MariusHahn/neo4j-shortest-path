@@ -16,7 +16,28 @@ It is far form being complete, but there will be some easy examples to show the 
 
 Algorithm \ref{alg:contraction} provides our contraction algorithm. We do what is called a \textit{metric dependent} contraction in \cite[Customization Contraction Hierarchies]{CCH}. 
 This is a greedy algorithm which always takes the next best vertex to contract. Some use the simple edge difference as \cite[Contraction Hierarchies]{Geisberger_2012}, but we will use
-a more advanced metric as desired in 
+a more advanced technique that assigns an importance to each vertex. This importance is further described in section \ref{sec:metric_dependent_importance}, with the equation \ref{eq:importance}.
+\\
+Before starting we have copied G into G' such that both are identical but refer to their own arc arc vertex set. The input parameter of the \textit{contractGraph} function is the set of vertices V int the input graph G'.
+At first we calculate the so called \textit{contraction} for each vertex, which is the set of shortcut arcs that hve to be inserted if that very vertex contracted next. From this contraction object we 
+can determine the importance of the vertex. We push the vertex together with its importance into the queue. The  queue is a priority queue that is organized by the importance, such that q. poll will always return the vertex with the 
+lowest importance in the queue. As long as the queue is not empty we pull the next vertex and calculate is contraction. We set the rank on the current vertex, initially starts at 0, on the current vertex, add this information to neo4j and increase 
+the rank for the next vertex that will be pulled from the queue. 
+\\ 
+Then we iterate over the shortcut set of the contraction and insert a shortcut into G' where there is yet no arc between vertices. If there is already an arc that connects the vertices of a shortcut, we update the weight of that arc if the shortcut
+weight is shorter and update the middle vertex to be able to later on reconstruct the actual path in the input graph G.
+Then we iterate ove all neighbors of the just contracted vertex $N_\downarrow(v) \cup N_\uparrow(v)$, recalculate the contraction of these vertices and repush their importance together with the vertex back into the queue. We have to to 
+this because the importance of a vertex is dependent on its neighbors. As the neighbors of v just lost a neighbor their importance has to have changed.
+After the queue is empty and the algorithm is done, we return top vertex, which is the one with the highest rank. This vertex is later on needed to store the index to the disk.
+\\
+To get a contraction of a vertex we have to iterate over all connected vertices of v that are not yet contracted. We initialize  a collection of shortcuts to an empty list. Then we iterate over all incoming arcs of v, where the start vertex has not 
+yet been contracted. For each of this incoming arc we iterate over all outgoing arcs of which the end vertex has not yet been contracted. Then we create a shortcut container object which is inserted into the shortcut collection. Into the shortcut
+we insert the incoming and the outgoing arc.
+\\
+Finally we calculate the edge difference and insert return the vertex together with the edge difference and the shortcuts.
+
+
+
 
 \subsection{Example}
 
@@ -33,7 +54,17 @@ The same applies after contracting $v(2)$ for the vertices $v(4)$ and $v(5)$. Fo
 
 \input{assets/pseudocode/cchSearch.tex}
 
-some text
+Algorithm \ref{alg:cchSearch} shows our search algorithm. It finds the shortest path between the to vertices. As input parameter is takes two integer values, which represent the rank of the start vertex and the rank of the target vertex.
+At first init a boolean variable that will us help to choose whether to continue with the forward or with the backward search. Then we initialize one forward query which receives the start vertex as input and all upwards arcs and one backward query that receives 
+the target vertex as input and all downward arcs. As long as we have not yet found the certainly we continue the search. We definitely have found the shortest path if either both queries have expanded the top node with the highest rank or 
+the next vertex to expand in both queries has a higher weight than the shortest shortest path merge we have seen so far. This is the functionality of \textit{isComplete} function. All shortest path pairs will be merged and pushed to the priority queue that is called \textit{candidates}.
+If the search is complete we simply poll and return the next value of the queue which is the shortest path or empty if the vertices are not connected
+\\\\
+If the search is not complete yet and pick forward is set to \textit{true} we will continue expanding the upward forward query other we will expand die backward query. After that we flip \textit{pickForward}, that at the next iteration set the respective other will be expanded.
+If the query we are about expand already reached the top vertex we continue with next iteration step, otherwise we tell the query to expand the next vertex. If the vertex that has be expanded last in the query also appears in the set of already 
+expanded vertices in the other query, we merge both their paths and add them to the priority query \textit{candidates} of shortest path pairs found so far. As two merged shortest paths don't necessarily result in a shortest path we still have to continue as described before.
+
+
 
 \subsection{Example}
 
@@ -116,7 +147,7 @@ As it is important to contract important vertices last, the advantage one gets m
 A vertex $v \epsilon E$ is important if there a many shortest paths that contain this very vertex. Therefore if it is possible to calculate a small balanced separator on $G$, CCH will be able to show its 
 whole advantage. To dive deeper into this topic, have a look at \cite[Lower Bounds and Approximation Algorithms for Search Space Sizes in Contraction Hierarchies]{BlumStorandt}.
 
-\subsection{Metric dependent Importance}
+\subsection{Metric dependent Importance}\label{sec:metric_dependent_importance}
 
 As shown above, taking only the edge difference $ED$ into account doesn't necessarily lead to a proper order, we decided to take the vertex importance calculation that is propose by \cite[Customization Contraction Hierarchies]{CCH}. To every 
 vertex we add the level property $l(v)$. The level of the vertex with is initially set to $0$. If a neighbor $w = N(v)$ is contracted level is set to $l(v) = max\{l(v)+1, l(w)\}$. For every arc $a \epsilon A'$
@@ -124,6 +155,7 @@ we add a the hop length to the arc $h(a)$. The hop length is equals the number o
 of $v$ and $D(v)$ the set of removed arcs. We calculate the importance $i(v)$ as follows:
 
 \begin{equation*}
+    \label{eq:importance}
     i(v) = l(v) + \frac{|A(v)|}{|D(v)|} + \frac{\sum_{a \epsilon A(v)} h(a)}{\sum_{a \epsilon D(v)} h(a)} 
 \end{equation*}
 

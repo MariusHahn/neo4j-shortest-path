@@ -3,12 +3,13 @@
     \label{alg:cchSearch}
     \begin{algorithmic}[1]
     \Function{find}{$\text{start}, \text{goal}$}
-        \State $\text{pickForward} \gets \text{true};$ $\text{forwardQuery} \gets \text{Query}(\text{start});$$\text{backwardQuery} \gets \text{Query}(\text{goal});$
-        \While{not \Call{isComplete}{$\text{forwardQuery, backwardQuery, candidates.peek()}$}}
+        \State $\text{pickForward} \gets \text{true};$ 
+        \State $\text{forwardQuery} \gets \text{Query}(\text{start, } \bigcirc A_\uparrow);$$\text{backwardQuery} \gets \text{Query}(\text{goal, } \bigcirc A_\downarrow);$
+        \While{$\neg$\Call{isComplete}{$\text{forwardQuery, backwardQuery, candidates.peek()}$}}
             \State $\text{query} \gets \text{pickForward} ? \text{forwardQuery} : \text{backwardQuery}$
             \State $\text{other} \gets \text{pickForward} ? \text{backwardQuery} : \text{forwardQuery}$
             \State $\text{pickForward} \gets \neg \text{pickForward}$
-            \If{\Call{isNotComplete}{$\text{query}$}}
+            \If{$\neg$\Call{reachedTop}{$\text{query}$}}
                  $\text{query.expandNext()}$
             \Else
                  \textbf{ continue}
@@ -41,5 +42,9 @@
         \EndIf
     \EndFor
     \EndProcedure
+    \Function{isComplete}{forwardQuery, backwardQuery, best}
+    \State reachedTop $\gets \Call{reachedTop}{forwardQuery} \land \Call{reachedTop}{backwardQuery}$ 
+    \State \Return $reachedTop  \lor \Call{w}{best} < \Call{w}{forwardQuery} \land \Call{w}{best} < \Call{w}{backwardQuery}$
+    \EndFunction
     \end{algorithmic}
 \end{algorithm}

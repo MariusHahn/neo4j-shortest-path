@@ -4,10 +4,10 @@
     \begin{algorithmic}[1]
     \Function{contractGraph}{V}
     \For{$v \in V$} 
-        \State queue.offer(getContraction(v))
+        \State Q.offer(getContraction(v))
     \EndFor
-    \While{queue is not empty}
-    \State $\text{contraction} \gets \text{getContraction(queue.poll())}$
+    \While{$Q \neq \emptyset$}
+    \State $\text{contraction} \gets \text{getContraction(Q.poll())}$
     \State $\text{v} \gets \text{contraction.v}$
     \State $\text{v.rank} \gets \text{rank}$
     \State updateNodeInNeo4J(vertex, rank++)
@@ -15,10 +15,10 @@
         \State $\text{createOrUpdateEdge}(vertexToContract, shortcut)$
     \EndFor
     \For{$\text{neighbor} \in N_\downarrow(v) \cap N_\uparrow(v)$}
-        \State $queue.update(getContraction(neighbor))$
+        \State $Q.update(getContraction(neighbor))$
     \EndFor
-    \State \Return $v$
     \EndWhile
+    \State \Return $v$
     \EndFunction
 
     \Function{getContraction}{v}
@@ -35,7 +35,7 @@
             \EndFor
         \EndIf
     \EndFor
-    \State $\text{ED} \gets |shortcuts| - outerCount -  (outerCount \text{ = 0 ? 0 : } \frac{innerCountTimesOuter}{outerCount})$
+    \State $\text{ED} \gets outerCount \text{ = 0 ? 0 : } |shortcuts| - outerCount - \frac{innerCountTimesOuter}{outerCount}$
     \State \Return Contraction(v, ED, shortcuts)
     \EndFunction
     \end{algorithmic}
