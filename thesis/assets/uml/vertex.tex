@@ -1,0 +1,9 @@
+\begin{tikzpicture}
+    \begin{class}[text width=0.5\linewidth]{Vertex}{0,0}
+        \attribute{+ rank : int}
+        \attribute{+ inArcs : Map<Vertex, Arc>}
+        \attribute{+ outArc : Map<Vertex, Arc>}
+        \operation{+ Vertex(rank: int)}
+        \operation{+ addArc(other: Vertex, middle: Vertex, weight: int, hopLength:int) }
+      \end{class}
+\end{tikzpicture}

@@ -4,7 +4,8 @@
     \begin{algorithmic}[1]
     \Function{find}{$\text{start}, \text{goal}$}
         \State $\text{pickForward} \gets \text{true};$ 
-        \State $\text{forwardQuery} \gets \text{Query}(\text{start, } \bigcirc A_\uparrow);$$\text{backwardQuery} \gets \text{Query}(\text{goal, } \bigcirc A_\downarrow);$
+        \State $\text{forwardQuery} \gets \text{Dijksta}(\text{start, [goal], } G^{*}_{\uparrow} (V,\bigcirc A_\uparrow));$
+        \State $\text{backwardQuery} \gets \text{Dijkstra}(\text{goal, [start], } G^{*}_{\downarrow} (V, \bigcirc A_\downarrow));$
         \While{$\neg$\Call{isComplete}{$\text{forwardQuery, backwardQuery, candidates.peek()}$}}
             \State $\text{query} \gets \text{pickForward} ? \text{forwardQuery} : \text{backwardQuery}$
             \State $\text{other} \gets \text{pickForward} ? \text{backwardQuery} : \text{forwardQuery}$

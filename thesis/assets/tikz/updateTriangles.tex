@@ -22,21 +22,21 @@
     \node[] at (5,-2) {$c_\downarrow = a_\downarrow + b_\uparrow $};
 
     \node[] at (11,3) {Upper Triangles};
-    
-    \node[main] (y3) at (9, 0) {$y$}; 
-    \node[main] (x3) [below right of=y3] {$x$};
-    \node[main] (z3) [right of=y3, above of=y3] {$z$}; 
-    \draw[ -Stealth] (z3) -- node[above , sloped] {$c$} (y3);
-    \draw[ -Stealth] (x3) -- node[below right, sloped, pos=0.8] {$a$} (y3);
-    \draw[ -Stealth] (z3) -- node[below left, sloped] {$b$} (x3);
-    \node[] at (10,-2) {$c_\downarrow = a_\uparrow + b_\downarrow$};
 
-    \node[main] (y3) at (12, 0) {$y$}; 
+    \node[main] (y3) at (9, 0) {$y$}; 
     \node[main] (x3) [below right of=y3] {$x$};
     \node[main] (z3) [right of=y3, above of=y3] {$z$}; 
     \draw[ -Stealth] (y3) -- node[above left, sloped] {$c$} (z3);
     \draw[ -Stealth] (y3) -- node[below left, sloped, pos=0.8] {$a$} (x3);
     \draw[ -Stealth] (x3) -- node[below left, sloped] {$b$} (z3);
-    \node[] at (13,-2) {$c_\uparrow = a_\downarrow + b_\uparrow$};
+    \node[] at (10,-2) {$c_\uparrow = a_\downarrow + b_\uparrow$};
+    
+    \node[main] (y3) at (12, 0) {$y$}; 
+    \node[main] (x3) [below right of=y3] {$x$};
+    \node[main] (z3) [right of=y3, above of=y3] {$z$}; 
+    \draw[ -Stealth] (z3) -- node[above , sloped] {$c$} (y3);
+    \draw[ -Stealth] (x3) -- node[below right, sloped, pos=0.8] {$a$} (y3);
+    \draw[ -Stealth] (z3) -- node[below left, sloped] {$b$} (x3);
+    \node[] at (13,-2) {$c_\downarrow = a_\uparrow + b_\downarrow$};
 
 \end{tikzpicture}
