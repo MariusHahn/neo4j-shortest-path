@@ -1,0 +1,24 @@
+\begin{tikzpicture}
+  \begin{class}[text width=0.55\linewidth]{Dijkstra}{0,0}
+    \attribute{goals : Set<Integer>}
+    \attribute{seen : Map<Integer, DijkstraState>}
+    \attribute{shortestPaths : Map<Integer, Path>}
+    \attribute{latestExpand : DijkstraState}
+    \attribute{queue : PriorityQueue<DijkstraState>}
+    \attribute{graph: Graph}
+    \operation{Dijkstra(start: int, Set<Integer> goals, G : Graph)}
+    \operation{getResult() : <Integer, Path> }
+    \operation{expandNext()  }
+    \operation{isComplete() : boolean }
+    \operation{latestWeight() : int }
+  \end{class}
+  \begin{class}[text width=0.3\linewidth]{DijkstraState}{0.55\linewidth, 0}
+    \attribute{endVertex : Vertex}
+    \attribute{path : Path}
+    \attribute{settled : boolean}
+    \attribute{latestExpand : DijkstraState}
+    \attribute{graph: Graph}
+    \operation{weight(): int }
+    \operation{settle()}
+  \end{class}
+\end{tikzpicture}

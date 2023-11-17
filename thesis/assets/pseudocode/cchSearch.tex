@@ -23,25 +23,6 @@
         \EndWhile
         \State \Return $\text{candidates.poll()}$
     \EndFunction
-
-    \Procedure{expandNext()}{}
-    \State $\text{state} \gets \text{queue.poll()}$
-    \State $\text{latestExpand} \gets \text{state}$
-    
-    \If{$\text{goals.contains}(\text{state.getEndVertex().rank}) $}
-        \State $\text{shortestPaths.put}(\text{state.getEndVertex().rank}, \text{state.getPath()})$
-    \EndIf
-    \State $\text{state.settle()}$
-    \For{ $\text{arc} \ \text{in} \ \text{state.getEndVertex().arcs}$}
-        \State $\text{neighbor} \gets \text{arc.otherVertex}(\text{state.getEndVertex()})$
-        \If{\Call{mustUpdateNeighborState}{$\text{state, neighbor, arc.weight}$}}
-        \State $\text{newState} \gets \text{state.getPath()} + \text{arc}$
-        \State $\text{queue.update}(\text{State}(\text{neighbor, newState}))$
-        \State $\text{seen.put}(neighbor.rank, newState)$
-            
-        \EndIf
-    \EndFor
-    \EndProcedure
     \Function{isComplete}{forwardQuery, backwardQuery, best}
     \State reachedTop $\gets \Call{reachedTop}{forwardQuery} \land \Call{reachedTop}{backwardQuery}$ 
     \State \Return $reachedTop  \lor \Call{w}{best} < \Call{w}{forwardQuery} \land \Call{w}{best} < \Call{w}{backwardQuery}$
