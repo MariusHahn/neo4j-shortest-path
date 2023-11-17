@@ -39,7 +39,25 @@ we insert the incoming and the outgoing arc.
 Finally we calculate the edge difference and return the vertex together with the edge difference and the shortcuts.
 
 \subsection{Lower Triangles}
-$\mathcal{O}$
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+    \centering
+    \input{assets/tikz/lowerTriangle.tex}
+    \caption{Lower Triangle}
+    \label{fig:lowerTrianle}
+\end{wrapfigure}
+
+
+To determine an arc weight of in G' we have to have a look at its lower triangle as shown in figure \ref{fig:lowerTrianle}. This is what the two for loop in \textit{getContraction(v)} in algorithm \ref{alg:contraction} do. They enumerate all
+lower triangles of the vertex $z$, which has a lower rank than $x$ and $y$, $r(z) < r(x) < r(y)$. The shortcut that is created, contains the arcs $b$ and $c$. The weight of $a$ in the $G'$ is determined by the shortest lower triangle or by the weight of the input graph. 
+\\
+The lower triangles are important for the basic customization process but also needed for the update process. We are interested in the arc $a$. There as shown in figure \ref{fig:lowerTrianle} it follows:
+
+
+\begin{align*}\label{eq:lower_triangle}
+    a_\uparrow & = b_\downarrow + c_\uparrow    &  a_\downarrow & = b_\uparrow + c_\downarrow \\
+    a(x, y) & = a(x, z) + a(z, y) & a(y, x) & = a(z, x) + a(y, z)
+\end{align*}
 
 \subsection{Example}
 
@@ -66,9 +84,6 @@ If the search is complete we simply peek the head of \textit{candidates} and ret
 If the search is not complete we continue. If \textit{pickForward} is set to \textit{true} we will continue expanding the upward forward query otherwise we will expand the backward query. After that we flip \textit{pickForward}, such that at the next iteration the respective other query will be expanded.
 If the query we are about expand already reached the top vertex we continue with next iteration step, otherwise we tell the query to expand the next vertex. If the vertex that has been expanded last in the query also appears in the set of already 
 expanded vertices in the other query, we merge both their paths and add them to the priority query \textit{candidates} of shortest path pairs found so far. As two merged shortest paths don't necessarily result in a shortest path, we still have to continue as described before.
-
-
-
 
 \subsection{Example}
 

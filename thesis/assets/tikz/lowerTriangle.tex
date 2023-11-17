@@ -1,0 +1,24 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+
+    \node[rotate=90] at (-0.25,0) {rank};
+    \draw [ -Stealth]  (0,-2) -- (0,2);
+
+    \node[] at (3,3) {Lower Triangles};
+    
+    \node[main] (x2) at (1, 0) {$x$}; 
+    \node[main] (z2) [below right of=x2] {$z$};
+    \node[main] (y2) [right of=z2, above of=x2] {$y$}; 
+    \draw[ -Stealth] (z2) -- node[below left, sloped] {$c$} (y2);
+    \draw[ -Stealth] (x2) -- node[below, sloped] {$b$} (z2);
+    \draw[ -Stealth] (x2) -- node[above , sloped] {$a$} (y2);
+    \node[] at (2,-2) {$a_\uparrow = b_\downarrow + c_\uparrow $};
+    
+    \node[main] (x21) at (4, 0) {$x$}; 
+    \node[main] (z21) [below right of=x21] {$z$};
+    \node[main] (y21) [right of=z21, above of=x21] {$y$}; 
+    \draw[ -Stealth] (y21) -- node[below , sloped] {$c$} (z21) ;
+    \draw[ -Stealth] (z21) -- node[below, sloped] {$b$} (x21);
+    \draw[ -Stealth] (y21) -- node[above , sloped] {$a$} (x21);
+    \node[] at (5,-2) {$a_\downarrow = b_\uparrow + c_\downarrow $};
+
+\end{tikzpicture}
