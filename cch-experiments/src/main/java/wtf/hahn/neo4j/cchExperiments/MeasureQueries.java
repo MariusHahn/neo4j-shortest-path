@@ -41,6 +41,69 @@ public class MeasureQueries {
         measureFile = Paths.get(workingDirectory, measureFileName);
     }
 
+    public void go2() {
+        Path workDirPath = Paths.get(workingDirectory);
+        try (final Transaction transaction = db.beginTx();
+             final FifoBuffer outBuffer = new FifoBuffer(bufferSize, Mode.OUT, workDirPath);
+             final FifoBuffer inBuffer = new FifoBuffer(bufferSize, Mode.IN, workDirPath);
+             final BufferedWriter bufferedWriter = getBufferedWriter();
+             final DiskChDijkstra diskChDijkstra = new DiskChDijkstra(outBuffer, inBuffer)) {
+            Map<Integer, Map<Node, WeightedPath>> dijkstras = new HashMap<>();
+            Map<Integer, Map<Node, DijkstraInfo>> dijkstrasInfos = new HashMap<>();
+            Dijkstra dijkstra = new Dijkstra(() -> ImportAndIndex.RELATIONSHIP_NAME, ImportAndIndex.WEIGH_PROPERTY);
+            List<Pair> sourceTargetPair = getPairs();
+            sourceTargetPair.forEach(pair -> {
+                int x = pair.x;
+                int y = pair.y;
+                final Node from = transaction.findNode(LABEL, ROAD_RANK_PROPERTY, x);
+                final Node to = transaction.findNode(LABEL, ROAD_RANK_PROPERTY, y);
+                Map<Node, WeightedPath> dijkstraPaths = dijkstras.computeIfAbsent(x, z -> dijkstra.find(from, Set.of()));
+                Map<Node, DijkstraInfo> dijkstraInfos = dijkstrasInfos.computeIfAbsent(x, z -> dijkstra.latestQuery.getExpansionInfo());
+                val chPath = new StoppedResult<>(() -> diskChDijkstra.find(x, y));
+                WeightedPath dijkstraPath = dijkstraPaths.get(to);
+                if (dijkstraPath != null) {
+                    if (chPath.getResult().weight() != dijkstraPath.weight()) {
+                        throw new AssertionError(chPath.getResult().weight() + "vs: " + dijkstraPath.weight());
+                    }
+                    DijkstraInfo dijkstraInfo = dijkstraInfos.get(to);
+                    String measure = String.format("%9d,%9d,%9d,%9d,%9d,%9d,%4d,%4d,%9d,%9d%n"
+                            , getId(from)
+                            , getId(to)
+                            , chPath.getMicros()
+                            , chPath.getResult().weight()
+                            , chPath.getResult().length()
+                            , diskChDijkstra.expandedNodes
+                            , diskChDijkstra.getLoadInvocationsLatestQuery()
+                            , dijkstraPath.length()
+                            , dijkstraInfo.micros()
+                            , dijkstraInfo.expandedNodes()
+                    );
+                    try {
+                        bufferedWriter.append(measure);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static List<Pair> getPairs() {
+        Random fromRandom = new Random(37);
+        LinkedList<Pair> c = new LinkedList<>();
+        for (int i = 1; i <= 100; i++) {
+            int x = fromRandom.nextInt(i);
+            Random toRandom = new Random(37);
+            for (int j = 1; j <= 100; j++) {
+                c.add(new Pair(x, toRandom.nextInt(j)));
+            }
+        }
+        Collections.shuffle(c);
+        return c;
+    }
+
     public void go() {
         Path workDirPath = Paths.get(workingDirectory);
         try (final Transaction transaction = db.beginTx();
@@ -133,4 +196,5 @@ public class MeasureQueries {
         if (!file.exists()) file.createNewFile();
         return new BufferedWriter(new FileWriter(file, true));
     }
+    record Pair(int x, int y) { }
 }

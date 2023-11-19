@@ -39,6 +39,11 @@ public class Application {
                     MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
                     measureQueries.go();
                 }
+                case "MEASURE2" -> {
+                    String measureFileName = "measure-%d-%d.csv".formatted(System.currentTimeMillis(), bufferSize);
+                    MeasureQueries measureQueries = new MeasureQueries(fileName, bufferSize, measureFileName, database.getDb());
+                    measureQueries.go2();
+                }
                 default -> throw new IllegalStateException("Unexpected value: " + action);
             }
         }
