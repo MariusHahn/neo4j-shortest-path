@@ -1,0 +1,43 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+
+    \node[rotate=90] at (-0.25,0) {rank};
+    \draw [ -Stealth]  (0,-2) -- (0,2);
+
+    %\node[] at (3,3) {Lower Triangles};
+    
+    \node[main, draw=black!20] (y) at (1, 0) {$y$}; 
+    \node[main] (x) [below right of=y] {$x$};
+    \node[main, draw=black!20] (z) [right of=z, above of=y] {$z$}; 
+
+    \draw[ -Stealth, draw=black!20] (x) -- (z);
+    \draw[ -Stealth, draw=black!20] (x) -- (y);
+    
+    \draw[ -Stealth, ] ( 2.5 , -1 ) -- node[above, sloped] {settle()} (5,-0.2);
+
+    \begin{class}[text width=0.2\linewidth]{VertexManager}{7,2}
+        \operation{+ VertexManager(b: Buffer)}
+        \operation{+ addArcs(vertex: Vertex)}
+    \end{class}
+
+    \begin{class}[text width=0.2\linewidth]{Buffer}{14,2}
+       \operation{+ arcs(rank: int): Set<DiskArc>}
+    \end{class}
+
+    \draw [] (13,-3) -- (13,-2);
+    \draw [] (15,-3) -- (15,-2);    
+
+    \draw [out=30, in=-210] (13,-2) to (15,-2);    
+    \draw [out=-30, in=-150] (13,-2) to (15,-2);    
+    \draw [out=-30, in=-150] (13,-3) to (15,-3); 
+
+    \node[] at (14,-2.7) {Disk};
+
+    \draw [ -Stealth] (13,0) to node[above, sloped] {get(0xFF)} (13,-1.9); 
+    \draw [ -Stealth] (15,-1.9) to node[above, sloped] {byte[]} (15,0); 
+
+    \draw [ -Stealth ] (9,2) to node[above, sloped] {arcs(x)} (12,2);    
+    \draw [ -Stealth ] (12,0.2) to node[above, sloped] {\{a(x,x), a(x,z)\}} (9,0.2);    
+
+
+    
+\end{tikzpicture}
