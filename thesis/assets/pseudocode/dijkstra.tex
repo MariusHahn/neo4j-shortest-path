@@ -6,8 +6,8 @@
     \State $\text{state} \gets \text{queue.poll()}$
     \State $\text{latestExpand} \gets \text{state}$
     
-    \If{$\text{goals.contains}(\text{state.getEndVertex().rank}) $}
-        \State $\text{shortestPaths.put}(\text{state.getEndVertex().rank}, \text{state.getPath()})$
+    \If{$\text{state.endVertex()} \in \text{goals} \lor \text{goals} = \emptyset $}
+        \State $\text{shortestPaths.put}(\text{state.endVertex()}, \text{state.getPath()})$
     \EndIf
     \State $\text{state.settle()}$
     \For{ $\text{arc} \ \text{in} \ \text{state.getEndVertex().arcs}$}
@@ -15,7 +15,7 @@
         \If{\Call{mustUpdateNeighborState}{$\text{state, neighbor, arc.weight}$}}
         \State $\text{newState} \gets \text{state.getPath()} + \text{arc}$
         \State $\text{queue.update}(\text{State}(\text{neighbor, newState}))$
-        \State $\text{seen.put}(neighbor.rank, newState)$
+        \State $\text{seen.put}(neighbor, newState)$
             
         \EndIf
     \EndFor

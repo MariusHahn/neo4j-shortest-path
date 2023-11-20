@@ -40,22 +40,37 @@ At pull we retrieve the element together with its current version number. If the
 
 \section{Dijkstra}
 
-We want to do a little recap on dijkstras algorithm as it crucial for the ch/cch search. Additionally we want to decuple two thing that are usually done together. The initialization of a dijkstra query and
-the iteration step, that expands vertices until the shortest path to the target is found. Looking at algorithm \ref{alg:disjkstra_algorithm} the \textit{expandNext()} procedure is what usually done in a
-while loop until the \textit{isComplete()} function returns \textit{true} and all requested shortest paths are found or all vertices have been expanded. We provide this with the function \textit{getResult()} 
-on such a dijkstra query object as you can see in figure \ref{fig:dijkstra_class}. Being able to call the \textit{expandNext()} procedure from outside is a very powerful. For example if we want to write a bidirectional
-dijkstra, we can create to two instances of the class \textit{Dijkstra} as stated in figure \ref{fig:dijkstra_class}. One dijkstra is initialized only with outgoing 
-$\text{Dijkstra(}s, [t,], \overrightarrow{G}(V, \overrightarrow{A}) \text{)}$ arcs the other only with incoming arcs $\text{Dijkstra(}t, [s], \overleftarrow{G}(V, \overleftarrow{A}) \text{)}$. Now we can build our 
-algorithm around that tell the bidirectional query when to stop or which side to expand next, but the essential thing here is we have reused the logic of the \textit{expandNext()} procedure and not written it again.
-
-\input{assets/pseudocode/dijkstra.tex}
-
-
 \begin{figure}
     \centering
     \input{assets/uml/dijkstra.tex}
     \caption{Dijkstra Class Diagram}
     \label{fig:dijkstra_class}
 \end{figure}
+
+We want to do a little explain dijkstras algorithm as it crucial for the ch/cch search. Additionally we want to decuple two thing that are usually done together.
+The initialization of a dijkstra query and the iteration step, that expands vertices until the shortest path to the target is found. 
+\\ 
+Dijkstra finds the shortest path from a source vertex to a target vertex by always go the \textit{best} path. Dijkstra starts with expanding the neighborhood of
+the source vertex and will move on to the vertex that has smallest total distance to the source node. This is done until dijkstra is about to expand the target node next.
+In the process of finding the target, dijkstra also finds the shortest path to every node it expands. Therefore dijkstra cannot only be used to do \textit{one to one} shortest path queries,
+queries but also \textit{one to many} and \textit{one to all} shortest path queries.
+\\
+Looking at algorithm \ref{fig:dijkstra_class} we initialize the query with a start id, a set of target ids and the graph on which we want to do the query. At the construction
+process the query will take the start id, create an object of type \textit{DijkstraState} and push it to the \textit{queue}. This priority queue is organized my the path weight of 
+\textit{DijkstraState} such that it always returns the shortest path that is inside the queue.
+\\
+After the initialization we can start expanding nodes using the \textit{expandNext()} method, which we provided in algorithm \ref{alg:disjkstra_algorithm}. At first we pull the 
+the next state from the queue. Then we check whether the endVertex of the just retrieved state is in set of targets we are looking for or the set of goals is empty, mean we do a \textit{one to all} search.
+If so we add the just found shortest path to the \textit{shortestPaths}. Then we settle that state we know that we found the shortest path for the endVertex of this state. Then we 
+iterate over all arcs that are attached to this endVertex and therefore get its neighbors. For each of this neighbors we check if we have to update it with a new state in the queue. This
+is the case if either we haven't seen this vertex so far or the state we pushed with this vertex before contains a longer path as the one we just found.
+\input{assets/pseudocode/dijkstra.tex}
+\\
+The \textit{expandNext()} procedure is what usually done in a while loop until the \textit{isComplete()} function returns \textit{true} and all requested shortest paths are found or all vertices have been expanded. We provide this with the function \textit{getResult()} 
+on such a dijkstra query object as you can see in figure \ref{fig:dijkstra_class}. Being able to call the \textit{expandNext()} procedure from outside is a very powerful. For example if we want to write a bidirectional
+dijkstra, we can create to two instances of the class \textit{Dijkstra} as stated in figure \ref{fig:dijkstra_class}. One dijkstra is initialized only with outgoing 
+$\text{Dijkstra(}s, [t,], \overrightarrow{G}(V, \overrightarrow{A}) \text{)}$ arcs the other only with incoming arcs $\text{Dijkstra(}t, [s], \overleftarrow{G}(V, \overleftarrow{A}) \text{)}$. Now we can build our 
+algorithm around that tell the bidirectional query when to stop or which side to expand next, but the essential thing here is we have reused the logic of the \textit{expandNext()} procedure and not written it again.
+
 
 

@@ -8,25 +8,17 @@
             xmajorgrids=true,
             ymajorgrids=true,
             grid style=dashed,
-            width = 0.54\linewidth
+            width = 1\linewidth
         ]
+        \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/ny-data.csv};
+        \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/col-data.csv};
         \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/data.csv};
+        \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/cal-data.csv};
+%        \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/cal-m50.csv};
+%        \addplot table [x=cchExpanded, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/e-data.csv};
+        \legend{New York, Colorado, Florida, California + Nevada, Great Lakes, Estern USA}
         \end{axis}
     \end{tikzpicture}
-    \begin{tikzpicture}
-        \begin{axis}[
-            title={I/O over Time in CCH},
-            xlabel={Time},
-            %ylabel={I/O},
-            legend pos=north west,
-            xmajorgrids=true,
-            ymajorgrids=true,
-            grid style=dashed,
-            width = 0.54\linewidth
-        ]
-        \addplot table [x=cchTime, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/data.csv};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Some Caption}
+    \caption{I/O's over Expanded Vertices for 40kB cache size per search side.}
     \label{fig:io_comparison}
 \end{figure}

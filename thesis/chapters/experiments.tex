@@ -32,6 +32,8 @@ Contraction methods that rely on measures like edge difference suffer from very 
 as proposed in this paper always will update the importance  of it's neighbors  after each contracted vertex and re-push it to the queue $Q$ of remaining vertices. Update the neighbor importance means to simulate the contraction of this neighbor. So we check for all pairs of incoming and outgoing neighbors $N_\downarrow(v) \times N_\uparrow(v) \setminus N_\downarrow(v) = N_\uparrow(v)$ whether we have to insert a shortcut. 
 This you have to $|Q|$ times. In case of a complete graph the in- and the outgoing neighbor set will have size $|Q|$. Which lead to the this many neighbor checks $(|Q| * |Q| - |Q|)*|Q|$ which is almost $(|Q|)^3$ checks whether to insert a shortcut or not. In case your graph already get's complete or close to it on the last 
 100 this is a doable exercise. In case there are 3000 remaining, it will starve. 
+\\
+Our test show that as if the number of neighbors that are not contracted yet and there need to be updated rise above $150$, the time to 500ms to contract a single vertex.
 
 
 \input{assets/tables/experimentKeyTable.tex}
@@ -52,6 +54,8 @@ It shows the advantage of CCH over dijkstra depends on the path length of the sh
 
 \input{assets/plots/dijkstra-vs-cch-query-speed.tex}
 
+\subsection{Query Analyses}
+
 Having a look a figure \ref{fig:dijkstra_vs_cch_expanded_vertices} we compare the amount of vertices the search query has to expand to find the shortest path. As expected dijkstra expands roughly quadratic many vertices to find the shortest path between vertices for shortest paths that involve up to 1000 vertices.
 After that the search touches the network borders and starts to expand the last leaves which happens almost linear.\\
 The CCH search only expands vertices of higher rank. As you can see in Figure \ref{fig:dijkstra_vs_cch_expanded_vertices} the CCH expands at most around 1600 vertices. Therefore, we assume, CCH needs at most expand 800 vertices per search side the find the node with the highest rank. So no matter which source or target one chooses, the query will be bound to these 1600 vertex expansions.
@@ -61,14 +65,18 @@ So far we only had a look long distance queries, let's have a look at the short 
 
 \input{assets/plots/dijkstra-vs-cch-expanded-vertices.tex}
 
-\subsection{Disk Access at Query Time}
+\section{IO's at Query Time}
 
-some text
-
-
+As we did our implementation to show that CCH could also fit for a graph database it is essential to have a look how many I/O's are cased by our search. As stated in section \ref{sec:how_to_store}, the arcs of one vertex are always stored in a single disk block. Therefore the worst case scenario that can happen is that there is one I/O per expanded vertex.
+As you can see in figure \ref{fig:io_comparison} we can do better. With a cache size of only 640 kB which gives the possibility to hold 40960 acs in cache we already achieve around 1.4 expanded vertices per I/O. This means in a bit less than every second we accedently already had the right set of arc in memory, when a new vertex was requested. This is pretty 
+impressive as 81920 arcs are about 0.6\%  of the arcs the road network of California and Nevada contains after the contraction.
 \input{assets/plots/io-comparison}
+\\
+For bigger network as the \textit{Great Lakes} and \textit{Eastern USA} this cache size was to small. In most scenarios we had about as many I/O's as  expanded nodes. So we will have to go bigger.
 
 
-\input{assets/plots/path-length-comparison.tex}
+
+
+%\input{assets/plots/path-length-comparison.tex}
 
 
