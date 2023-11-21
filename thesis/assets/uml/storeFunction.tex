@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+    \begin{class}[text width=0.8\linewidth]{StoreFunction}{0,0}
+        \attribute{- stack : Deque<Iterator<Vertex\text{>}>}
+        \attribute{- mode : Mode\{UP or DOWN\}} 
+        \attribute{- positionWriter : PositionWriter}
+        \attribute{- arcWriter : ArcWriter}
+        \operation{+ StoreFunction(top: Vertex, mode: Mode, path : Path) }
+        \operation{+ store(vertex: Vertex) }
+        \operation{- neighbors(vertex: Vertex): Iterator<Vertex> }
+      \end{class}
+\end{tikzpicture}

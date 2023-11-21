@@ -2,7 +2,7 @@
 
 In this section it is described how "Customizable Contraction Hierarchies" CCH is integrated into Neo4j. CCH arguments the input graph, which means it inserts arcs, so called shortcuts, that do not belong to the original data. To keep the change to the input graphs as little as possible we decided to not insert any arc into the graph that is stored inside the neo4j database, but introduce another graph data structure, the index graph. 
 The mapping between the index and the graph that resides in the database is achieved by the rank property. The rank property is set to the input and the the index graph at contraction time. Through this we achieve a unique mapping between $G$ and $G'$.
-This gives yet another two advantages. One is that we get full control about the graph representation which is helpful to efficiently store and read the index graph for the disk. Another is that the with this approach it makes it easier to later on port the idea to another graph database manufactures.
+This gives yet another two advantages. One is that we get full control about the graph representation which is helpful to efficiently store and read the index graph for the disk. Another is that with this approach makes it easier to later on port the idea to another graph database manufactures.
 
 \section{Index Graph Data Structure}\label{sec:index_graph}
 
@@ -13,11 +13,20 @@ This gives yet another two advantages. One is that we get full control about the
     \label{uml:index_graph}
 \end{figure}
 
-The index graph data structure is neither a adjacency list nor adjacency matrix. There is a vertex object that has two hash tables. One for incoming arc and one for outgoing arcs. The hash tables keys are of type vertex and the value is the arc. An arc has a reference to its start vertex and one to its end vertex. \\
+The index graph data structure is neither a adjacency list nor adjacency matrix. There is a vertex object that has two hash tables. One for incoming arc and one for outgoing arcs. The hash tables keys are of type vertex and the value is the arc. An arc has a reference to its start vertex and one to its end vertex as shown in figure \ref{uml:index_graph}. 
+This also means we cannot construct them all at once, but need a function which initializes the graph, because we have a circular reference. Our solution if you want to initialize such a graph, for an id pair that represents arc or from relationships that come from neo4j is as follows: We iterate over all id pairs, create all vertices that we have not seen so far an push them to a hash table. 
+Then create the arc and attach the vertices to it. These vertices we get from the hash table. Finally we add the arc to its start and end vertex.
+\\
 A disadvantage of this model could be that some modern hardware optimization that exist for arrays do not match with this data structure. Due to paging algorithms as described in \cite[Modern Operatins Systems]{andrew2015modern} when using an array, the values this array are stored sequentially in main memory. When one value of an array is accessed by the CPU, modern hardware reads subsequent values into the CPU-cache because it is likely that they are accessed right after it. The model of the index graph is a linked data structure, a bit like a linked list. The elements of an linked list are contained somewhere in main memory. There is no guarantee that subsequent values have any spacial proximity. Therefore the just explained hardware optimization will not apply. \\ % cite some paper to this topic
 However, this makes the the graph traversal easy. Additional it makes it very efficient to explore the neighborhood of a vertex. There is no array traversal to find a vertex and only one hash table lookup for finding an arc of a vertex. Additionally these hash tables only contain few elements. Test on small graphs [Oldenburg] show that cch queries can be answered in less than one millisecond, which is close to what we tested with the original cch application.
 
 \section{The Mapping}\label{sec:mapping}
+\begin{figure}
+    \centering
+    \input{assets/tikz/neoToDiskMapping.tex}
+    \caption{mapping}
+    \label{fig:mapping}
+\end{figure}
 
 The in memory data structure of neo4j is similar to the just explained index graph data structure in section \ref{sec:index_graph}. A \textit{node} has a collection of \textit{relationships} and a \textit{relationship} has a reference to its \textit{start node} and \textit{end node}.
 As neo4j is a full blown property graph nodes and relationship contain a lot of other information. A node has a collection of \textit{labels}, relationship has a \textit{type}. The class \textit{Node} and the class \textit{Relationship} 
@@ -33,40 +42,52 @@ $\bigcirc A_\downarrow$ contains all downward edge that which are needed for the
 During the the contraction every node gets a rank assigned. This rank is the only change that is made to the Neo4j data structure and its the mapping identifier between the input graph $G$ and the index graph $G'$. $G'$ will then be used to generate $\bigcirc A_\downarrow$ and $\bigcirc A_\uparrow$.
 
 
-\begin{figure}
-    \centering
-    \input{assets/tikz/neoToDiskMapping.tex}
-    \caption{mapping}
-    \label{fig:mapping}
-\end{figure}
+
 
 \section{How to Store the Index Graph}\label{sec:how_to_store}
-
-After generating the disk arc sets $\bigcirc A_\downarrow$ and $\bigcirc A_\uparrow$, we now want to store them as efficiently as possible to the disk. To refine the definition of a disk arc. It consist of four values \textit{start rank}, the \textit{end rank}, the \textit{start rank} and the \textit{weight} 
-\\
-This 16 Byte disk collected to disk blocks, that have at least the size of one disk block on the systems hard drive, as usually the system will always read a complete disk block even if you request only 16 Byte of information. But it is possible to make blocks bigger than one disk block. This can be wanted if you have a big read cache,
-or even need it the highest outgoing or in ingoing arc degree exceed the $\frac{diskBlockSize}{16}$ as you will see in \ref{sec:persistanceOrder}.
 
 \begin{figure}
     \centering
     \input{assets/tikz/diskBlock.tex}
-    \caption{Disk Block}
+\caption{Disk Block}
     \label{fig:disk_block}
 \end{figure}
 
+After generating the index graph $G'$, we now want to store them as efficiently as possible to the disk. To refine the definition of a disk arc. It consist of four values \textit{start rank}, the \textit{end rank}, the \textit{start rank} and the \textit{weight} as you can see in figure \ref{fig:disk_block}.
+\\
+This 16 Byte disk arcs are collected to disk blocks. The size of a block can be set as parameter but has two lower bounds. At first a disk block should not be smaller as the block size of the file system beneath as this is the smallest unit once can gets and it would be a wast of space.
+The second lower bound is the maximum degree that exists in the index graph after the contraction as all arc of one vertex, as all upward arcs a vertex have to be stored int the same disk block. This applies for the downward arcs, too. 
+\begin{equation*}
+    max(d_{\uparrow max}(v), d_{\downarrow max}(v)) \leqslant  \frac{diskBlockSize}{16}  
+\end{equation*}
+
 \subsection{Persistance Order}\label{sec:persistanceOrder}
 
-As the disk arcs are later on is used for the CCH search, we want to sequentially write them in a way that provides a high spatial proximity of vertices that are likely to get requested together. Here we will adopt the idea of \cite[Mobile Route Planning]{Sanders}. In the transformation form $G'$ to its disk arcs $\bigcirc A_\uparrow$ 
-and $\bigcirc A_\downarrow$ we do a simple depth first search on all ingoing arcs on the target rank to determine the order for $\bigcirc A_\uparrow$. We do the same for all outgoing arcs on the source rank to determine the order for $\bigcirc A_\downarrow$.
-There is one file for storing all upward arc and on file storing all downward arcs. Each of this files has a position file that belongs to it, as shown in figure \ref{fig:position_file}. After every vertex that is expanded, all its arcs are pushed to a buffer of size disk block. If the buffer is full or the number of arcs doesn't fit anymore,
-the buffer is flushed to the current position in the arc file and the file position is incremented by $1$. The store position is saved in the position file of the arc file, such that we can find the arcs back later on. If the buffer wasn't complete full all remaining arc slots are filled with dummy arcs that contain only $-1$ at every property.
+\input{assets/pseudocode/storeFunction.tex}
 
+
+As the disk arcs are later on is used for the CCH search, we want to sequentially write them in a way that provides a high spatial proximity of vertices that are likely to get requested together. Here we will adopt the idea of \cite[Mobile Route Planning]{Sanders}. In the transformation form $G'$ to its disk arcs $\bigcirc A_\uparrow$ 
+and $\bigcirc A_\downarrow$ we do a simple depth first search on all ingoing arcs on the target rank to determine the order for $\bigcirc A_\uparrow$. We provided the algorithm for that in algorithm \ref{alg:store_dfs}. As you can see in figure \ref{fig:store_function}, the receives the vertex with the highest rank, whether it shell 
+store the upward or the downwards graph and the path, where to store the arcs on the disk. For the upwards graph the mode is set to upwards. At initialization we push an iterator over all incoming vertices that reach the top vertex to stack. Also we open a file write for writing the arc and one file writer for writing the position file as shown in figure \ref{fig:position_file}.
+Then we start the \textit{store()} function of algorithm \ref{alg:store_dfs}. As long as the stack is not empty we pick the top iterator of the stack, but leaf it inside. Then we check if that iterator still holds a vertex. If not we remove the iterator and continue. If it holds one we retrieve it. If that vertex hasn't yet been written to the disk,
+we tell the arc writer to store it. The arc writer will return the disk block number at which the arcs of that vertex are stored in the arc file. This position writer will keep track of this information. Then we call the neighbors function which get's an iterator of this vertex neighbors sorted ascending by their rank. Finally when the algorithm stops, we write the 
+position file to the disk and also flush the rest of the arc file buffer.
+\\
+We do the same for all the downwards graph using all outgoing instead of the incoming arcs to determine the neighborhood. The arc writer is a write buffer that is as big as the defined disk block size. If during an iteration step there have been more arcs pushed to this arc writer than would fit in the current block, the arc writer flushes 
+its cache to the disk, filling the remaining disk arc slots with four times $-1$.
 
 \begin{figure}
     \centering
     \input{assets/tikz/positionFile.tex}
     \caption{Position File}
     \label{fig:position_file}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \input{assets/uml/storeFunction.tex}
+    \caption{StoreFunction}
+    \label{fig:store_function}
 \end{figure}
 
 \section{Reading Disk Arcs}
@@ -91,18 +112,27 @@ resilient to programming errors.
 The search brings all things explained in this chapter together. 
 
 At the beginning there are to index graphs initialized the upwards graph $G_\uparrow'(V_\uparrow, A_\uparrow)$ and the downwards graph $G_\downarrow'(V_\downarrow, A_\downarrow)$. We are looking for the shortest
-path from the source vertex $v(s)$ to the target vertex $v(t)$. The vertex set $V_\uparrow$ of the upwards graph $G_\uparrow'(V, A_\uparrow)$ only contains one vertex $v(s)$ and the $A_\uparrow$ only contains 
-the upward edges to $v(s)$. The vertex set $V_\downarrow$ of the downwards graph $G_\downarrow'(V_\downarrow, A_\downarrow)$ only contains the $v(t)$ and the edge set $A_\downarrow$ only contain the arcs to $v(t)$.
+path from the source vertex $v(s)$ to the target vertex $v(t)$. The vertex set $V_\uparrow$ of the upwards graph $G_\uparrow'(V, A_\uparrow)$ only contains one vertex $v(s)$ and the upward arc set is empty $A_\uparrow = \emptyset$. 
+The vertex set $V_\downarrow$ of the downwards graph $G_\downarrow'(V_\downarrow, A_\downarrow)$ only contains the $v(t)$ and the arc set is empty $A_\downarrow = \emptyset$.
+Looking at graph in figure \ref{fig:lazy_load_vertex} visualize the search upwards search size after initialization. The ars an vertices in grey are not loaded yet.
 \\
-Now both $G_\uparrow'$ and $G_\uparrow'$ are alternatingly expanded with CH-Dijkstra. When the CH-Dijkstra has decided which vertex to expand next, the buffer will be requested to load its neighborhood. This can be 
+As defined earlier in section \ref{sec:dijakstra}, the vertices of the dijkstra query are warped in a object called \textit{DijkstraState} which is define in figure \ref{fig:dijkstra_class}. We now extend this 
+class by one parameter, the \textit{VertexLoader} which you can see in figure \ref{fig:lazy_load_vertex}. The \textit{VertexLoader} has only one method \textit{addArcs(vertex: Vertex)}. If you pass a vertex to this method
+the VertexLoader will take that vertex and attached all its arcs and their end vertices to it. This happens when the \textit{expandNext()} method in algorithm \ref{alg:disjkstra_algorithm} calls \textit{state.settle()}. This 
+follows the observation that the arcs of a vertex in dijkstra are only of interest if the query is about to expand this vertex.
+\\
+The \textit{VertexManager} get is \textit{DiskArc} from a \textit{Buffer}. The buffer can be of any buffer type it only has to implement \textit{arcs(rank: int):Set<DiskArc>} method. The \textit{VertexManager} is in responsibility 
+create the arcs and vertices form the \textit{DiskArc}'s it gets. A \textit{Buffer} contains some type of collection data structure cache \textit{DiskArc}'s. When the vertex manger requests some arcs the \textit{Buffer} checks whether 
+they are already cached. If yes it returns them. If not it will request the arcs from the hard drive. This whole process is also visualized in figure \ref{fig:lazy_load_vertex}.
+\\
+After starting the CH-Dijksta as described in algorithm \ref{alg:cchSearch} both $G_\uparrow'$ and $G_\downarrow'$ are alternatingly expanded and the vertices need will be attached when needed. This can be 
 compared to Command \& Conquer or a lot of other strategy  real-time strategy video games where you start at a map that is almost completely grey and the map is only load to the position you are plus some padding.
-The rest is just a plain CH-Search where we stop after we determined the correct shortest path.
 
 \begin{figure}
     \centering
     \input{assets/tikz/lazyLoadVertex.tex}
     \caption{lazy load vertex at query time}
-    \label{fig:circular_buffer}
+    \label{fig:lazy_load_vertex}
 \end{figure}
 
 

@@ -6,12 +6,15 @@ to give an overview of efforts that have been made to make \cite[Customizable Co
 
 \section[Algorithmic History]{Algorithmic History} \label{sec:algorithmic_history}
 
-\cite[Contraction Hierarchies]{Geisberger_2012} or CH is heavily influenced by the idea of the \cite[Transit-Node]{Bast_2007} approach and as transit node approach itself, CCH is a
-technique to speed up \cite[Dijkstras Algorithm]{Dijkstra_1959}, which is the most basic and robust algorithm to find shortest path in graphs. CH goes back to the diploma thesis of \cite[Geisberger]{Geisberger} in 2008. The \cite[Transit-Node]{Bast_2007} approach
-tries to find vertices inside the graph that are more important than others. Important in this case means, these are vertices that reside on many shortest paths. This speeds up 
-especially long distance queries, as one only needs to calculate the distance to the the next transit node of the source and target vertex as the shortest paths between 
-the transit or access nodes will be known. \\ 
-CH goes even further on the idea of having important vertices. It applies an importance to each vertex in the graph a so called rank. Furthermore it adds edges to the graph,
+There have been many approaches to become quicker than dijkstra. To name some there is \cite[A*]{A_Star}, which adds a heuristic to each node to help dijkstra to go in the right direct. Then there is \cite[ALT]{ALT} with stands for 
+\textit{A* + Landmarks + Triangle Inequality}, which is a approach to improve the A* heuristic with landmarks. Then there are the \cite[Arc Flag]{ARC_FLAG} approach that which is based on the idea that many shortest paths in a graph
+usually overlap, so we can store them in a compact way. Later only edges which are flagged true for the target direction will be expanded by dijkstra.
+Then there is the \cite[Transit-Node]{Bast_2007} that uses the observation that if you want to go far, nodes of a small area usually pass all by the same node. If you can determine such nodes you store their distance in a table. If finally you are looking
+for the way from one to another node one only starts to local dijkstra for the source and the target side until one finds transit node. As the distance between the transit nodes are known, we simply can look up the rest of the path.
+\cite[Contraction Hierarchies]{Geisberger_2012} or CH, as transit nodes, goes with the idea that there are nodes that are more important than others, but instead of selecting some important nodes we rank them all. CCH is a fashion
+of CH that makes it easier to react to changes in the CH index structure. CH goes back to the diploma thesis of \cite[Geisberger]{Geisberger} in 2008. As the transit node approach CH and CCH speed up 
+especially long distance queries. \\ 
+CH adds edges to the graph,
 so called shortcuts, that preserve the shortest path property of the graph in case a vertex that is contracted resides on a shortest path between others. When querying a shortest
 path CH uses a modified bidirectional-dijkstra that is restricted to only visit nodes that are of higher importance, or rank, than the its about to expand next.
 This method is able to retrieve shortest paths of vertices that have a high spacial distance, however, it is rather static. In case a new edge is added or an edge weight is updated, 
@@ -21,7 +24,17 @@ they are added if there had been a connection between its neighbors through the 
 The shortcut weights are later on calculated through the lowers triangle. Additionally the \cite[Customization Contraction Hierarchies]{CCH} provides an update approach that only updates,
 edges that are affected by a weight change.
 
-\section{Contraction Hierarchies Database History}\label{sec:related_work:database}
+
+\section{Neo4j Shortest Path Queries}
+
+Neo4j contains a implementation of dijksta, bidirectional dijksta and an A* implementation out of the box. They are provided by the traversal API, such that every plugin can use it. 
+Sadly the only provide a \textit{one to one} dijksta, which made it useless for our purpose. Additionally our test that that prove our dijkstra implementation as stated in \ref{sec:dijkstra}, uses the neo4j bidirectional dijkstra and compares the path weight.
+By that we also measure the time both need to find the shortest path. It shows our undirectional dijkstra is about twice as fast as the one of neo4j.
+\\
+Then there is the neo4j graph data science library  which provides a \textit{one to all} and \textit{one to one} dijkstra implementation. Additionally it contains also a A* implementation, a \textit{Yen’s Shortest Path} algorithm and a \textit{Delta-Stepping Single-Source Shortest Path} algorithm.
+
+
+\section{Contraction Hierarchies in Neo4j}\label{sec:related_work:database}
 
 There is one bachelor thesis by Nicolai D'Effremo \cite[Some text]{DEffremo2019} that has implemented a version on \cite[Contraction Hierarchies]{Geisberger_2012} for Neo4j, one 
 of the most used graph databases of today in 2023. This implementation shows that even in for databases CH is an index structure worth pursuing, as there was a tremendous speedup 
