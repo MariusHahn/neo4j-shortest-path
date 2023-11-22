@@ -1,6 +1,15 @@
 \chapter{Experiments}
 
-In this chapter we will experimentally check if our idea and implementation of a persisted version of CCH works out.
+In this chapter we will experimentally check if our idea and implementation of a persisted version of CCH works out. We will give an answer to the following Questions:
+\begin{itemize}
+    \item What is the largest graph we are able to index?
+    \item Are we able to beat dijkstra's performance? if yes, by how much?
+    \item Is there a category of queries that work better than others?
+    \item Do different buffer sizes significantly change the performance?
+    \item Is the input graph size the only factor that affect the performance?
+    \item How long do updates take if we change all arc weights?
+    \item Do updates effect performance of the search?
+\end{itemize}
 
 \section{The Test Environment}
 
@@ -8,11 +17,13 @@ We implemented this CCH in \textit{Java 17} and fo \textit{Neo4j 5.1.0}. The onl
 \\
 The code runs on a virtual machine that is running \textit{Linux Mint 20.3 Una}. This VM has two  AMD EPYC 7351 16-Core Processors with L1d cache=1 MiB L1i cache=2 MB, L2 cache=16 MB and L3 cache=128 MB. 
 It has 512 GB of RAM and the system hard drive is a \textit{Intel SSDPEKNW020T8} SSD with 2 TB.
-
+The fact that our test environment uses a SDD hard drive isn't ideal. Databases usually use HDD drives which are slower in reading data but faster in writing data. However, a quick lookup on the internet shows that,
+as of today, in November 2023, HDD drives start at a price of around 15€/TB and have 512MB of cache. Our biggest index has 430MB in total, depending on the caching algorithm of the disk, it could be that 
+the HDD would pre cache the whole index anyway, such that there are fewer actual reads from the durning disks in the HDD and the read performance gets closer to what a SSD can achieve.
 
 \section{The Test Data}
 
-The test graphs we evaluate the implementation are provided by the \cite[9th DIMACS Implementation Challenge - Shortest Paths]{DIMACS}. There we focus on the road networks of New York, Colorado, Florida and California+Nevada.
+The test graphs we evaluate the implementation are provided by the \cite[9th DIMACS Implementation Challenge - Shortest Paths]{DIMACS}. There we focus on the road networks of New York, Colorado, Florida, California+Nevada and also larger networks that represent the great lakes on the north american continent as well as the USA east cost.
 We use the distance graphs, only in case of New York we tried the distance and the time travel graph. As the results were similar and the contraction strategy is not depending on the arc weight we omitted the further test wit the time travel graphs.
 The arc size differs from the DIMACS Challenge as we have filtered out duplicate edges.
 
@@ -24,34 +35,46 @@ In New York, regardless if you take the state or only the city itself, there are
 \\ 
 Where as the population of Florida is more sparse and located on a line at the cost of both side, as well as their streets. Therefore as shown in figure \ref{fig:linear_contraction} the contraction can easily find vertices as separators. 
 
-\subsection{Limits}
+\subsection{Limits} \label{sec:contraction_limits}
 
-We decided to set the time limit a contraction should not exceed to one day. If, within this time the contraction did finish, we decided to abort the process. This happend for the graphs \textit{Western USA, …}. If one would want to go this size or bigger we suggest,
+We decided to set the time limit a contraction should not exceed to about one day. If, within this time the contraction did finish, we decided to abort the process. This happend for the graphs \textit{Western USA}, therefore we didn't try larger ones. If one would want to go this size or bigger we suggest,
 to achieve the vertex ordering by recursive finding balanced separators as described in \cite[Customization Contraction Hierarchies]{CCH}. 
 \\
-Contraction methods that rely on measures like edge difference suffer from very bad performance, if the graph gets dense. At the same time, the remaining graph will get denser towards the end of the contraction process. It is possible  that the last few nodes form a complete graph. The algorithm
+Contraction methods that rely on measures like edge difference suffer from very bad performance, if the graph gets dense. At the same time, the remaining graph will get denser towards the end of the contraction process. It is possible  that the last few nodes form a complete graph. The graph that \textit{Great Lake} turned complete with $1078$ nodes left in the queue. 
+at this time it toke about 110 second to contract a single vertex, and here comes why. The algorithm for the contraction \ref{alg:contraction}
 as proposed in this paper always will update the importance  of it's neighbors  after each contracted vertex and re-push it to the queue $Q$ of remaining vertices. Update the neighbor importance means to simulate the contraction of this neighbor. So we check for all pairs of incoming and outgoing neighbors $N_\downarrow(v) \times N_\uparrow(v) \setminus N_\downarrow(v) = N_\uparrow(v)$ whether we have to insert a shortcut. 
-This you have to $|Q|$ times. In case of a complete graph the in- and the outgoing neighbor set will have size $|Q|$. Which lead to the this many neighbor checks $(|Q| * |Q| - |Q|)*|Q|$ which is almost $(|Q|)^3$ checks whether to insert a shortcut or not. In case your graph already get's complete or close to it on the last 
+This you have to $|Q|$ times. In case of a complete graph the in- and the outgoing neighbor set will have size $|Q|$. Which lead to the this many neighbor checks $(|Q| * |Q| - |Q|)*|Q|$ which is almost $(|Q|)^3$ calls to the \textit{getContraction()} method in algorithm \ref{alg:contraction}, to checks whether to insert a shortcut or not. In case your graph already get's complete or close to it on the last 
 100 this is a doable exercise. In case there are 3000 remaining, it will starve. 
 \\
 Our test show that as if the number of neighbors that are not contracted yet and there need to be updated rise above $150$, the time to 500ms to contract a single vertex.
 
 
-\input{assets/tables/experimentKeyTable.tex}
-
 \section{Query Performance}
 
+\input{assets/tables/experimentKeyTable.tex}
+
+
 In this section we will have a look at the query performance. The query performance will depends mainly in quality of the contraction and the buffer size. 
-As the circular buffer we implemented performs better we will focus on it and bring only a small comparison at the end to the LRU buffer.
+As the circular buffer we implemented performs better we will focus on it. 
+\\ We do $10000$ point to point shortest path queries, where the start and the end vertex of the previous are always different to the one under test. This is because if you 
+always start from the same vertex or query the same target, at least one of the buffers has most probably already the right edges in cache. This is desirable but doesn't reflect real world scenario.
+In case you always start from the same query, dijkstra will always be a good choice, as a \textit{one-to-all} dijkstra can calculate all shortest paths from a start vertex to all reachable nodes in about 10 seconds on the Florida graph.
+This cannot be beaten by CCH as it can only do one to one queries.
 
+One of the big questions can we even beat dijkstra's performance. As you see in table \ref{tab:overview_table}, our 
+CCH algorithm was faster on average. For all graphs under test the query times improved significantly in comparison to dijkstra. Especially for the graph that represents Florida the query performance improvement 
+was tremendous. An average query time could be reduces from 2.6 seconds down to 0.039 second when having the whole graph in memory. But even if we only have 640kB in cache, the query performance did improve by factor five to sixteen. 
+Increasing the cache to 20\% of the edge size the graph has did sometimes lead to better results, as for California+Nevada. Here we could decrease the query time by half. For some other graphs it didn't bring any improvement as for Florida.
+The others had some improvement, in the region of about 20\%. A 20\% caching strategy though could be something that is useful if you have an application that often queries the same vertex.
+With $t^{40kB}_{cch}$ and $t^{40kB}_{cch-updated}$ we also tested the performance after updates have happened. There was very little change in that. All queries got slightly worse but didn't loose much.
 
-\subsection{Comparison with Dijkstra}
+\subsection{Short and Long Distance Queries}
 
 Regarding Figure \ref{fig:dijkstra_vs_cch_query_speed} shows speed difference of Dijkstra and CCH-shortest path query. As you can see, the greater distance, the greater the advantage of CCH over dijkstra. Small queries where the shortest path involve only a few hundred vertices have a very little speed up,
 whereas long distance queries are a lot faster. Figure \ref{fig:dijkstra_vs_cch_query_speed} is a random sample of queries in California and Nevada. As you can
 see in the left chart, there are some long distance queries for which dijkstra performs very good, though you cannot see them in the right chart, that has the path 
 length on the x-axis. We assume the good performing long distance queries to be in Nevada as its road network is sparser and than those of California. Therefore we added the right chart.
-It shows the advantage of CCH over dijkstra depends on the path length of the shortest path.
+It shows the advantage of CCH over dijkstra depends on the path length of the shortest path. This is underling our theory as there are still some longer queries that perform well but now there are closer together.
 
 \input{assets/plots/dijkstra-vs-cch-query-speed.tex}
 

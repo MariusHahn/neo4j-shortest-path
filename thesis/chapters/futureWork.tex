@@ -1,2 +1,30 @@
 \chapter{Future Work}
-to be written
+
+With this work we barely scratched the surface of what can be done with CCH in neo4j. 
+There are a lot of special topics one could dive deeper to improve CCH for neo4j.
+
+\section{Contraction Algorithms}
+
+As the contraction algorithm \ref{alg:contraction} we use definitely has its limitation as we have seen in the experiment section \ref{sec:contraction_limits}, it is worth digging
+deeper there. One very promising method determine the vertex by recursively look for minimum balanced separators until they tend to get big and then continue with our algorithm.
+Another question we haven't even touched is, what if we add vertices and arcs. How can we deal with such updates in the input graph which are not unusual for databases.
+
+\section{The Test Dataset}
+
+Changing the test domain can be interesting, too. Most papers like \cite[CCH]{CCH}, and \cite[CH]{Geisberger_2012} and many more focus on road networks. This definitely made sense for this
+paper to also check if we come to similar results. However, one could also try grids as \cite[Storandt]{storandt2013contraction} or looking for other real world domains that can be modeled such that shortest path queries are of major interest.
+
+\section{Perfect Customization and Transition to CH}
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+    \input{assets/tikz/PerfectCustomization.tex}
+    
+\end{wrapfigure}
+
+We didn't implement the perfect customization, nor the transition from CCH to CH. A CH index is usually faster at query time as the amount of arcs is less. Therefore it can be useful to have 
+a CCH and always calculate a CH from it after each update. In that scenario it is also useful to measure how long such a transition takes.
+
+\section{Using relational Databases}
+
+Furthermore it is questionable if graph databases like neo4J solve any problem. Due to [paper] there is no significant difference in processing a graph in a graph database compared to a relational 
+database. Therefore it would be interesting to see, how an implementation of dijkstra and (C)CH perform in SQL, written for relational databases. 

@@ -1,6 +1,7 @@
 \chapter{Integration in a Neo4j}
 
-In this section it is described how "Customizable Contraction Hierarchies" CCH is integrated into Neo4j. CCH arguments the input graph, which means it inserts arcs, so called shortcuts, that do not belong to the original data. To keep the change to the input graphs as little as possible we decided to not insert any arc into the graph that is stored inside the neo4j database, but introduce another graph data structure, the index graph. 
+In this section it is described how "Customizable Contraction Hierarchies" CCH is integrated into Neo4j. CCH arguments the input graph, which means it inserts arcs, so called shortcuts, that do not belong to the original data. We keep the change to the input graphs as little as possible we decided to not insert any arc into the graph that is stored inside the neo4j database, but introduce another graph data structure, the index graph. Through that 
+decision we get full control over the data structure so we can decide how to store it.   
 The mapping between the index and the graph that resides in the database is achieved by the rank property. The rank property is set to the input and the the index graph at contraction time. Through this we achieve a unique mapping between $G$ and $G'$.
 This gives yet another two advantages. One is that we get full control about the graph representation which is helpful to efficiently store and read the index graph for the disk. Another is that with this approach makes it easier to later on port the idea to another graph database manufactures.
 

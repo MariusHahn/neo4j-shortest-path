@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+    \begin{class}[text width=0.7\linewidth]{Arc}{0.7\linewidth, 0}
+      \attribute{- buffer : DiskArc[]}
+      \attribute{- mode : Mode}
+      \attribute{- position : Map<Integer, Integer> // rank -> bufferPosition} 
+      \attribute{- bufferSize : int}
+      \attribute{- arcReader}
+      \operation{+ Arc(start: Vertex, end: Vertex, weight: int, middle: Vertex, hopLength: int) }
+      \operation{+ other(vertex: Vertex): Vertex}
+    \end{class}
+\end{tikzpicture}
