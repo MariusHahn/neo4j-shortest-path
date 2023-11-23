@@ -27,6 +27,17 @@ The test graphs we evaluate the implementation are provided by the \cite[9th DIM
 We use the distance graphs, only in case of New York we tried the distance and the time travel graph. As the results were similar and the contraction strategy is not depending on the arc weight we omitted the further test wit the time travel graphs.
 The arc size differs from the DIMACS Challenge as we have filtered out duplicate edges.
 
+\section{Test Results}
+
+The table \ref{tab:overview_table} are our basic test results. The arc size differs from the DIMACS Challenge as we have filtered out duplicate edges. The following table represents our basic test results:
+
+\input{assets/tables/experimentKeyTable.tex}
+
+We do $10000$ point to point shortest path queries, where the start and the end vertex of the previous are always different to the one under test. This is because if you 
+always start from the same vertex or query the same target, at least one of the buffers has most probably already the right edges in cache. This is desirable but doesn't reflect real world scenario.
+In case you always start from the same query, dijkstra will always be a good choice, as a \textit{one-to-all} dijkstra can calculate all shortest paths from a start vertex to all reachable nodes in about 10 seconds on the Florida graph.
+This cannot be beaten by CCH as it can only do one to one queries.
+
 \section{The Contraction}
 
 In table \ref{tab:overview_table} you can see the basic results of the networks we tested. One would think that the contraction time goes along with the size of the network, though it doesn't. The New York graph has has about the same contraction time 
@@ -51,15 +62,11 @@ Our test show that as if the number of neighbors that are not contracted yet and
 
 \section{Query Performance}
 
-\input{assets/tables/experimentKeyTable.tex}
 
 
 In this section we will have a look at the query performance. The query performance will depends mainly in quality of the contraction and the buffer size. 
 As the circular buffer we implemented performs better we will focus on it. 
-\\ We do $10000$ point to point shortest path queries, where the start and the end vertex of the previous are always different to the one under test. This is because if you 
-always start from the same vertex or query the same target, at least one of the buffers has most probably already the right edges in cache. This is desirable but doesn't reflect real world scenario.
-In case you always start from the same query, dijkstra will always be a good choice, as a \textit{one-to-all} dijkstra can calculate all shortest paths from a start vertex to all reachable nodes in about 10 seconds on the Florida graph.
-This cannot be beaten by CCH as it can only do one to one queries.
+\\ 
 
 One of the big questions can we even beat dijkstra's performance. As you see in table \ref{tab:overview_table}, our 
 CCH algorithm was faster on average. For all graphs under test the query times improved significantly in comparison to dijkstra. Especially for the graph that represents Florida the query performance improvement 
@@ -91,16 +98,26 @@ So far we only had a look long distance queries, let's have a look at the short 
 
 \section{IO's at Query Time}
 
+\begin{wrapfigure}{r}{0.65\textwidth}    
+    \input{assets/plots/io-comparison}
+    \caption{I/O's over Expanded Vertices for 40kB cache size per search side.}
+    \label{fig:io_comparison}
+\end{wrapfigure}
+
 As we did our implementation to show that CCH could also fit for a graph database it is essential to have a look how many I/O's are cased by our search. As stated in section \ref{sec:how_to_store}, the arcs of one vertex are always stored in a single disk block. Therefore the worst case scenario that can happen is that there is one I/O per expanded vertex.
 As you can see in figure \ref{fig:io_comparison} we can do better. With a cache size of only 640 kB which gives the possibility to hold 40960 acs in cache we already achieve around 1.4 expanded vertices per I/O. This means in a bit less than every second we accedently already had the right set of arc in memory, when a new vertex was requested. This is pretty 
 impressive as 81920 arcs are about 0.6\%  of the arcs the road network of California and Nevada contains after the contraction.
-\input{assets/plots/io-comparison}
-\\
+
+
 For bigger network as the \textit{Great Lakes} and \textit{Eastern USA} this cache size was to small. In most scenarios we had about as many I/O's as  expanded nodes. So we will have to go bigger.
 
+\section{Circular Buffer}
+
+Here we want to compare the I/O's a query needs to find the shortest path. From the table \ref{tab:overview_table} you can already see that on average decreases heavily. In figure \ref{fig:io_comparison} you can see the I/O's over the dijkstra path length.
+You can see that the increase of the buffer size lead to a reduction of I/O's for almost all queries. Interesting to see is also the increased buffer size also lead to lower the upper bound of I/O's a query needs to finish. This is very useful observation,
+as you can easily figure out how many I/O's you can afford and choose the buffer size respectively. 
 
 
-
-%\input{assets/plots/path-length-comparison.tex}
+\input{assets/plots/coloradoBufferComp.tex}
 
 

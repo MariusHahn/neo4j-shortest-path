@@ -43,8 +43,6 @@ $\bigcirc A_\downarrow$ contains all downward edge that which are needed for the
 During the the contraction every node gets a rank assigned. This rank is the only change that is made to the Neo4j data structure and its the mapping identifier between the input graph $G$ and the index graph $G'$. $G'$ will then be used to generate $\bigcirc A_\downarrow$ and $\bigcirc A_\uparrow$.
 
 
-
-
 \section{How to Store the Index Graph}\label{sec:how_to_store}
 
 \begin{figure}
@@ -98,9 +96,34 @@ There one will get an array, contain the requested arcs but also some other. The
 
 \subsection{Circular Buffer}
 
-For the circular buffer we simply used an array of disk arcs. If we reach the end of the buffer we restart overwriting the values from the array start. To get the all arcs of a rank one request that rank number. There is a position hash table which tells the start position of that rank inside the buffer. If it is missing, the containing disk block is read to the buffer. It 
-continues to read sequentially until the request rank and the read arc doesn't belong together anymore. This buffer has the advantage that we can exactly determine the amount of arcs we buffering. Also as it is just a simple array, it will be easy for the operation system to cache it.
-The disadvantage is that it is possible that we request arc sets very often as it is possible they get evicted just before request again.
+We implemented a circular buffer to read and cache the DiskArcs at query time. Figure \ref{fig:circular} is simple visualization, for a circular buffer of upward edges. There is the DiskArc array that has already been filled with some edges, a position hash table that contains the last index at which you will find an arc for the requested rank and a write pointer, that tell at which position we have to continue writing when the next cache miss occurs.
+
+\begin{figure}[H]
+    \centering
+    \input{assets/tikz/CircularBuffer.tex}
+    \caption{Circular Buffer for upwards arcs}
+    \label{fig:circular}
+\end{figure}
+
+If a rank is requested that is already in the buffer, we look up the position in the positions hash table and iterate with decreasing index from the retrieved position until the start vertex of the arc we read has a different rank than the requested. 
+If we reach the end of the buffer the iteration index is moduloed with the buffer size, such that we continue reading at the beginning of the DiskArc array.
+\\
+If the rank we requesting isn't in the hash table we request the containing block from the disk. 
+We receive an array ouf DiskArcs that contains all arcs of the requested rank and maybe some more, which are also likely to be requested soon. At first we insert $-1$ for the request rank into the hash table. 
+This is because one will not find a DiskArc for every rank one requests.
+For instance the vertex with the highest rank will not have any outgoing arcs. 
+To prevent having such vertices requested from the disk every time the search touches the top of the graph we have a $-1$ in the position table and if that rank is requested we simply return an empty collection.
+We iterate the jus load DiskArc array. For each DiskArc we insert the start arc rank into the position table, together with the current position and the disk arc into the array at the current position. After each insert 
+we increment the positionWriter by $1$. If we reach the end of the buffer array it is back set to $0$. 
+\\
+As it is possible that we only partly overwrite some arc sets that are already in the buffer, we remove the position of the rank that at the write pointer position after each disk read invocation. 
+\\ 
+Determine whether a arc set is inside the buffer isn't trival. 
+If its not in position table, it not in the buffer. 
+If it in the positions table it is possible that it has been overwritten. 
+So we check whether at position we retrieve from the table there is actually a arc that starts with the requested rank.
+If yes, the buffer contains the arc set, if no it doesn't and we remove that rank from the position table. 
+
 
 \subsection{Least Recently Used Buffer}
 
