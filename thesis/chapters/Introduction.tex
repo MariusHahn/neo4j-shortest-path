@@ -1,22 +1,34 @@
 \chapter{Introduction}
 
-Neo4J is a database that uses a graph model to handle data. In contrast to relational databases, graph databases handle relationships a first-class citizen. 
-This means a relationship that connects nodes is an entity just as the nodes it connects themselves. Nodes have a direct pointer to their relationships, and relationships
-have a pointer to their start end node. Whereas in a relational database the data is organized in tables. Tables have rows and theses rows can be connected to other rows 
-of the same or different table using joins on matching cells, usually primary- foreign key relationships. To retrieve information that is stored in two tables rows one has to scan 
-both an join them on the desired key property Depending on the size of the tables and the number of joins that have to be done to retrieve the desired information, such queries
-can be very expensive. 
-\\\\
-As in a graph database, a node has a pointer to its relationship and a relationship has a pointer to its nodes, there is no table scan needed to retrieve such connected data, which can make such queries very 
-performant. Examples for such queries are shortest path queries on domains which resembles graph by their nature. 
+Most applications that handle data have to store these eventually.
+Simple files do not not offer enough semantic structure.
+Therefore databases have been developed, to not only store but query and aggregate data effective and efficiently.
+Relational that store data in tables become the unspoken industry standard in the last decades. 
+However there are domains that do not naturally fit into tables and one will need a lot of restructuring to make them fit.
+As a result, there have been efforts to create databases that use other abstractions to store data, like the graph database Neo4J.
 \\
-We will focus on these, shortest path queries and try to make these even quicker by adding an index call Customizable Contraction Hierarchies, \textit{CCH}. CCH is proven to achieve a tremendous speedup
-compared to dijkstra's algorithm, in graphs where one can find vertices that are more important than others. important in this context means that these vertices belong to many shortest paths. One example for
-such a domain are road networks, which we will also use in our test scenarios.  
+In contrast to relational databases, graph databases handle relationships a first-class citizen.
+%Neo4J is a database that uses a graph model to handle data.
+This means a relationship that connects nodes is an entity just as the nodes it connects themselves.
+Nodes have a direct pointer to their relationships, and relationships have a pointer to their start end node.
+Whereas in a relational database the data is organized in tables.
+Tables have rows and theses rows can be connected to other rows of the same or different table using joins on matching cells, usually primary- foreign key relationships.
+To retrieve information that is stored in two tables rows one has to scan both an join them on the desired key property.
+Depending on the size of the tables and the number of joins that have to be done to retrieve the desired information, such queries can be very expensive.
 \\
-In comparison to many other papers that examine CCH in their specific details we want to examine if we can adopt it to the graph database Neo4J, and still keep its advantages. Therefore, will we be able to store the 
-index in a fashion such that we can keep the performance gain we had before. Additionally we want to explore how the indes behaves after an update on the edge weights. Will queries still be as quick as they were before the update.
-This is an essential question as data in databases are usually not only stored but also manipulated. We also want to discover how big such an index graph will get, as thre might be no need to read the index from the disk,
-because it easily fits in main memory.
+As in a graph database, a node has a pointer to its relationship and a relationship has a pointer to its nodes, there is no table scan needed to retrieve such connected data, which can make such queries very performant.
+Examples for such queries are shortest path queries on domains which resembles graph by their nature.
 \\
-Finally we want to keep the integration into neo4j as small as possible to make it later on as easy as possible to port the implementation to other graph databases that might become more relevant in future. 
+We will focus on these, shortest path queries and try to make these even quicker by adding an index call \cite[Customization Contraction Hierarchies]{CCH}, \textit{CCH}. 
+CCH is proven to achieve a tremendous speedup compared to dijkstra's algorithm, in graphs where one can find vertices that are more important than others.
+Important in this context means that these vertices belong to many shortest paths.
+One example for such a domain are road networks, which we will also use in our test scenarios.
+\\
+In comparison to many other papers that examine CCH in their specific details we want to examine if we can adopt it to the graph database Neo4J, and still keep its advantages.
+Will we be able to store the index in a fashion such that we can keep the performance gain we had before?
+Additionally we want to explore how the index behaves after an update on the edge weights.
+Will queries still be as quick as they were before the update?
+This is an essential question as data in databases are usually not only stored but also manipulated.
+We also want to discover how big such an index graph will get, as thre might be no need to read the index from the disk, because it easily fits in main memory.
+\\
+Finally we want to keep the integration into neo4j as small as possible to make it later on as easy as possible to port the implementation to other graph databases that might become more relevant in future.
