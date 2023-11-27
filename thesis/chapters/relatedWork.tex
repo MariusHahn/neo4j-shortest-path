@@ -4,7 +4,7 @@ As our research focus is set ti databases, we want to divide this chapter in two
 \nameref{sec:algorithmic_history} that will give some basic overview what has been published regarding index structures to speed up shortest path queries for graphs.
 \nameref{sec:related_work:database} we will try to give an overview of efforts that have been made to make \cite[Customizable Contraction Hierarchies]{CCH} it suitable for graph databases.
 
-\section[Algorithmic History]{Algorithmic History} \label{sec:algorithmic_history}
+\section{Speed Up Dijkstra's algorithm} \label{sec:algorithmic_history}
 
 The basic algorithm to answer shortest path queries is \cite[dijkstra]{Dijkstra_1959}.
 It is from 1959 and in the decades after it there have been many approaches to get it quicker.
@@ -36,11 +36,11 @@ Additionally \cite[Customization Contraction Hierarchies]{CCH} provides an updat
 edges that are affected by a weight change.
 
 
-\section{Neo4j Shortest Path Queries}
+\section{Existing shortest path algorithms in Neo4j}
 
-Neo4j contains a implementation of dijksta, bidirectional dijksta and an A* implementation out of the box.
+Neo4j contains a implementation of dijkstra, bidirectional dijkstra and an A* implementation out of the box.
 They are provided by the traversal API, such that every plugin can use it.
-Sadly the only provide a \textit{one to one} dijksta, which made it useless for our purpose.
+Sadly the only provide a \textit{one to one} dijkstra, which made it useless for our purpose.
 Additionally the tests that prove our dijkstra implementation as stated in \ref{sec:dijkstra}, uses the neo4j bidirectional dijkstra and compares the path weights.
 By that we also measure the time both need to find the shortest path.
 It shows our unidirectional dijkstra is slightly faster than the one of neo4j.
@@ -48,6 +48,20 @@ It shows our unidirectional dijkstra is slightly faster than the one of neo4j.
 Then there is the neo4j graph data science library  which provides a \textit{one to all} and \textit{one to one} dijkstra implementation.
 Additionally it contains also a A* implementation, a \textit{Yen’s Shortest Path} algorithm and a \textit{Delta-Stepping Single-Source Shortest Path} algorithm.
 We did't use these neither as it turned out, having our own dijkstra is key to get the implementation we are looking for.
+
+\section{Shortest path query processing with external memory}
+
+Most shortest path external memory approaches have focused on Hub-Labels like "HLDB: location-based services in databases \cite{Abraham_2012}" and "COLD. Revisiting Hub Labels on the database for large-scale graphs \cite{efentakis2015cold}", with a few notable exceptions like "Mobile Route Planning \cite{Sanders}" and "The case against specialized graph analytics engines" \cite{fan2015case}.
+Hub-Labels tries to find important vertices that are encoded in many shortest path, so called "hubs". 
+After that it precalculates a two hop cover for all vertices in the graph.
+For every source target vertex pair $s$, $t$ there must be at least one common hub $\forall s,t \epsilon V \exists h \epsilon H(s) \cap H(t)$ \cite{Abraham_2011} and saves this information to a so called hitting set $H$. 
+Each vertex has its own hitting set. 
+For query answering on looks in the hitting set of the source and the target vertex. 
+There must be at least one common hub.
+With adding the distances that are stored in the two hitting sets on gets the distance from $s$ to $t$.
+By recursively looking at the neighbors of the target vertex one can finally resolve the original path. 
+This method is faster than CH due to \cite{Abraham_2012} but the space consumption is higher as well as the preprocessing time. 
+HLDB \cite{Abraham_2012} uses a relational database to store and query the hitting set of vertices.
 
 \section{Contraction Hierarchies in Neo4j}\label{sec:related_work:database}
 
