@@ -100,3 +100,32 @@ Being able to call the \textit{expandNext()} procedure from outside is a very po
 For example if we want to write a bidirectional dijkstra, we can create to two instances of the class \textit{Dijkstra} as stated in figure \ref{fig:dijkstra_class}.
 One dijkstra is initialized only with outgoing $\text{Dijkstra(}s, [t,], \overrightarrow{G}(V, \overrightarrow{A}) \text{)}$ arcs the other only with incoming arcs $\text{Dijkstra(}t, [s], \overleftarrow{G}(V, \overleftarrow{A}) \text{)}$.
 Now we can build our algorithm around that tells the bidirectional query when to stop or which side to expand next, but the essential thing here is we have reused the logic of the \textit{expandNext()} procedure and not written it again.
+
+\section{Contraction Hierarchies}
+
+Contraction Hierarchies \cite{Sanders} is a method that first arguments the graph with some additional edges that later on help Dijkstra's algorithm, such that it needs to expand fewer vertices.
+
+\begin{figure}[H]
+    \centering
+    \input{assets/tikz/chsimple.tex}
+    \caption{Contraction Hierarchies simple example}
+    \label{fig:ch_simple_example}
+\end{figure}
+
+Reading Figure \ref{fig:ch_simple_example} Contraction Hierarchies contracts, or deletes, vertices in a given order. 
+The order we take is defined by the number you see inside the vertices, so CH contracts it in this order $v(1)$, $v(2)$, $v(3)$ and finally $v(4)$.
+Only the solid lines are edges of the original graph.
+The dashed line is a shortcut.
+While contracting vertices it preserves the shortest path among the remaining vertices.
+At first $v(1)$ is contracted and as $v(1)$ is on the shortest path between $v(2)$ and $v(3)$ a shortcut is inserted between them.
+This is the only shortcut CH inserts in this small graph.
+In a shortest path dijkstra will now be restricted to only expand edges from that are of higher rank.
+To get all possible path CH does this one from the source vertex side expanding all outgoing edges and from the target side with all ingoing edges.
+If we want to find the shortest path from $v(2)$ to $v(3)$, CH will expand all outgoing of $v(2)$ where it finds $v(3)$.
+It also expands all ingoing of the target vertex $v(3)$ where it finds $v(4)$. 
+Then both search side are merged at the meeting point which is $v(4)$ in this case.
+As a result one get the path on the right in Figure \ref{fig:ch_simple_example}. 
+The upwards search also find the a direct path from $v(2)$ to $v(3)$, which one can see in the middle of Figure \ref{fig:ch_simple_example}. 
+Out of all these paths one take the shortest, which is also the shortest path in the original graph.
+A shortcut does not only contain a weight information but also which vertex was contracted as it was inserted.
+With this information the one can resolve the actual path in the graph.

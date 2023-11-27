@@ -153,12 +153,20 @@ If during an iteration step there have been more arcs pushed to this arc writer 
 If one wants to get all upwards arcs of rank $i$ one needs take  the upwards position file, retrieve the integer $j$ that is stored at index $i$, and then read the complete block $j$ in the upwards arc file.
 One will get an array, containing the requested arcs but also some others.
 These arcs are likely to be request next.
-Therefore we want to keep them in memory.
-We implemented two buffer a \textit{circular buffer} and a \textit{least recently used buffer} LRU.
+Therefore we want to keep them in memory and to do so we use buffers. 
+We implemented two buffers a \textit{circular buffer} and a \textit{least recently used buffer} LRU.
 
 \subsection{Circular Buffer}
 
 We implemented a circular buffer to read and cache the DiskArcs at query time.
+One might also call it FiFo-buffer, which is correct too. 
+The key properties of this buffer are:
+
+\begin{itemize}
+    \item The element that resides inside the longest will be overwritten next if a new element is fetched from the disk. So \textit{first in first out} or FiFo.
+    \item If the maximum number of elements the buffer is reached it starts to overwrite the elements from the beginning. Therefore \textit{circular} or \textit{ring} buffer.
+    \item A element is never \textit{take out}. This means, elements that have been requested and returned will stay inside the buffer until they will be eventually overwritten. 
+\end{itemize}
 Figure \ref{fig:circular} is simple visualization, for a circular buffer of upward arcs.
 There is the DiskArc array that has already been filled with some arcs, a position hash table that contains the last index at which one will find an arc for the requested rank and a write pointer, that tells at which position we have to continue writing when the next cache miss occurs.
 
