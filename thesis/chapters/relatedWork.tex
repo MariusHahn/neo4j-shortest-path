@@ -1,53 +1,61 @@
 \chapter{Related Work} 
 
-As our research focus is set ti databases, we want to divide this chapter in two main sections \nameref{sec:algorithmic_history} and \nameref{sec:related_work:database}.
+As our research focus is set on databases, we want to divide this chapter into two main sections \nameref{sec:algorithmic_history} and \nameref{sec:related_work:database}.
 \nameref{sec:algorithmic_history} that will give some basic overview what has been published regarding index structures to speed up shortest path queries for graphs.
-\nameref{sec:related_work:database} we will try to give an overview of efforts that have been made to make \cite[Customizable Contraction Hierarchies]{CCH} it suitable for graph databases.
+\nameref{sec:related_work:database} we will try to give an overview of efforts that have been made to make Customizable Contraction Hierarchies \cite{CCH} it suitable for graph databases.
 
 \section{Speed Up Dijkstra's algorithm} \label{sec:algorithmic_history}
 
-The basic algorithm to answer shortest path queries is \cite[dijkstra]{Dijkstra_1959}.
-It is from 1959 and in the decades after it there have been many approaches to get it quicker.
-To name some there is \cite[A*]{A_Star}, which adds a heuristic to each node to help dijkstra to go in the right direct.
-Then there is \cite[ALT]{ALT} with stands for \textit{A* + Landmarks + Triangle Inequality}, which is a approach to improve the A* heuristic with landmarks.
-Then there is the \cite[Arc Flag]{ARC_FLAG} approach that which is based on the idea that many shortest paths in a graph usually overlap, so we can store them in a compact way.
-Later only edges which are flagged true for the target direction will be expanded by dijkstra.
-Then there is the \cite[Transit-Node]{Bast_2007} that makes use of the observation that if you want to go far, nodes that are spacial close usually pass by the same node.
+The basic algorithm to answer shortest path queries is Dijkstra's algorithm \cite{Dijkstra_1959}.
+It is from 1959 and in the following decades there have been many approaches to make it quicker.
+To name some there is A* \cite{A_Star}, which adds a heuristic to each node to help dijkstra to go in the right direct.
+Furthermore ALT \cite{ALT} with stands for \textit{A* + Landmarks + Triangle Inequality}, which is a approach to improve the A* heuristic with landmarks.
+Additionally the Arc Flag \cite{ARC_FLAG} approach which is based on the idea that many shortest paths in a graph usually overlap, so we can store them in a compact way.
+At a later point edges which are flagged true for the target direction will be expanded by dijkstra.
+On top of that is the Transit-Node \cite{Bast_2007} which makes use of the observation that if you want to go far, nodes which are spatially close usually pass by the same node.
 One will try to find such nodes and store their connecting shortest paths in a table.
-If one looks for the way from one to another node one only starts to local dijkstra for the source and the target side until one finds a transit node.
+If one looks for the way from one node to another node one only starts to local dijkstra for the source and the target side until one finds a transit node.
 As the distance between the transit nodes are known, we simply can look up the rest of the path.
-Then there is \cite[Contraction Hierarchies]{Geisberger_2012} or CH which is the base for what we will examine further.
-As transit nodes, CH goes with the idea that there are nodes that are more important than others, but instead of selecting some important nodes one ranks them all.
-CCH, what we will implement for Neo4J, is a fashion of CH that makes it easier to react to changes in the CH index structure.
-CH goes back to the diploma thesis of \cite[Geisberger]{Geisberger} in 2008.
+Moreover Contraction Hierarchies \cite{Geisberger_2012} or CH which is the base for what we will examine further.
+As transit nodes, CH uses the idea that there are nodes which are more important than others, but instead of selecting some important nodes one ranks them all.
+CCH, what we will implement for Neo4j, is a fashion of CH that makes it easier to react to changes in the CH index structure.
+CH goes back to the diploma thesis of Geisberger \cite{Geisberger} in 2008.
 As all previous mentioned techniques, CH and CCH especially speed up long distance queries.
 \\ 
-CH deletes nodes and inserts edges to the graph, so called shortcuts, that preserve the shortest path property in case a node that is deleted resides on a shortest path between remaining ones.
-When querying a shortest path, CH uses a modified bidirectional-dijkstra that is restricted to only visit nodes that are of higher importance, called rank, than the its about to expand next.
+CH deletes nodes and inserts edges to the graph, so called shortcuts, which preserve the shortest path property in case a node which is deleted resides on a shortest path between the remaining ones.
+When querying a shortest path, CH uses a modified bidirectional-dijkstra which is restricted to only expand nodes that are of higher importance.
 This method is able to retrieve shortest paths of vertices that have a high spacial distance.
 However, it is rather static.
 In case a new edge is added or an edge weight is updated, it might be necessary to recontract the whole graph to preserve the shortest path property.
 \\
-In 2016 \cite[Customization Contraction Hierarchies]{CCH} or CCH was published.
+In 2016 Customization Contraction Hierarchies \cite{CCH} or CCH was published.
 The approach is the same, but in CCH shortcuts are not only added if the contraction violates the shortest path property.
 Shortcuts are added if there had been a connection between its neighbors through the just contracted vertex and these neighbors do not own a direct connection through an already existing edge.
-The shortcut weights are later on calculated through the lowers triangle.
-Additionally \cite[Customization Contraction Hierarchies]{CCH} provides an update approach that only updates,
-edges that are affected by a weight change.
+The shortcut weights are later on calculated through the lowers triangle \ref{sec:lower_triangles}.
+Additionally Customization Contraction Hierarchies \cite{CCH} provides an update approach which only updates edges affected by a weight change.
 
 
 \section{Existing shortest path algorithms in Neo4j}
 
-Neo4j contains a implementation of dijkstra, bidirectional dijkstra and an A* implementation out of the box.
-They are provided by the traversal API, such that every plugin can use it.
-Sadly the only provide a \textit{one to one} dijkstra, which made it useless for our purpose.
-Additionally the tests that prove our dijkstra implementation as stated in \ref{sec:dijkstra}, uses the neo4j bidirectional dijkstra and compares the path weights.
+Neo4j contains an implementation of Dijkstra's algorithm , a bidirectional Dijkstra and A*.
+They are provided by the traversal API such that every plugin can use it.
+Unfortunately they only provide a \textit{one to one} dijkstra, which made it useless for our purpose.
+The tests that prove our dijkstra implementation as stated in \ref{sec:dijkstra} use the Neo4j bidirectional dijkstra and compare the path's weights.
 By that we also measure the time both need to find the shortest path.
-It shows our unidirectional dijkstra is slightly faster than the one of neo4j.
+It shows our unidirectional dijkstra is slightly faster than the one of Neo4j.
 \\
-Then there is the neo4j graph data science library  which provides a \textit{one to all} and \textit{one to one} dijkstra implementation.
-Additionally it contains also a A* implementation, a \textit{Yen’s Shortest Path} algorithm and a \textit{Delta-Stepping Single-Source Shortest Path} algorithm.
-We did't use these neither as it turned out, having our own dijkstra is key to get the implementation we are looking for.
+Furthermore the Neo4j graph data science library  which provides a \textit{one to all} and \textit{one to one} dijkstra implementation.
+Moreover it contains an A* implementation, a \textit{Yen’s Shortest Path} algorithm and a \textit{Delta-Stepping Single-Source Shortest Path} algorithm.
+We did not use these either as it turned out that having our own dijkstra is key to accomplish the implementation we are aiming for.
+
+\section{Contraction Hierarchies in Neo4j}\label{sec:related_work:database}
+
+The bachelor thesis by Nicolai D'Effremo \cite{DEffremo2019} which has implemented a version on Contraction Hierarchies \cite{Geisberger_2012} for Neo4j.
+This implementation shows that even for databases CH is an index structure worth pursuing, as there was a tremendous speedup of shortest path queries paired with a reasonable preprocessing time.
+Anton Zickenberg \cite{Zickenberg2021} showed in his bachelor thesis that it is even possible to restrict these queries with label constraints.
+Although CH and CCH have only slightly differ, unfortunately we could not use much of the code provided by them.
+It was deeply integrated into the Neo4j-Platform.
+Additionally since two major release updates have happened which meant breaking changes have made it nearly impossible to reuse any of this code.
 
 \section{Shortest path query processing with external memory}
 
@@ -62,20 +70,12 @@ With adding the distances that are stored in the two hitting sets on gets the di
 By recursively looking at the neighbors of the target vertex one can finally resolve the original path. 
 This method is faster than CH due to \cite{Abraham_2012} but the space consumption is higher as well as the preprocessing time. 
 HLDB \cite{Abraham_2012} uses a relational database to store and query the hitting set of vertices.
-
-\section{Contraction Hierarchies in Neo4j}\label{sec:related_work:database}
-
-There is one bachelor thesis by Nicolai D'Effremo \cite[Some text]{DEffremo2019} that has implemented a version on \cite[Contraction Hierarchies]{Geisberger_2012} for Neo4j.
-This implementation shows that even for databases CH is an index structure worth pursuing, as there was a tremendous speedup of shortest path queries paired with a reasonable preprocessing time.
-\cite{Zickenberg2021} showed in his bachelor thesis that it is even possible to restricted these queries with label constraints.
-Although CH and CCH have little difference, sadly we could not use much of the code provided by there works.
-It was deeply integrated into the Neo4j-Platform.
-Additionally since then two major release updates happened that have breaking changes which make it nearly impossible to reuse any of this code.
 \\
-Finally there is \cite[Mobile Route Planning]{Sanders} by Peter Sanders, Dominik Schultes, and Christian Vetter.
-In this paper it is described how one can efficiently store the a CH index structure on a hard drive.
-It states an interesting technique to how store edge that are likely to be read sequentially spatially close on the hard drive which makes read operations that have to be done during query time fast.
-The motivation of \cite[Mobile Route Planning]{Sanders} through was slightly different.
-They came up with this idea because computation power on mobile devices is limited, so they could precalculate the CH index on a server and then later distribute it to a mobile device.
+Finally there is Mobile Route Planning \cite{Sanders} by Peter Sanders, Dominik Schultes, and Christian Vetter.
+In this paper it is described how one can efficiently store a CH index structure on a hard drive.
+It includes an interesting technique to how to store edges which are likely to be read sequentially spatially close on the hard drive.
+As a result read operations that have to be done during query time are efficiently.
+The motivation of Mobile Route Planning \cite{Sanders} through was slightly different.
+They came up with this idea because computation power on mobile devices is limited, therefore they wanted to find a solution to precalculate the CH index on a server and later on distribute it to a mobile device.
 \\
-We will use parts of this idea and partly port it to our database context as we suppose there are many similarities.
+We will use parts of this idea and partly port it to our database context as we suppose there to be many similarities.

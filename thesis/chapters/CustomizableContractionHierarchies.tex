@@ -1,7 +1,8 @@
 \chapter{Customizable Contraction Hierarchies}\label{sec:Preliminary_CCH}
 
-In this section we will present the basic idea of \cite[Customization Contraction Hierarchies]{CCH} and also work out the main difference between CCH and \cite[Contraction Hierarchies]{Geisberger_2012}.
-We will provide examples to help understanding concepts that are crucial to understand what we've implemented.
+In this section we will present the basic idea of Customization Contraction Hierarchies \cite{CCH} and also work out the main difference between CCH and Contraction Hierarchies \cite{Geisberger_2012}.
+We will provide examples to help understand concepts which are crucial to comprehend our implementation.
+
 \section{Contracting}
 
 \input{assets/pseudocode/contraction.tex}
@@ -14,39 +15,38 @@ We will provide examples to help understanding concepts that are crucial to unde
 \end{figure}
 
 Algorithm \ref{alg:contraction} provides our contraction algorithm.
-We do what is called a \textit{metric dependent} contraction in \cite[Customization Contraction Hierarchies]{CCH}.
+We do a called \textit{metric dependent} contraction in Customization Contraction Hierarchies \cite{CCH}.
 This is a greedy algorithm which always takes the next best vertex to contract.
-Some use the simple edge difference as \cite[Contraction Hierarchies]{Geisberger_2012}, but we will use
-a more advanced technique that assigns an importance to each vertex.
+Some use the simple edge difference as Contraction Hierarchies \cite{Geisberger_2012}, but we will use a more advanced technique which assigns an importance to each vertex.
 This importance is further described in section \ref{sec:metric_dependent_importance}, through the equation \ref{eq:importance}.
 \\
 Before starting we have copied $G$ into $G'$ such that both are identical but refer to their own arc and vertex set.
-The input parameter of the \textit{contractGraph()} function is the set of vertices $V$ int the index graph $G'$.
-At first we calculate the so called \textit{contraction} for each vertex, which is the set of shortcut arcs that has to be inserted if that vertex is contracted next.
+The input parameter of the \textit{contractGraph()} function is the set of vertices $V$ into the index graph $G'$.
+At first we calculate the so called \textit{contraction} for each vertex, which is the set of shortcut arcs which has to be inserted if that vertex is contracted next.
 From this contraction object we can determine the importance of the vertex.
 We push the vertex together with its importance into the queue.
-The  queue is a priority queue that is organized by the importance, such that \textit{Q.poll()} will always return the vertex with the lowest importance in the queue.
+The  queue is a priority queue which is organized by the importance, such that \textit{Q.poll()} will always return the vertex with the lowest importance in the queue.
 As long as the queue is not empty we pull the next vertex and calculate its contraction.
-We assign the rank on the current vertex, initially starting at 0, on the current vertex, add this information to $G$ which resides in neo4j and increase the rank for the next vertex that will be pulled from the queue.
+We assign the rank on the current vertex, initially starting at 0, and add this information to $G$ which resides in Neo4j and increase the rank for the next vertex that will be pulled from the queue.
 \\ 
 Then we iterate over the shortcut set of the contraction and insert a shortcut into $G'$ where there is yet no arc between vertices.
-If there is already an arc that connects the vertices of a shortcut, we update the weight of that arc if the shortcut weight is smaller and update the middle vertex to be able to later on reconstruct the actual path in the input graph $G$.
-In comparison to \cite[Customization Contraction Hierarchies]{CCH}  we do two steps in one.
+If there is already an arc which connects the vertices of a shortcut, we update the weight of that arc.
+If the shortcut weight is smaller we update the middle vertex to be able to reconstruct the actual path in the input graph $G$.
+In comparison to \cite{CCH}  we merge two steps in one.
 The first is adding shortcuts and the sections is basic customization, through lower triangle enumeration \ref{sec:lower_triangles}.
-We do because at this point we already have the lower triangles at hand, so we do not need to iterate over them again over all arcs to set the correct weight and middle vertex.
-
-Then we iterate over all neighbors of the just contracted vertex $N_\downarrow(v) \cup N_\uparrow(v)$, recalculate the contraction of these vertices and repush their importance together with the vertex back into the queue.
-We have to do this because the importance of a vertex depends on its neighbors.
+This is needed because at this point we already have the lower triangles at hand, this we do not need to iterate over them again to set the correct weight and middle vertex of the arcs.
+Then we iterate over the neighbors of the recently contracted vertex $N_\downarrow(v) \cup N_\uparrow(v)$, recalculate the contraction of these vertices and repush their importance together with the vertex back into the queue.
+This is needed because the importance of a vertex depends on its neighbors.
 As the neighbors of $v$ just lost a neighbor their importance has to have changed.
-After the queue is empty and the algorithm is done, we return top vertex, which is the one with the highest rank.
-This vertex is later on needed to store the index to the disk.
+After the queue is empty and the algorithm is finished, the function return the top vertex, which is the one with the highest rank.
+This vertex is later on needed to store the index onto the disk.
 \\
-To get a contraction of a vertex we have to iterate over all connected vertices of $v$ that are not yet contracted.
+To get a contraction of a vertex we have to iterate over all connected vertices of $v$ which are not yet contracted.
 We initialize  a collection of shortcuts to an empty list.
-Then we iterate over all incoming arcs of $v$, where the start vertex has not yet been contracted.
-For each of this incoming arcs we iterate over all outgoing arcs of which the end vertex has not yet been contracted.
+Afterwards we iterate over all incoming arcs of $v$, where the start vertex has not yet been contracted.
+For each of these incoming arcs we iterate over all outgoing arcs of which the end vertex has not yet been contracted.
 Then we create a shortcut container object which is inserted into the shortcut collection.
-Into the shortcut we insert the incoming and the outgoing arc.
+Into the shortcut we insert the incoming and the outgoing arcs.
 \\
 Finally we calculate the edge difference and return the vertex together with the edge difference and the shortcuts, in a \textit{Contraction} object.
 
@@ -60,15 +60,15 @@ Finally we calculate the edge difference and return the vertex together with the
 \end{wrapfigure}
 
 
-To determine an arc weight of in G' we have to have a look at its lower triangle as shown in figure \ref{fig:lowerTrianle}.
-This is what the two for loops in \textit{getContraction(v)} in algorithm \ref{alg:contraction} do.
+To determine an arc weight of G' we need to look at its lower triangle as shown in Figure \ref{fig:lowerTrianle}.
+This is the two loops in \textit{getContraction(v)} in Algorithm \ref{alg:contraction}.
 They enumerate all lower triangles of the vertex $z$, which has a lower rank than $x$ and $y$, $r(z) < r(x) < r(y)$.
-The shortcut that is created, contains the arcs $b$ and $c$.
-The weight of $a$ in the $G'$ is determined by the shortest lower triangle or by the weight of the input graph, is shorter.
+The shortcut which is created, contains the arcs $b$ and $c$.
+The weight of $a$ in the $G'$ is determined by the shortest lower triangle or by the weight of the input graph.
 \\
 The lower triangles are important for the basic customization process but also needed for the update process.
 We are interested in the arc $a$.
-There as shown in figure \ref{fig:lowerTrianle} it follows:
+As shown in Figure \ref{fig:lowerTrianle} it follows:
 
 
 \begin{align*}\label{eq:lower_triangle}
@@ -76,20 +76,18 @@ There as shown in figure \ref{fig:lowerTrianle} it follows:
     a(x, y) & = a(x, z) + a(z, y) & a(y, x) & = a(z, x) + a(y, z)
 \end{align*}
 
-\subsection{Example}
+\subsection{Contraction Example}
 
 In Figure \ref{fig:contrating_and_searching} you can see a contracted graph $G'(V,E')$ on the left.
 The solid lines represent the original edges $E$ of a graph $G$.
-The dashed lines between vertices are shortcuts $S$ that have been added while creating the CCH index graph $G'(V, E')$.
+The dashed lines between vertices are shortcuts $S$ which have been added while creating the CCH index graph $G'(V, E')$.
 The numbers inside the vertices reflect the contraction order.
-\\
 Contracting a vertex means deleting it.
-While contracting a vertex we want to preserve its via connection.
-If a vertex that is contracted resides on a simple path between two vertices of higher rank, and there is no edge $e \epsilon E'$ between these vertices a shortcut has to be inserted.
-
-Let's reconstruct the contraction of Figure \ref{fig:contrating_and_searching}.
+If a vertex which is contracted resides on a simple path between two vertices of higher rank, and there is no edge $e \epsilon E'$ between these vertices a shortcut has to be inserted.
+We will now reconstruct the contraction of Figure \ref{fig:contrating_and_searching}.
 At first vertex $v(1)$ is removed.
-As $v(1)$ resides on a simple path to between $v(3)$ and $v(5)$ and there is no edge $e(v(3), v(5)) \notin E'$, hence a shortcut is added to keep the via path.
+As $v(1)$ resides on a simple path between $v(3)$ and $v(5)$ and there is no edge $e(v(3), v(5)) \notin E'$. 
+Hence a shortcut is added to keep the connection.
 The same applies after contracting $v(2)$ for the vertices $v(4)$ and $v(5)$.
 For all the other vertices we do not need to insert shortcuts.
 
@@ -97,56 +95,55 @@ For all the other vertices we do not need to insert shortcuts.
 
 \input{assets/pseudocode/cchSearch.tex}
 
-Algorithm \ref{alg:cchSearch} shows our search algorithm.
+Algorithm \ref{alg:cchSearch} depicts our search algorithm.
 It finds the shortest path between two vertices.
-As input parameter is takes two integer values, which represent the rank of the start vertex and the rank of the target vertex.
-At first we init a boolean variable that helps to choose whether to continue with the forward or with the backward search.
+As input parameter is takes two integer values, which represent the rank of the start vertex and the rank of the target vertices.
+At first we create a boolean variable which helps to choose whether to continue with the forward or with the backward search.
 Then we initialize one forward query which receives the start vertex as input and all upwards arcs and one backward query that receives the target vertex as input and all downward arcs.
-As long as we have not found the shortest path we continue the search.
-We definitely have found the shortest path if either both queries have expanded the top vertex with the highest rank or the next vertex to expand in both queries is farer than the shortest shortest path merge we have seen so far.
+We continue until we find the shortest path.
+We definitely have found the shortest path if either both queries have expanded the top vertex with the highest rank or the next vertex to expand to in both queries is further than the shortest path merge we have seen so far.
 This is the functionality of \textit{isComplete} function.
-All shortest path pairs will be merged and pushed to the priority queue that is called \textit{candidates}.
+All shortest path pairs will be merged and pushed to the priority queue which is called \textit{candidates}.
 It is organized by the path weight and will return the shortest path merge that has been found on \textit{candidates.peek()}.
-If the search is complete we simply peek the head of \textit{candidates} and return it as the shortest path or none if the vertices are not connected.
-\\\\
+If the search is complete we simply peek at the head of \textit{candidates} and return it as the shortest path; or none if the vertices are not connected.
+\\
 If the search is not complete we continue.
 If \textit{pickForward} is set to \textit{true} we will continue expanding the upward forward query otherwise we will expand the backward query.
-After that we flip \textit{pickForward}, such that in the next iteration the respective other query will be expanded.
-If the query we are about expand already reached the top vertex we continue with next iteration step, otherwise we tell the query to expand the next vertex.
-If the vertex that has been expanded last in the query also appears in the set of already expanded vertices in the other query, we merge both their paths and add them to the priority query \textit{candidates} of shortest path pairs found so far.
-As two merged shortest paths don't necessarily result in a shortest path, we still have to continue as described before.
+Afterwards we flip \textit{pickForward}, such that in the next iteration the respective other query will be expanded.
+If the query we are about to expand already reached the top vertex we continue with next iteration step, otherwise we tell the query to expand the next vertex.
+If the vertex which has been expanded last in the query also appears in the set of already expanded vertices in the other query, we merge both their paths and add them to the priority query \textit{candidates} of the shortest path pairs found so far.
+As two merged shortest paths do not necessarily result in a shortest path, we still have to continue as described before.
 
 \subsection{Example}
 
-Regarding Figure \ref{fig:contrating_and_searching}, as we preserved all via paths during the contraction the shortest path can be retrieved by a bidirectional Dijkstra that is restricted such that it only expands vertices of higher rank.
-
+Regarding Figure \ref{fig:contrating_and_searching}, as we preserved all shortest paths during the contraction the shortest path can be retrieved by a bidirectional Dijkstra which is restricted such that it only expands vertices of higher rank.
 Therefore if one wants to retrieve the shortest path between $v(3)$ and $v(4)$ there will be a forward search from $v(3)$ and a backward search from $v(4)$.
 As we restrict theses searches to expand only vertices of higher rank, the only vertices to expand are the start and target vertex.
-Both will find only one vertex $v(5)$, the highest vertex and the meeting point, too.
-Finding at least one meeting point in the forward an backward search means there exist a path between them.
+Both will find only one vertex $v(5)$, the highest vertex and also the meeting point.
+Finding at least one meeting point in the forward and backward search means there exist a path between them.
 After merging these paths at the middle vertex $v(5)$ one will obtain the shortest path.
 \\
-For an arbitrary contracted graph is it possible that there are more than one meeting point.
+For an arbitrary contracted graph it is possible that there is more than one meeting point.
 As merging two shortest paths will not necessary lead to an other shortest path, one has to merge all possible meeting points and take the path among the merged ones which has the smallest distance.
 \\ 
-In the example of figure \ref{fig:contrating_and_searching}, backward and forward search both reach the top vertex, so the search can stop.
+In the example of Figure \ref{fig:contrating_and_searching}, backward and forward search both reach the top vertex, so the search can stop.
 
 \section{Difference between CH and CCH}
 
-Looking at the left graph in figure \ref{fig:DifferenceCHAndCCH} it has been contracted in the CH way, whereas the right is the CCH way.
-We explicitly state this here because we have found paper \cite{Ouyang_2020} that mix up these well known names, claiming they to Contraction Hierarchies CH while actually doing Customizable Contraction Hierarchies CCH.
-The main difference is, CH will only insert an shortcut between two vertices if the vertex that is contracted resides on the shortest path between two of its neighbors.
-When vertex $v(1)$ is contracted there is no shortcut inserted as vertex $v(1)$ is not on the shortest path between which is via vertex $v(4)$.
+The left graph in Figure \ref{fig:DifferenceCHAndCCH} has been contracted in the CH way, whereas the right is the CCH way.
+We explicitly state this here because we have found a paper \cite{Ouyang_2020} which mixes up these well known names, claiming they do Contraction Hierarchies, CH, while actually doing Customizable Contraction Hierarchies CCH.
+The main difference is, CH will only insert a shortcut between two vertices if the vertex that is contracted resides on the shortest path between two of its neighbors.
+When vertex $v(1)$ is contracted there is no shortcut inserted as vertex $v(1)$ is not on the shortest path between $v(3)$ and $v(4)$.
 \\
-Whereas in the CCH case the edge weights do not play a role at contraction time.
+Whereas in the CCH case the edge weights do not play a role while contracting.
 If a vertex is contracted and there is no direct connection between two of its neighbors, one has to insert a shortcut.
-This gives the advantage that later on we can easily update edge weights without inserting new shortcut, as all possibly needed shortcuts already exist.
-\\
+This gives the advantage that we can later on easily update edge weights without inserting new shortcut, as all possibly needed shortcuts already exist.
+
 \subsection{Example} 
-Let's complete this example by updating the edge $e(v(2), v(4))$ that currently has the weight of $w(e)=1$ to $w(e) = 5$.
+We will complete this example by updating the edge $e(v(2), v(4))$ which currently has the weight of $w(e)=1$ to $w(e) = 5$.
 Now the vertex $v(1)$ is on the shortest path between vertex $v(2)$ and $v(3)$.
 
-To update the CH graph we have to insert an edge between vertex $v(2)$ and $v(3)$ whereas the topological structure of the CCH remains the same, one only need to update the weight and the middle vertex of the already give shortcut edge.
+To update the CH graph we have to insert an edge between vertex $v(2)$ and $v(3)$ whereas the topological structure of the CCH remains the same, one only needs to update the weight and the middle vertex of the already give shortcut edge.
 
 \begin{figure}
     \centering
@@ -156,20 +153,21 @@ To update the CH graph we have to insert an edge between vertex $v(2)$ and $v(3)
 \end{figure}
 
 \section{Metric Dependent Vertex Order}\label{sec:metric_dependent_vertex_order}
-There are two ways to get a suitable vertex order.
+There are two ways to receive a suitable vertex order.
 A so called \textit{metric independent} and a so called \textit{metric dependent} one.
 The metric independent recursively looks for minimum balanced separator to determine a vertex ordering\cite{CCH}.
-Although this is the superior method, it is not used in this paper writing an algorithm that calculates balanced separators isn't trivial, and we are not aiming for optimizing the contraction process.
+Although this is the superior method, it is not used in this paper. 
+Writing an algorithm that calculates balanced separators is not trivial, and we are not aiming for optimizing the contraction process.
 
 The \textit{metric dependent} order mainly uses the edge difference $ED$ to determine which vertex is to be contracted next.
 The $ED$ is determined as the $|edges To Insert| - |edges To Remove|$.
-The fewer edges are inserted during contraction the fewer edges will be contained by the final graph, therefore fewer edges to expand in a search.
-However using only the edge differences doesn't lead to desired result.
-This is because during contraction there will be areas that get sparser than others.
+The fewer edges are inserted during contraction the fewer edges will be contained by the final graph, therefore fewer edges will have to be expanded during the search.
+However using only the edge differences does not  lead to desired result.
+This is because during contraction there will be areas which becomes sparser than others.
 
-There are two problems that can arise.
+There are two problems which can arise.
 One is that important vertices are not contracted last.
-The other is the search space of the query gets linear although it could be logarithmic.
+The other is the search space of the query becomes linear although it could be logarithmic.
 
 \subsection{Important Vertices not contracted last}\label{sec:not_contracted_last}
 
@@ -180,19 +178,21 @@ The other is the search space of the query gets linear although it could be loga
     \label{fig:not_contracted_last}
 \end{figure}
 
-Looking at figure \ref{fig:not_contracted_last}, this is a possible contraction order, if only the $ED$ is used to contract vertices.
+Figure \ref{fig:not_contracted_last}, this is a possible contraction order, if the $ED$ is to contract vertices.
 At the beginning the vertices with rank 1, 2, 3, 5 have the same edge difference, which is $ED = -1$.
 Vertex after vertex is removed  and  no shortcut is inserted.
 This happens until there are only $v(4)$ and $v(5)$ left.
-Now $v(4)$ has an $ED=-1$, too, same as $v(5)$, so the chance is $\frac{1}{2}$ the algorithm contracts $v(4)$ before $v(5)$.
+Now $v(4)$ has also an $ED=-1$, similar as $v(5)$.
+Thus chance is $\frac{1}{2}$ the algorithm contracts $v(4)$ before $v(5)$.
 This is not the desired result.
-There are six \\$e(v(1),v(2)), e(v(1),v(3)), e(v(1),v(5)), e(v(2),v(3)), e(v(2),v(5)), e(v(3),v(5))$  shortest paths that involve  $v(4)$, all the other vertices do not encode any shortest path, so $v(4)$ should be contracted last.
-The search graph on the right of Figure \ref{fig:not_contracted_last} shows why.
+There are six \\$e(v(1),v(2)), e(v(1),v(3)), e(v(1),v(5)), e(v(2),v(3)), e(v(2),v(5)), e(v(3),v(5))$  shortest paths that involve  $v(4)$. 
+All the other vertices do not encode any shortest path, therefore $v(4)$ should be contracted last.
+The search graph on the right of Figure \ref{fig:not_contracted_last} shows the reason.
 Imagine we we do a shortest path query between $v(1)$ and $v(3)$.
-After expanding both, the forward and the backward search to $v(4)$, there is yet another vertex we'll have to expand $v(5)$.
-Although as you can see in the original graph on the right, its not possible that $v(5)$ is on the shortest path.
+After expanding both, the forward and the backward search to $v(4)$, there is yet another vertex we will have to expand $v(5)$.
+Although as visible in the original graph on the right, it is not possible that $v(5)$ is on the shortest path.
 Therefore a better contraction order would be contracting $v(5)$ before $v(4)$.
-This can be overcome by the method that is explained in section \ref{sec:vertex_importance}.
+This issue can be overcome by the method that is explained in section \ref{sec:vertex_importance}.
 
 \subsection{Linear Query Search Space}\label{sec:linear_query}
 
@@ -203,44 +203,46 @@ This can be overcome by the method that is explained in section \ref{sec:vertex_
 \label{fig:linear_contraction}
 \end{figure}
 
-Regarding figure \ref{fig:linear_contraction} there are three possible index graphs $G'$ of one and the same base graph $G$.
+Figure \ref{fig:linear_contraction} shows three possible index graphs $G'$ of one and the same base graph $G$.
 The numbers inside the vertices represent the contraction order.
 \\
 The first one could be contracted using the edge difference $ED$, as always one of the outer vertices with $ED=-1$ was contracted.
 On the one hand it reaches the optimum in case for \textit{least shortcuts inserted}.
-On the other though it has the worst search space among the three vertex orderings.
+On the other hand it has the worst search space among the three vertex orderings.
 To get from vertex $v(1)$ to $v(5)$ we have to expand four vertices.
 \\
-The second $G'$ one contracts from the inside to the outside, which encodes the most shortest paths, first and therefore inserts three shortcuts.
+The second $G'$ is contracted from the inside to the outside, which encodes the shortest path, first and therefore inserts three shortcuts.
 Although this example has a lot of shortcuts, there are still a lot of vertices to expand in some cases.
 In case every vertex of $G$ has a weight of $1$, and one wants to go from $v(1)$ to $v(5)$ the forward search will have to expand three to four vertices as in the upper first example.
 \\
 The third example contracts the middle vertex last.
 At first it contracts the vertices right next to the middle vertex.
-Therefore we have to insert shortcuts between $e(v(3)v(5))$ and $e(v(4), v(5))$, so no matter what source, target pair we are trying to find in this example, the forward and the backward search will have to expand at most one single vertex each.
+Therefore we have to insert shortcuts between $e(v(3)v(5))$ and $e(v(4), v(5))$.
+Thus no matter what source-target-pair we are trying to find in this example, the forward and the backward search will have to expand at no more than one single vertex each.
 
-\section{Vertex importance}\label{sec:vertex_importance}
+\section{Vertex Importance}\label{sec:vertex_importance}
 
-As shown in section \ref{sec:not_contracted_last} and \ref{sec:linear_query} there are vertices that are more important that other vertices.
-Contracting these vertices late is key to get a efficient search later on.
+As discussed in section \ref{sec:not_contracted_last} and \ref{sec:linear_query} that are vertices that are more important than other vertices.
+Contracting these vertices late is key to results in a efficient search lateron.
 
 
 \subsection{Suitability of CCH}
 
-As it is important to contract important vertices last, the advantage one gets in doing a CCH search over a simple dijkstra run depends whether the base graph $G(V, E)$ has vertices that are more important than others.
+As it is important to contract important vertices last, the advantage one gets in doing a CCH search over a simple dijkstra run depends on whether the base graph $G(V, E)$ has vertices which are more important than others.
 
-A vertex $v \epsilon E$ is important if there are many shortest paths that contain this very vertex.
+A vertex $v \epsilon E$ is important if there are many shortest paths containing this very vertex.
 Therefore if it is possible to calculate a small balanced separator on $G$, CCH will be able to show its whole advantage.
-To dive deeper into this topic, have a look at \cite[Lower Bounds and Approximation Algorithms for Search Space Sizes in Contraction Hierarchies]{BlumStorandt}.
+To dive deeper into this topic, see "Lower Bounds and Approximation Algorithms for Search Space Sizes in Contraction Hierarchies" \cite{BlumStorandt}.
 
 \subsection{Metric dependent Importance}\label{sec:metric_dependent_importance}
 
-As shown above, taking only the edge difference $ED$ into account doesn't necessarily lead to a proper order.
-We decided to take the vertex importance calculation as proposed by \cite[Customization Contraction Hierarchies]{CCH}.
+As shown in section \ref{fig:not_contracted_last} and \ref{fig:linear_contraction}, taking only the edge difference $ED$ into account does not  necessarily lead to a proper order.
+We decided to take the vertex importance calculation as proposed by Customization Contraction Hierarchies \cite{CCH}.
 To every vertex we add the level property $l(v)$ which is initially set to $0$.
-If a neighbor $w \epsilon N(v)$ is contracted level is set to $l(v) = max\{l(v)+1, l(w)\}$.
-For every arc $a \epsilon A'$ we add a the hop length to the arc $h(a)$.
-The hop length is equals the number of arcs, this arc represents when fully unpacked.
+If a neighbor $w \epsilon N(v)$ is contracted, the level is set to $l(v) = max\{l(v)+1, l(w)\}$.
+For every arc $a \epsilon A'$ we add a hop length to the arc $h(a)$.
+The hop length equal the number of arcs.
+This arc represents when fully unpacked.
 Additionally, we denote as $A(v)$ the set of inserted arcs after the contraction of $v$ and $D(v)$ the set of removed arcs.
 We calculate the importance $i(v)$ as follows:
 
@@ -249,9 +251,9 @@ We calculate the importance $i(v)$ as follows:
     i(v) = l(v) + \frac{|A(v)|}{|D(v)|} + \frac{\sum_{a \epsilon A(v)} h(a)}{\sum_{a \epsilon D(v)} h(a)} 
 \end{equation}
 
-Our tests show that this importance calculation result in slightly increase in the amount of shortcuts added, but the maximum Vertex degree is smaller.
+Our tests show that this importance calculation results in a small increase regarding in the amount of shortcuts added, but the maximum vertex degree is smaller.
 Which speeds up the contraction process towards the end.
-Additionally the average search time decreases as the search space decreases too.
+Additionally the average search time decreases as the search space decreases.
 
 
 % \section{Perfect Customization}
@@ -267,16 +269,17 @@ Additionally the average search time decreases as the search space decreases too
 
 \input{assets/pseudocode/update.tex}
 
-The biggest advantage of CCH over CH is, that it is easy to update without the need of changing the topological structure of the index graph.
+The biggest advantage of CCH over CH is that it is easy to update without the need of changing the topological structure of the index graph.
 This is the reason why CCH can be interesting for graph databases.
-If an arcs $w(a(x, y))$ weight increases or decreases this can result in a weight change on arcs that connect vertices of higher rank than $x, y$.
+If an arcs $w(a(x, y))$ weight increases or decreases this can result in a weight change on arcs which connect vertices of higher rank than $x, y$.
 We determine all arcs of the input graph $G$ that have been changed and push them to a priority queue.
-The queue always pops the the arc $a(x,y)$ with the lowest rank of the start vertex $x$.
-If there are multiple it pops the one with the lowest rank of $y$ among the ones with the lowest rank of $x$.
-Then we determine the new weight of the arc using the lower triangles.
-If there is a lower triangle that can be used as a pass through such that the arc weight in $G'$ does not change we only update the middle vertex if needed.
+The queue always returns the arc $a(x,y)$ with the lowest rank of the start vertex $x$.
+If there are multiple it returns the one with the lowest rank of $y$ among the ones with the lowest rank of $x$.
+Afterwards we determine the new weight of the arc using the lower triangles.
+If there is a lower triangle which can be used as a pass through such that the arc weight in $G'$ does not change we only update the middle vertex.
 If the weight of the arc has changed we assign the new weight to the arc.
-Then we check all upper triangles, as drawn in figure \ref{fig:updateTriangles}, of $a(x,y)$ if there is an upper arc, denoted by $c$ in figure \ref{fig:updateTriangles}, that is influenced by this change.
+Then we check all upper triangles, as shown in Figure \ref{fig:updateTriangles} of the arc $a(x,y)$. 
+If there is an upper arc, denoted by $c$ in Figure \ref{fig:updateTriangles}, that is influenced by this change.
 If it is influenced by this change we push it to the priority queue.
 We do the same with all intermediate triangles.
 \\
@@ -289,11 +292,11 @@ We do the same with all intermediate triangles.
 
 \subsection{Intermediate and Upper Triangles}
 
-As the explanation of intermediate and upper triangles in \cite[Customization Contraction Hierarchies]{CCH} exists, but is hardly understandable as kept quit short, we will describe the here in every very detail.
+As the explanation of intermediate and upper triangles in Customization Contraction Hierarchies \cite{CCH} exists, but it is difficult to understand as kept quite short, we will describe it here in detail.
 
-We define an arc as its to end vertex $x$ and $y$, where the rank of $x$ is smaller as the rank $y$, $r(x) < r(y)$.
+We define an arc as its start and end vertex $a(x,y)$, where the rank of $x$ is smaller as the rank $y$, $r(x) < r(y)$.
 For every $a$ we want to construct triangles that involve a vertex $z$.
-The arc between $x$ and $z$ we assign the letter $b$ and the arc between $y$ and $z$ we assign the letter $c$.
+We assign the letter $b$ to arc between $x$ and $z$ and the letter $c$ to the arc between $y$ and $z$.
 
 The motivation to construct these triangles is to find the shortest path from $y$ to $z$, to set the weight of $c$.
 Therefore we have to resolve the equation to $c$
@@ -301,16 +304,16 @@ Therefore we have to resolve the equation to $c$
     c = a + b
 \end{equation*}
 
-In the case of upper triangles we want to find a triangle for $x$ and $y$, such that middle vertex $z$ is of high rank than both,  $r(x) < r(y) < r(z)$.
-Therefore the as shown in figure \ref{fig:updateTriangles} follows for the upper triangle:
+In the case of upper triangles we want to find a triangle for $x$ and $y$, such that middle vertex $z$ is of higher rank than both,  $r(x) < r(y) < r(z)$.
+Therefore as shown in Figure \ref{fig:updateTriangles} results for the upper triangle:
 
 \begin{align*}\label{eq:upper_triangle}
     c_\uparrow & = a_\downarrow + b_\uparrow    &  c_\downarrow & = a_\uparrow + b_\downarrow \\
     a(y, z) & = a(y, x) + a(x, z) & a(z, y) & = a(x, y) + a(z, x)
 \end{align*}
 
-In the case of intermediate triangles we want to find a triangle for $x$ and $y$, such that middle vertex $z$ is of high rank than $x$ but of lower rank than $y$,  $r(x) < r(z) < r(y)$.
-Therefore the as shown in figure \ref{fig:updateTriangles} follows for the upper triangle:
+In the case of intermediate triangles we want to find a triangle for $x$ and $y$, such that middle vertex $z$ is of higher rank than $x$ but of lower rank than $y$,  $r(x) < r(z) < r(y)$.
+Therefore as shown in Figure \ref{fig:updateTriangles} results for the upper triangle:
 
 \begin{align*}
     c_\uparrow & = a_\uparrow + b_\downarrow    &  c_\downarrow & = a_\downarrow + b_\uparrow \\

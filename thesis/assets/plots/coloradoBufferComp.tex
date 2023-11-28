@@ -1,4 +1,3 @@
-\begin{figure}   
     \begin{tikzpicture}
         \begin{axis}[
             title={Colorado I/O Circular Buffer},
@@ -8,7 +7,7 @@
             xmajorgrids=true,
             ymajorgrids=true,
             grid style=dashed,
-            width = 0.54\linewidth,
+            width = 0.5\linewidth,
         ]
             
             \addplot table [x=dijkstraHops, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/col-data20.csv};
@@ -25,7 +24,7 @@
             xmajorgrids=true,
             ymajorgrids=true,
             grid style=dashed,
-            width = 0.54\linewidth
+            width = 0.5\linewidth
         ]
             
             \addplot table [x=dijkstraHops, y=cchLoadInvocations, col sep=comma, only marks] {assets/plots/lks-data20.csv};
@@ -33,6 +32,3 @@
             \legend{$\text{20\%}$, 640kB}
         \end{axis}
     \end{tikzpicture}
-    \caption{Comparison of CCH query I/O's. One query was done with 640kB buffer size, the other with 20\% of all arcs}
-    \label{fig:coloradoBufferComp}
-\end{figure}
