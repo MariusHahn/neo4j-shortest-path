@@ -47,6 +47,11 @@
 
 \chapter*{Abstract}
 
+The thesis addresses the challenge of speeding up shortest path queries in graph databases, with a focus on Neo4j. 
+It employs an index called Customizable Contraction Hierarchies (CCH), which has been proven to significantly outperform Dijkstra's algorithm, especially in graphs where certain vertices are more important than others in terms of their presence in numerous shortest paths. 
+The research specifically explores the integration of CCH into Neo4j and its performance post multiple edge weight updates.
+The thesis also investigates the size of the index graph and whether it can be stored entirely in the main memory.
+It also comments on possibilities to employ further implementations of CCH to other graph databases.
 % Table of Contents           
 \tableofcontents
 
