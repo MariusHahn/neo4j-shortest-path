@@ -16,6 +16,18 @@
 
 % Paket für Tabellen im Corporate Design der Universität Konstanz
 \usepackage{tabu}
+\usepackage{array,booktabs,ragged2e}
+\usepackage{pgfplots}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tabellenzusatzpezifikationen                          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
 
 \usetheme{Madrid}
 \usecolortheme{default}
@@ -122,26 +134,39 @@
 \end{frame}
 %---------------------------------------------------------
 
-
+\section{Introduction}
 \include{frames/motivation}
 \include{frames/obstacles}
+
 \section{Dijkstra}
 \include{frames/dijkstra}
+
+\section{Contraction Hierarchies}
 \include{frames/ch}
 \include{frames/chVsCch}
+\include{frames/cchWeigts}
+
+\section{Vertex Order}
 \include{frames/importantNotContractedLast}
 \include{frames/linearContraction}
+\include{frames/importanceCalc}
+
+\section{External Memory}
 \include{frames/persistanceObjectives}
 \include{frames/disk}
 \include{frames/propertyGraph}
 \include{frames/diskBlock}
 \include{frames/chDiskSearch}
 \include{frames/circularBuffer}
-\include{frames/frame1}
 
-\section{Second section}
-\include{frames/frame2}
-\include{frames/frame3}
+\section{Experiments}
+\include{frames/generalResults}
+\include{frames/queryTimeComp}
+\include{frames/expandedNodes}
+\include{frames/buffer640}
+\include{frames/buffer20percent}
 
+\section{Conclusion}
+\include{frames/conclusion}
 
 \end{document}

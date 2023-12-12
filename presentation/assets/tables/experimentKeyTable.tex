@@ -1,0 +1,28 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+    \node (tab1)  at (3,2) {%
+    \begin{tabular}{ p{0.15\linewidth} || R{0.14\linewidth} | R{0.14\linewidth} | R{0.14\linewidth} | R{0.14\linewidth} | R{0.15\linewidth} | R{0.15\linewidth} }
+    \toprule
+     & \multicolumn{1}{l}{\textbf{New York}} & \multicolumn{1}{l}{\textbf{Colorado}} & \multicolumn{1}{l}{\textbf{Florida}} & \multicolumn{1}{L{0.1\linewidth}}{\textbf{California +Nevada}} & \multicolumn{1}{L{0.115\linewidth}}{\textbf{Great Lakes}} & \multicolumn{1}{L{0.115\linewidth}}{\textbf{Eastern USA}} \\ 
+    \midrule
+    $|V|$ & 264,346 & 435,666 & 1,070,376 & 1,890,815 &  2,758,119  & 3,598,623 \\
+    $|A|$ & 730,100 & 1,042,400 & 2,687,902 & 4,630,444 & 6,794,808 & 8,708,058 \\
+    $|S|$ & 2,153,002 & 1,680,290 & 4,397,804 & 8,598,552 & 17,833,050 & 17,712,722 \\
+    $\frac{|S|}{|A|}$ & 2.93 & 1.59 & 1.62 & 1.85 & 2.62 & 2.03 \\
+    $t_{contraction}$ & 545 s & 233 s & 579 s & 4,384 s  & 25.29 h & 23.29 h \\
+    $max(d (v))$ & 1,150 & 629 & 785 & 1,252 & 2,433 & 2,391  \\
+    $|\bigcirc A_\uparrow|$  & 23.1 MB & 21.9 MB & 56.9 MB & 107 MB  & 201 MB & 215 MB \\ 
+    $\text{pos-file}_\uparrow$ & 1.1 MB & 1.8 MB & 1.3MB & 7.6 MB & 11.1 MB& 14.4 MB  \\ 
+    $t_{dijkstra}$ & 0.816 s & 0.549 s & 2.630 s & 4.858 s  & 5.425 s & 5.387 s \\ 
+    $t^{640kB}_{cch}$ & 0.140 s & 0.122 s & 0.147 s & 0.289 s & 0.732 s & 0.727 s \\
+    $ I/O^{640kB}$ & 574 & 437 & 500 & 899  & 1671 & 1572 \\
+    $t_{update}$ & 90 s & 51 s & 142 s & 444 s & 1827s & 1557s  \\
+    $t^{640kB}_{cch-updated}$ & 0.147 s & 0.129 s & 0.150 s & 0.302 s & 0.783 s & 0.855 s \\
+    $I/O^{640kB}_{cch-upd.}$ & 569 & 457 & 516 & 924  & 2779 & 2716  \\
+    $t^{20\%}_{cch-updated}$ & 0.136 s & 0.130 s & 0.092 s & 0.183 s & 0.660 s & 0.680 s \\
+    $I/O^{20\%}_{cch-upd.}$ & 315 & 307 & 226 & 283  & 804 & 680  \\
+    $t^{100\%}_{cch-updated}$ & 0.062 s & 0.038 s & 0.039 s & 0.099 s & 0.438 s & 0.479 s \\
+    $I/O^{100\%}_{cch-upd.}$ & 0 & 0 & 0 & 0  & 1 & 0  \\
+    \bottomrule
+    \end{tabular}
+    };
+\end{tikzpicture}

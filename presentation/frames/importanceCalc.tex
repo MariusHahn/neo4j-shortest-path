@@ -1,0 +1,20 @@
+\begin{frame}
+    \frametitle{Importance Calculation}
+
+    \begin{itemize}
+        \item add a level $l(v) = 0$ to each node 
+        \item if contracting v: $l(v) = max\{l(v)+1, l(w)\} \forall w \epsilon N(v)$
+        \item $A(v)$ set of added arcs
+        \item $D(v)$ set of deleted arcs
+        \item $h(a)$ hops an arc represents if unpacked
+    \end{itemize}
+
+    \begin{equation*}
+        \label{eq:importance}
+        i(v) = l(v) + \frac{|A(v)|}{|D(v)|} + \frac{\sum_{a \epsilon A(v)} h(a)}{\sum_{a \epsilon D(v)} h(a)} 
+    \end{equation*}
+    
+    \begin{alertblock}{Important theorem}
+        more shortcuts inserted but improves query time!
+    \end{alertblock}
+\end{frame}
