@@ -1,0 +1,31 @@
+\begin{algorithm}
+    \caption{Dijkstra Algorithm}
+    \label{alg:disjkstra_algorithm}
+    \begin{algorithmic}[1]
+    \Procedure{expandNext()}{}
+    \State $\text{state} \gets \text{queue.poll()}$
+    \State $\text{latestExpand} \gets \text{state}$
+    
+    \If{$\text{state.endVertex()} \in \text{goals} \lor \text{goals} = \emptyset $}
+        \State $\text{shortestPaths.put}(\text{state.endVertex()}, \text{state.getPath()})$
+    \EndIf
+    \State $\text{state.settle()}$
+    \For{ $\text{arc} \ \text{in} \ \text{state.getEndVertex().arcs}$}
+        \State $\text{neighbor} \gets \text{arc.otherVertex}(\text{state.getEndVertex()})$
+        \If{\Call{mustUpdateNeighborState}{$\text{state, neighbor, arc.weight}$}}
+        \State $\text{newState} \gets \text{state.getPath()} + \text{arc}$
+        \State $\text{queue.update}(\text{State}(\text{neighbor, newState}))$
+        \State $\text{seen.put}(neighbor, newState)$
+            
+        \EndIf
+    \EndFor
+    \EndProcedure
+    \Function{isComplete}{forwardQuery, backwardQuery, best}
+    \State \Return $\text{queue} = \emptyset \lor |\text{shortestPaths}| = |\text{goals}| \land \text{goals} \neq \emptyset$
+    \EndFunction
+    \Function{mustUpdateNeighborState}{state, neighbor, cost}
+    \State $\text{nInSeen} \gets \text{seen[neighbor]}$ 
+    \State \Return $\text{neighbor} \notin \text{seen} \lor \lnot (\text{nInSeen.settled} \lor \text{nInSeen} < \text{state.weight + cost})$
+    \EndFunction
+    \end{algorithmic}
+\end{algorithm}

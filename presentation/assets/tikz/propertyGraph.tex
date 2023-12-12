@@ -1,0 +1,11 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+ 
+    \node[main, align=center] (x3) at (0,4) {id:23, labels:\{\\Location,…\}, \\props:\{\\\textcolor{red}{rank:3},…\}};
+    \node[main, align=center] (x2) at (12,2) {id:22, labels:\{\\Location,…\}, \\ props:\{\\\textcolor{red}{rank:2},…\}};
+    \node[main, align=center] (x1) at (6, 0) {id:21, labels:\{\\Location,…\},  \\ props:\{\\\textcolor{red}{rank:1},…\}};
+    
+    \draw[ -Stealth] (x2) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{red}{weight:1}}(x1);
+    \draw[ -Stealth] (x1) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{red}{weight:1}} (x3);
+    \draw[dashed, -Stealth] (x2) -- node[above, sloped] {\textcolor{red}{2}}(x3);
+
+\end{tikzpicture}

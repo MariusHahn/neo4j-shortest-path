@@ -1,0 +1,46 @@
+\begin{frame}
+    \frametitle{Contraction Hierarchies Example}
+
+    \visible<5->{Let's go from $v_2$ to $v_3$}
+    \vfill
+    \centering
+    \begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+        \visible<1-4>{\node[main] (x4) at (1, 3) {$4$};}
+        \visible<1-3>{\node[main] (x3) at (0, 2) {$3$};}
+        \visible<1-2>{\node[main] (x2) at (2, 1) {$2$};}
+        \visible<1>{\node[main] (x1) at (1, 0) {$1$};}
+        \visible<5->{\node[main] (x4) at (1, 3) {$4$};}
+        \visible<5->{\node[main] (x3) at (0, 2) {$3$};}
+        \visible<5->{\node[main] (x2) at (2, 1) {$2$};}
+        \visible<5->{\node[main] (x1) at (1, 0) {$1$};}
+        
+        \visible<1>{\draw (x1) -- node[below right] {$2$}(x2);}
+        \visible<1>{\draw (x1) -- node[below left] {$4$} (x3);}
+        \visible<1-2>{\draw (x2) -- node[above right] {$5$} (x4);}
+        \visible<1-3>{\draw (x3) -- node[above left] {$3$} (x4);}
+        \visible<2>{\draw[dashed] (x2) -- node[above, sloped] {$6$}  (x3);}
+        \visible<5->{\draw (x1) -- node[below right] {$2$}(x2);}
+        \visible<5->{\draw (x1) -- node[below left] {$4$} (x3);}
+        \visible<5->{\draw (x2) -- node[above right] {$5$} (x4);}
+        \visible<5->{\draw (x3) -- node[above left] {$3$} (x4);}
+        \visible<5->{\draw[dashed] (x2) -- node[above, sloped] {$6$}  (x3);}
+    
+        \visible<6->{\draw[dashed]  (3,0) -- (3,3);}
+    
+    
+        \visible<7->{\node[main] (x31) at (4, 2) {$3$};}
+        \visible<6->{\node[main] (x21) at (6, 1) {$2$};}
+        \visible<7->{\draw[ -Stealth, dashed] (x21) to node[above, sloped] {$6$}  (x31);}
+    
+        \visible<6->{\draw[dashed]  (7,0) -- (7,3);}
+    
+        \visible<8->{\node[main] (x32) at (8, 2) {$3$};}
+        \visible<7->{\node[main] (x42) at (9, 3) {$4$};}
+        \visible<6->{\node[main] (x22) at (10, 1) {$2$};}
+    
+        \visible<7->{\draw[-Stealth,] (x22) to node[above right] {$5$} (x42);}
+        \visible<8->{\draw[-Stealth] (x42) to node[above left] {$3$} (x32);}
+    
+\end{tikzpicture}
+
+\end{frame}

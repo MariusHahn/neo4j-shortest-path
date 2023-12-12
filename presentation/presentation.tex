@@ -1,0 +1,147 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+\usepackage[utf8]{inputenc}
+
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{backgrounds,matrix,fadings,calc,positioning,decorations.pathreplacing,arrows.meta,shapes,shapes.multipart}
+\usepackage{standalone} % Necessary to skip headers of {standalone} documents
+\usepackage{tikzscale} % To use \includegraphics with TikZ code
+\usetikzlibrary{backgrounds,fit,positioning}
+
+\usepackage{graphicx} % Include the package for graphics
+% Nummerrierung von Abbilungen und Tabelle fortlaufend
+\usepackage{chngcntr}
+
+% Paket für Tabellen im Corporate Design der Universität Konstanz
+\usepackage{tabu}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{enumerate items}[default]
+\definecolor{uniBlau}{RGB}{59,199,235}
+\setbeamercolor*{structure}{bg=white,fg=uniBlau}
+
+% \setbeamercolor*{palette primary}{use=structure,fg=white,bg=structure.fg}
+% \setbeamercolor*{palette secondary}{use=structure,fg=white,bg=structure.fg!75}
+% \setbeamercolor*{palette tertiary}{use=structure,fg=white,bg=structure.fg!50!black}
+% \setbeamercolor*{palette quaternary}{fg=white,bg=black}
+
+% \setbeamercolor{section in toc}{fg=black,bg=white}
+% \setbeamercolor{alerted text}{use=structure,fg=structure.fg!50!black!80!black}
+% \setbeamercolor{frametitle}{bg=black,fg=white}
+
+% \setbeamercolor{titlelike}{parent=palette primary,fg=structure.fg!50!black}
+% \setbeamercolor{frametitle}{bg=gray!10!white,fg=black}
+
+% \setbeamercolor*{titlelike}{parent=palette primary}
+
+% \setbeamercolor{block title example}{bg=black,fg=white}
+
+% \usepackage{times,url}
+
+% \setbeamertemplate{footline}[frame number]
+% \setbeamertemplate{footline}[frame number]{}
+
+%\setbeamertemplate{footline}{}
+
+%\setbeamertemplate{footline}
+%{
+%  \leavevmode%
+%  \hbox{%
+%  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+%    \usebeamerfont{author in head/foot}\insertsection
+%  \end{beamercolorbox}%
+%  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+%    \usebeamerfont{title in head/foot}\insertsubsection
+%  \end{beamercolorbox}%
+%  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+%    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+%    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex} 
+%  \end{beamercolorbox}}%
+%  \vskip0pt%
+%}
+
+%------------------------------------------------------------
+%This block of code defines the information to appear in the
+%Title page
+\title[CCH in Neo4j] %optional
+{Query Processing on Dynamic Networks with Customizable Contraction Hierarchies on Neo4j}
+
+%\subtitle{A short story}
+
+\author[Marius Hahn] % (optional)
+{Marius Hahn}
+
+\institute[CIS] % (optional)
+{
+  Grouf of Database and Information Systems \\
+  Department of Computer and Information Science \\
+  Faculty of Sciences \\
+  Universität Konstanz
+}
+
+\date[$\text{14}^{\text{th}}$ December 2023] % (optional)
+{Master Colloquium, $\text{14}^{\text{th}}$ December 2023}
+
+% 右下角使用logo的方式
+% \logo{\includegraphics[height=1cm]{overleaf-logo}} 
+
+%End of title page configuration block
+%------------------------------------------------------------
+
+
+
+%------------------------------------------------------------
+%The next block of commands puts the table of contents at the 
+%beginning of each section and highlights the current section:
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Table of Contents}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+%------------------------------------------------------------
+
+
+\begin{document}
+
+%The next statement creates the title page.
+\frame{\titlepage}
+
+
+%---------------------------------------------------------
+%This block of code is for the table of contents after
+%the title page
+\begin{frame}
+\frametitle{Table of Contents}
+\tableofcontents
+\end{frame}
+%---------------------------------------------------------
+
+
+\include{frames/motivation}
+\include{frames/obstacles}
+\section{Dijkstra}
+\include{frames/dijkstra}
+\include{frames/ch}
+\include{frames/chVsCch}
+\include{frames/importantNotContractedLast}
+\include{frames/linearContraction}
+\include{frames/persistanceObjectives}
+\include{frames/disk}
+\include{frames/propertyGraph}
+\include{frames/diskBlock}
+\include{frames/chDiskSearch}
+\include{frames/circularBuffer}
+\include{frames/frame1}
+
+\section{Second section}
+\include{frames/frame2}
+\include{frames/frame3}
+
+
+\end{document}

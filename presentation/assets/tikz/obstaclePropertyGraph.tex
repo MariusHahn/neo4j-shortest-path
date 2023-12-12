@@ -1,0 +1,17 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+ 
+    \node[main, align=center] (x3) at (0,4) {id:23, labels:\{\\Location,…\}, \\props:\{\\\textcolor{black}{rank:3},…\}};
+    \node[main, align=center] (x2) at (12,2) {id:22, labels:\{\\Location,…\}, \\ props:\{\\\textcolor{black}{rank:2},…\}};
+    \node[main, align=center] (x1) at (4, 0) {id:21, labels:\{\\Location,…\},  \\ props:\{\\\textcolor{black}{rank:1},…\}};
+    \node[main, align=center] (x4) at (7, 5) {id:24, labels:\{\\Location,…\},  \\ props:\{\\\textcolor{black}{rank:4},…\}};
+    
+    \draw[ -Stealth] (x2) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}}(x1);
+    \draw[ -Stealth] (x1) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}} (x3);
+    \draw[ -Stealth] (x1) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}} (x4);
+    \draw[ -Stealth] (x2) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}} (x4);
+    \draw[ -Stealth] (x3) -- node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}} (x4);
+    \draw[ -Stealth, out=-120, in=-180] (x3) to node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}} (x1);
+    \draw[ -Stealth, out=40, in=140] (x3) to node[rectangle,draw, fill=white,  align=center] {:ROAD \\ \textcolor{black}{weight:1}} (x4);
+
+
+\end{tikzpicture}

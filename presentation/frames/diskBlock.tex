@@ -1,0 +1,14 @@
+\begin{frame}
+    \frametitle{Store Example}
+    \centering    
+    \includegraphics[width=0.65\linewidth]{assets/tikz/diskBlock.tex}
+    \begin{itemize}
+        \item fill all arcs of a vertex into a block 
+        \item add block number of rank to position file. $G_\uparrow$ use \textit{from} ; $G_\downarrow$ use \textit{to}  
+        \item if next vertex' arcs don't fit anymore $\rightarrow$ flush block and take next 
+    \end{itemize}
+    \begin{alertblock}{Min Block Size}
+        \centering
+        $    max(d_{\uparrow max}(v), d_{\downarrow max}(v)) \leqslant  \frac{diskBlockSize}{16}  $
+    \end{alertblock}
+\end{frame}

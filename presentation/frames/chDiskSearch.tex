@@ -1,0 +1,18 @@
+\begin{frame}
+    \frametitle{CCH Disk Search (upwards graph example)}
+
+    \begin{enumerate}
+        \item lazy load vertices $\Rrightarrow$ only start node is loaded without arcs 
+        \item<2-> settle vertex (right before expanding it) 
+        \begin{itemize}
+            \item<3-> VertexManager requests arc of v(x) from buffer
+            \item<4-> Buffer requests arcs from disk if not cached yet
+            \item<6-> Buffer returns arcs
+            \item<7-> VertexManager attaches arcs to v(x)
+        \end{itemize}
+    \end{enumerate}
+    \vfill
+    \includegraphics[width=\linewidth]{assets/tikz/lazyLoadVertex.tex}
+    
+
+\end{frame}
