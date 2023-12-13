@@ -1,0 +1,28 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+    \node (tab1)  at (3,2) {%
+    \begin{tabular}{ p{0.15\linewidth} || R{0.14\linewidth} | R{0.15\linewidth} | R{0.15\linewidth} }
+    \toprule
+     & \multicolumn{1}{L{0.1\linewidth}}{\textbf{California +Nevada}} & \multicolumn{1}{L{0.115\linewidth}}{\textbf{Great Lakes}} & \multicolumn{1}{L{0.115\linewidth}}{\textbf{Eastern USA}} \\ 
+    \midrule
+    \only<1>{$|V|$ & 1,890,815 &  2,758,119  & 3,598,623 \\}
+    \only<1>{$|A|$ & 4,630,444 & 6,794,808 & 8,708,058 \\}
+    \only<1>{$|S|$ & 8,598,552 & 17,833,050 & 17,712,722 \\}
+    \only<1>{$\frac{|S|}{|A|}$ & 1.85 & 2.62 & 2.03 \\}
+    \only<1>{$t_{contraction}$ & 4,384 s  & 25.29 h & 23.29 h \\}
+    \only<1>{$max(d (v))$ & 1,252 & 2,433 & 2,391  \\}
+    \only<1>{$|\bigcirc A_\uparrow|$  & 107 MB  & 201 MB & 215 MB \\ }
+    \only<1>{$\text{pos-file}_\uparrow$ & 7.6 MB & 11.1 MB& 14.4 MB  \\ }
+    \only<2>{$t_{dijkstra}$ & 4.858 s  & 5.425 s & 5.387 s \\ }
+    \only<2>{$t^{640kB}_{cch}$ & 0.289 s & 0.732 s & 0.727 s \\}
+    \only<3>{$ I/O^{640kB}$ & 899 & 1671 & 1572 \\}
+    \only<1>{$t_{update}$ & 444 s & 1827s & 1557s  \\}
+    \only<2>{$t^{640kB}_{cch-updated}$ & 0.302 s & 0.783 s & 0.855 s \\}
+    \only<3>{$I/O^{640kB}_{cch-upd.}$ & 924  & 2779 & 2716  \\}
+    \only<2>{$t^{20\%}_{cch-updated}$ & 0.183 s & 0.660 s & 0.680 s \\}
+    \only<3>{$I/O^{20\%}_{cch-upd.}$ & 283  & 804 & 680  \\}
+    \only<2>{$t^{100\%}_{cch-updated}$ & 0.099 s & 0.438 s & 0.479 s \\}
+    \\
+    \bottomrule
+    \end{tabular}
+    };
+\end{tikzpicture}
