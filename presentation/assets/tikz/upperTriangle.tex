@@ -1,0 +1,35 @@
+\begin{tikzpicture}[node distance={15mm}, main/.style = {draw, circle}]
+
+    \draw[dashed]  (7,-1) -- (7,2);
+
+    \node[main] (x31) at (8, 1) {$3$};
+    \node[main] (x41) at (9, 2) {$4$};
+    \node[main] (x21) at (10, 0) {$2$};
+    \node[main] (x11) at (9, -1) {$1$};
+    
+    \draw (x11) -- node[below right] {\sout{$2$} $\rightarrow 3$}(x21);
+    \draw (x11) -- node[below left] {$2$} (x31);
+    \draw (x21) -- node[above right] {$1$} (x41);
+    \draw (x31) -- node[above left] {$1$} (x41);
+    \draw[dashed] (x21) -- node[above, sloped] {4}  (x31);
+
+    \node[rotate=90] at (-0.25,0) {rank};
+    \draw [ -Stealth]  (0,-2) -- (0,2);
+    
+    \node[main] (y2) at (3, 0)  {$y$}; 
+    \node[main] (x2) at (2, -1) {$x$};
+    \node[main] (z2) at (1, 1)  {$z$}; 
+    \draw[ -Stealth] (y2) -- node[above] {$c$} (z2);
+    \draw[ -Stealth] (y2) -- node[below, pos=0.2] {$a$} (x2);
+    \draw[ -Stealth] (x2) -- node[below left] {$b$} (z2);
+    \node[] at (2,-2) {$c_\uparrow = a_\downarrow + b_\uparrow$};
+
+    \node[main] (y21) at (6, 0)  {$y$};  
+    \node[main] (x21) at (5,-1)  {$x$};
+    \node[main] (z21) at (4, 1)  {$z$};  
+    \draw[ -Stealth] (z21) -- node[above] {$c$} (y21);
+    \draw[ -Stealth] (x21) -- node[below, pos=0.6] {$a$} (y21);
+    \draw[ -Stealth] (z21) -- node[below left] {$b$} (x21);
+    \node[] at (5,-2) {$c_\downarrow = a_\uparrow + b_\downarrow$};
+
+\end{tikzpicture}
